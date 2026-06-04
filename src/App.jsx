@@ -864,6 +864,15 @@ function App() {
           <p className="brand-subtitle">{t('brand.subtitle')}</p>
         </div>
         <div className="header-actions">
+          <button className="btn btn-icon" onClick={() => setTheme(t => t === 'light' ? 'dark' : 'light')} title={t('nav.toggleTheme')}>
+            {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+          </button>
+          <button className="btn btn-icon btn-lang" onClick={() => setLang(l => l === 'en' ? 'ar' : 'en')} title={t('lang.switch')}>
+            <span style={{ fontSize: '14px', fontWeight: 700 }}>{lang === 'en' ? 'AR' : 'EN'}</span>
+          </button>
+          <button className="btn btn-icon sidebar-toggle-btn" onClick={() => setSidebarOpen(true)} aria-label={t('nav.openSidebar')}>
+            <Menu size={18} />
+          </button>
           {dayData && (
             <button className="btn btn-primary btn-add-task" onClick={() => openTaskModal('add')}>
               <Plus size={16} /> {t('header.addTask')}
@@ -874,15 +883,6 @@ function App() {
               <Download size={16} /> {t('header.export')}
             </button>
           )}
-          <button className="btn btn-icon btn-lang" onClick={() => setLang(l => l === 'en' ? 'ar' : 'en')} title={t('lang.switch')}>
-            <span style={{ fontSize: '14px', fontWeight: 700 }}>{lang === 'en' ? 'AR' : 'EN'}</span>
-          </button>
-          <button className="btn btn-icon sidebar-toggle-btn" onClick={() => setSidebarOpen(true)} aria-label={t('nav.openSidebar')}>
-            <Menu size={18} />
-          </button>
-          <button className="btn btn-icon" onClick={() => setTheme(t => t === 'light' ? 'dark' : 'light')} title={t('nav.toggleTheme')}>
-            {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
-          </button>
         </div>
       </header>
 
