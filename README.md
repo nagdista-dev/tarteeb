@@ -1,16 +1,36 @@
-# React + Vite
+# Tarteeb — Prayer-Based Daily Planner
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A daily planner organized around the five daily prayers (Maghrib–Maghrib cycle). Built with React + Vite.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Prayer-aware timeline** — tasks are scheduled within prayer periods (Maghrib, Isha, Fajr, Dhuhr, Asr) with automatic time slot management
+- **Collision-free scheduling** — start/end time selects only show available 5-minute slots that don't overlap existing tasks
+- **Fixed prayer tasks** — five daily prayers and Adhkar are pre-populated and cannot be edited or deleted
+- **Markdown export** — export the day's tasks, prayer times, and journal notes as a `.md` file
+- **Journal** — daily diary with save button, Arabic/RTL support
+- **History** — browse, open, or delete past days
+- **Sidebar** — collapsible on mobile, shows prayer times, next prayer countdown, and completion stats
+- **Dark mode** — toggleable light/dark theme
+- **Local storage** — all data persists in the browser
 
-## React Compiler
+## Getting Started
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+npm install
+npm run dev
+```
 
-## Expanding the ESLint configuration
+Build for production:
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```bash
+npm run build
+```
+
+## Tech Stack
+
+- React 19
+- Vite
+- Prayer times via Aladhan API
+- Google Fonts (Inter, Tajawal)
+- Lucide React icons
