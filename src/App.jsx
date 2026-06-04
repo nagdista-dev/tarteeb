@@ -303,7 +303,6 @@ function App() {
   });
   const [habitModal, setHabitModal] = useState({ open: false, mode: 'add', habit: null });
   const [habitForm, setHabitForm] = useState({ name: '' });
-  const [expandedNotes, setExpandedNotes] = useState({});
   const [expandedStats, setExpandedStats] = useState({});
 
   const dismissWelcome = () => {
@@ -662,16 +661,6 @@ function App() {
       const entries = { ...(h.entries || {}) };
       const current = entries[today];
       entries[today] = { completed: !current?.completed, notes: current?.notes || '' };
-      return { ...h, entries };
-    }));
-  };
-
-  const updateHabitNotes = (id, notes) => {
-    const today = getTodayStr();
-    setHabits(prev => prev.map(h => {
-      if (h.id !== id) return h;
-      const entries = { ...(h.entries || {}) };
-      entries[today] = { completed: entries[today]?.completed || false, notes };
       return { ...h, entries };
     }));
   };
@@ -1437,7 +1426,7 @@ function App() {
                               {isDone && <Check size={16} />}
                             </button>
                             <div className="habit-info">
-                              <span className="habit-name" onClick={() => setExpandedStats(prev => ({ ...prev, [habit.id]: !prev[habit.id] }))}>
+                              <span className="habit-name" onClick={() => { setHabitForm({ name: habit.name }); setHabitModal({ open: true, mode: 'edit', habit }); }}>
                                 {habit.name}
                               </span>
                               <div className="habit-meta">
@@ -1448,31 +1437,15 @@ function App() {
                                 <span>{stats.rate}%</span>
                               </div>
                             </div>
-                            <button
-                              type="button"
-                              className={`habit-notes-toggle ${todayEntry?.notes ? 'has-notes' : ''}`}
-                              onClick={() => setExpandedNotes(prev => ({ ...prev, [habit.id]: !prev[habit.id] }))}
-                              title={t('habits.notes')}
-                            >
-                              <Edit2 size={15} />
-                            </button>
                             <div className="habit-actions">
+                              <button type="button" className="btn-task-action" onClick={() => { setHabitForm({ name: habit.name }); setHabitModal({ open: true, mode: 'edit', habit }); }} title={t('habits.edit')}>
+                                <Edit2 size={13} />
+                              </button>
                               <button type="button" className="btn-task-action delete" onClick={() => deleteHabit(habit.id)} title={t('habits.delete')}>
                                 <Trash2 size={13} />
                               </button>
                             </div>
                           </div>
-                          {expandedNotes[habit.id] && (
-                            <div className="habit-notes-area">
-                              <textarea
-                                className="habit-notes-input"
-                                placeholder={t('habits.notesPlaceholder')}
-                                value={todayEntry?.notes || ''}
-                                onChange={e => updateHabitNotes(habit.id, e.target.value)}
-                                rows={2}
-                              />
-                            </div>
-                          )}
                           <div className="habit-stats-panel">
                             <button
                               type="button"

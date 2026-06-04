@@ -4256,53 +4256,6 @@ textarea.form-textarea {
   flex-shrink: 0;
 }
 
-.habit-notes-toggle {
-  flex-shrink: 0;
-  background: none;
-  border: none;
-  color: var(--text-tertiary);
-  cursor: pointer;
-  padding: 4px;
-  border-radius: 6px;
-  transition: all 0.15s;
-  display: flex;
-  align-items: center;
-}
-
-.habit-notes-toggle:hover {
-  color: var(--color-emerald);
-  background: var(--bg-primary);
-}
-
-.habit-notes-toggle.has-notes {
-  color: var(--color-emerald);
-}
-
-.habit-notes-area {
-  padding: 0 16px 14px;
-}
-
-.habit-notes-input {
-  width: 100%;
-  padding: 8px 10px;
-  border-radius: 8px;
-  border: 1.5px solid var(--border-color);
-  background: var(--bg-primary);
-  font-family: var(--font-sans), var(--font-arabic);
-  font-size: 0.82rem;
-  color: var(--text-primary);
-  outline: none;
-  resize: vertical;
-  min-height: 36px;
-  transition: border-color 0.2s;
-  box-sizing: border-box;
-}
-
-.habit-notes-input:focus {
-  border-color: var(--color-emerald);
-}
-
-/* Habit Stats */
 .habit-stats-panel {
   border-top: 1px solid var(--border-color);
   padding: 14px 16px;
