@@ -52,7 +52,7 @@ const FIXED_TASK_SCHEDULE = {
   'Maghrib Prayer': { period: 'evening', offset: 0 },
   'Isha Prayer': { period: 'night', offset: 0 },
   'Fajr Prayer': { period: 'morning', offset: 0 },
-  'Morning Adhkar': { period: 'morning', offset: 15 },
+  'Morning Adhkar': { period: 'morning', offset: 30 },
   'Dhuhr Prayer': { period: 'afternoon', offset: 0 },
   'Asr Prayer': { period: 'late_afternoon', offset: 0 },
   'Evening Adhkar': { period: 'late_afternoon', offset: 0 }
