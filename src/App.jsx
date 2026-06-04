@@ -124,10 +124,10 @@ const normalizeTasksForPrayerBlocks = (tasks, prayers) => {
   });
 };
 
-const getFirstAvailableTimeForPeriod = (period, tasks, prayers, duration = 15) => {
+const getFirstAvailableTimeForPeriod = (period, tasks, prayers, duration = 15, excludeTaskId = null) => {
   const blockStart = getPeriodStartMinutes(period, prayers);
   const blockEnd = getPeriodEndMinutes(period, prayers);
-  const occupied = getOccupiedSlots(period, tasks, prayers);
+  const occupied = getOccupiedSlots(period, tasks, prayers, excludeTaskId);
 
   for (let start = blockStart; start + duration <= blockEnd; start += TASK_GAP) {
     const overlaps = occupied.some(slot => start < slot.end && start + duration > slot.start);
@@ -137,10 +137,10 @@ const getFirstAvailableTimeForPeriod = (period, tasks, prayers, duration = 15) =
   return formatMinutesToTime(blockStart);
 };
 
-const getOccupiedSlots = (period, tasks, prayers) => {
+const getOccupiedSlots = (period, tasks, prayers, excludeTaskId = null) => {
   return tasks
     .map(task => normalizeFixedTask(task, prayers))
-    .filter(task => task.period === period)
+    .filter(task => task.period === period && task.id !== excludeTaskId)
     .map(task => {
       const start = getTaskStartMinutes(task, prayers);
       return { start, end: start + (Number(task.duration) || 15) };
@@ -148,10 +148,10 @@ const getOccupiedSlots = (period, tasks, prayers) => {
     .sort((a, b) => a.start - b.start);
 };
 
-const getAvailableStartSlots = (period, tasks, prayers) => {
+const getAvailableStartSlots = (period, tasks, prayers, excludeTaskId = null) => {
   const blockStart = getPeriodStartMinutes(period, prayers);
   const blockEnd = getPeriodEndMinutes(period, prayers);
-  const occupied = getOccupiedSlots(period, tasks, prayers);
+  const occupied = getOccupiedSlots(period, tasks, prayers, excludeTaskId);
   const slots = [];
 
   for (let start = blockStart; start < blockEnd; start += TASK_GAP) {
@@ -162,9 +162,9 @@ const getAvailableStartSlots = (period, tasks, prayers) => {
   return slots;
 };
 
-const getAvailableEndSlots = (period, tasks, prayers, startMinutes) => {
+const getAvailableEndSlots = (period, tasks, prayers, startMinutes, excludeTaskId = null) => {
   const blockEnd = getPeriodEndMinutes(period, prayers);
-  const occupied = getOccupiedSlots(period, tasks, prayers);
+  const occupied = getOccupiedSlots(period, tasks, prayers, excludeTaskId);
   const slots = [];
 
   for (let end = startMinutes + TASK_GAP; end <= blockEnd; end += TASK_GAP) {
@@ -1013,6 +1013,13 @@ function App() {
               <button className="sidebar-toggle-btn" onClick={() => setLang(lang === 'en' ? 'ar' : 'en')} title={t('settings.language')}>
                 {lang === 'en' ? 'AR' : 'EN'}
               </button>
+              <button className="sidebar-toggle-btn" onClick={() => setFontSize(s => {
+                const idx = FONT_SIZES.indexOf(s);
+                return FONT_SIZES[(idx + 1) % FONT_SIZES.length];
+              })} title={t('settings.fontSize')}>
+                <Type size={16} />
+                <span className="font-size-sidebar-label">{t('settings.fontSize_' + fontSize)}</span>
+              </button>
             </div>
             <div className="sidebar-export-wrap">
               <button className="btn btn-export sidebar-export-btn" onClick={exportToMarkdown} title={t('header.exportTitle')}>
@@ -1454,10 +1461,11 @@ function App() {
                     value={taskForm.period}
                     onChange={e => {
                       const period = e.target.value;
-                      const slots = dayData ? getAvailableStartSlots(period, dayData.tasks, dayData.prayerTimes) : [];
+                      const excludeId = taskModal.task?.id;
+                      const slots = dayData ? getAvailableStartSlots(period, dayData.tasks, dayData.prayerTimes, excludeId) : [];
                       const firstStart = slots.length > 0 ? formatMinutesToTime(slots[0]) : '00:00';
                       const firstStartMin = scheduledTimeToPlannerMinutes(firstStart, period, dayData.prayerTimes);
-                      const endSlots = dayData ? getAvailableEndSlots(period, dayData.tasks, dayData.prayerTimes, firstStartMin) : [];
+                      const endSlots = dayData ? getAvailableEndSlots(period, dayData.tasks, dayData.prayerTimes, firstStartMin, excludeId) : [];
                       const endTime = endSlots.length > 0 ? formatMinutesToTime(endSlots[0]) : formatMinutesToTime(firstStartMin + 15);
                       setTaskForm(prev => ({
                         ...prev,
@@ -1483,12 +1491,12 @@ function App() {
                       onChange={e => {
                         const startTime = e.target.value;
                         const startMin = scheduledTimeToPlannerMinutes(startTime, taskForm.period, dayData.prayerTimes);
-                        const endSlots = getAvailableEndSlots(taskForm.period, dayData.tasks, dayData.prayerTimes, startMin);
+                        const endSlots = getAvailableEndSlots(taskForm.period, dayData.tasks, dayData.prayerTimes, startMin, taskModal.task?.id);
                         const endTime = endSlots.length > 0 ? formatMinutesToTime(endSlots[0]) : formatMinutesToTime(startMin + 15);
                         setTaskForm(prev => ({ ...prev, scheduledTime: startTime, endTime }));
                       }}
                     >
-                      {(dayData ? getAvailableStartSlots(taskForm.period, dayData.tasks, dayData.prayerTimes) : []).map(min => (
+                      {(dayData ? getAvailableStartSlots(taskForm.period, dayData.tasks, dayData.prayerTimes, taskModal.task?.id) : []).map(min => (
                         <option key={min} value={formatMinutesToTime(min)}>{formatMinutesToTime(min)}</option>
                       ))}
                     </select>
@@ -1500,7 +1508,7 @@ function App() {
                       value={taskForm.endTime}
                       onChange={e => setTaskForm(prev => ({ ...prev, endTime: e.target.value }))}
                     >
-                      {(dayData ? getAvailableEndSlots(taskForm.period, dayData.tasks, dayData.prayerTimes, scheduledTimeToPlannerMinutes(taskForm.scheduledTime, taskForm.period, dayData.prayerTimes)) : []).map(min => (
+                      {(dayData ? getAvailableEndSlots(taskForm.period, dayData.tasks, dayData.prayerTimes, scheduledTimeToPlannerMinutes(taskForm.scheduledTime, taskForm.period, dayData.prayerTimes), taskModal.task?.id) : []).map(min => (
                         <option key={min} value={formatMinutesToTime(min)}>{formatMinutesToTime(min)}</option>
                       ))}
                     </select>

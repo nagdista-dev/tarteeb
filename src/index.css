@@ -2040,6 +2040,11 @@ textarea.form-textarea {
   color: var(--text-primary);
 }
 
+.font-size-sidebar-label {
+  font-size: 0.65rem;
+  white-space: nowrap;
+}
+
 .btn-menu-mobile {
   display: none;
 }
