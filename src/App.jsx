@@ -11,8 +11,8 @@ import {
   calculateTimelineStatus, PERIODS_META, savePrayerCache, getPrayerCache,
   getPeriodStartMinutes, getPeriodEndMinutes, formatDurationHours,
   PLANNER_PERIOD_ORDER, getDefaultTimeForPeriod, getCurrentPlannerMinutes,
-  getTaskDisplayTime, sortTasksForPlannerDay, scheduledTimeToPlannerMinutes,
-  formatMinutesToTime, setUse12h, getUse12h
+   getTaskDisplayTime, sortTasksForPlannerDay, scheduledTimeToPlannerMinutes,
+  formatMinutesToTime, setUse12h, getUse12h, parseTimeToMinutes
 } from './utils/prayerService';
 
 import { t, setLanguage, getLanguage, translateTaskName } from './i18n';
@@ -208,6 +208,28 @@ function App() {
     document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
     localStorage.setItem('tarteeb_lang', lang);
     setLanguage(lang);
+    document.title = lang === 'ar' ? 'Tarteeb — منظم يومي مسلم' : 'Tarteeb — Muslim Daily Planner';
+    document.querySelector('meta[name="description"]')?.setAttribute('content',
+      lang === 'ar'
+        ? 'Tarteeb — منظم يومي مسلم: خطط يومك حول أوقات الصلاة، إدارة المهام، ومذكرات يومية'
+        : 'Muslim Daily Planner — organize your day around Islamic prayer times with a beautiful vertical timeline, task management, and daily diary.'
+    );
+    document.querySelector('meta[property="og:title"]')?.setAttribute('content',
+      lang === 'ar' ? 'Tarteeb — منظم يومي مسلم' : 'Tarteeb — Muslim Daily Planner'
+    );
+    document.querySelector('meta[property="og:description"]')?.setAttribute('content',
+      lang === 'ar'
+        ? 'خطط يومك حول أوقات الصلاة الإسلامية مع خط زمني عمودي جميل، إدارة المهام، ومذكرات يومية'
+        : 'Organize your day around Islamic prayer times with a beautiful vertical timeline, task management, and daily diary.'
+    );
+    document.querySelector('meta[name="twitter:title"]')?.setAttribute('content',
+      lang === 'ar' ? 'Tarteeb — منظم يومي مسلم' : 'Tarteeb — Muslim Daily Planner'
+    );
+    document.querySelector('meta[name="twitter:description"]')?.setAttribute('content',
+      lang === 'ar'
+        ? 'خطط يومك حول أوقات الصلاة الإسلامية مع خط زمني عمودي جميل، إدارة المهام، ومذكرات يومية'
+        : 'Organize your day around Islamic prayer times with a beautiful vertical timeline, task management, and daily diary.'
+    );
   }, [lang]);
 
   // ---- Font Size ----
@@ -944,11 +966,11 @@ function App() {
                 const ds = getPeriodStartMinutes('evening', p);
                 const boxToPeriod = { maghrib: 'evening', isha: 'night', fajr: 'morning', dhuhr: 'afternoon', asr: 'late_afternoon' };
                 const boxes = [
-                  { key: 'maghrib', prayer: t('prayer.maghrib'), time: p.maghrib, minutes: ds },
-                  { key: 'isha', prayer: t('prayer.isha'), time: p.isha, minutes: getPeriodStartMinutes('night', p) },
-                  { key: 'fajr', prayer: t('prayer.fajr'), time: p.fajr, minutes: getPeriodStartMinutes('morning', p) },
-                  { key: 'dhuhr', prayer: t('prayer.dhuhr'), time: p.dhuhr, minutes: getPeriodStartMinutes('afternoon', p) },
-                  { key: 'asr', prayer: t('prayer.asr'), time: p.asr, minutes: getPeriodStartMinutes('late_afternoon', p) },
+                  { key: 'maghrib', prayer: t('prayer.maghrib'), time: formatMinutesToTime(parseTimeToMinutes(p.maghrib)), minutes: ds },
+                  { key: 'isha', prayer: t('prayer.isha'), time: formatMinutesToTime(parseTimeToMinutes(p.isha)), minutes: getPeriodStartMinutes('night', p) },
+                  { key: 'fajr', prayer: t('prayer.fajr'), time: formatMinutesToTime(parseTimeToMinutes(p.fajr)), minutes: getPeriodStartMinutes('morning', p) },
+                  { key: 'dhuhr', prayer: t('prayer.dhuhr'), time: formatMinutesToTime(parseTimeToMinutes(p.dhuhr)), minutes: getPeriodStartMinutes('afternoon', p) },
+                  { key: 'asr', prayer: t('prayer.asr'), time: formatMinutesToTime(parseTimeToMinutes(p.asr)), minutes: getPeriodStartMinutes('late_afternoon', p) },
                 ];
                 const cpm = getCurrentPlannerMinutes(currentTime, activeDate);
                 const activePeriod = timelineStatus?.activePeriod;
