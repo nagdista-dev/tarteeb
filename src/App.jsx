@@ -194,11 +194,11 @@ function App() {
   const [currentPage, setCurrentPage] = useState('home'); // home | tasks | journal | history | guide | settings
 
   // ---- Theme ----
-  const [theme, setTheme] = useState(() => localStorage.getItem('tarteeb_theme') || 'light');
+  const [theme, setTheme] = useState(() => localStorage.getItem('tarteeb_theme') || 'dark');
 
   // ---- Language ----
   const [lang, setLang] = useState(() => {
-    const saved = localStorage.getItem('tarteeb_lang') || 'en';
+    const saved = localStorage.getItem('tarteeb_lang') || 'ar';
     setLanguage(saved);
     return saved;
   });
