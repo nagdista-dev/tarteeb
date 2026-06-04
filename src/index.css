@@ -1021,14 +1021,14 @@ a {
   font-size: 1rem;
   font-weight: 700;
   color: var(--text-primary);
-  font-family: var(--font-sans), var(--font-arabic);
+  font-family: var(--font-arabic), var(--font-sans);
 }
 
 .journal-date {
   font-size: 0.75rem;
   color: var(--text-tertiary);
   font-weight: 500;
-  font-family: var(--font-sans), var(--font-arabic);
+  font-family: var(--font-arabic), var(--font-sans);
 }
 
 .btn-save-journal {
@@ -1060,7 +1060,7 @@ a {
   outline: none;
   line-height: 1.7;
   color: var(--text-primary);
-  font-family: var(--font-sans), var(--font-arabic);
+  font-family: var(--font-arabic), var(--font-sans);
 }
 
 .diary-textarea:focus {

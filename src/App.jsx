@@ -259,7 +259,8 @@ function App() {
   // ---- Location Config ----
   const [locationConfig, setLocationConfig] = useState(() => {
     const saved = localStorage.getItem('tarteeb_location_config');
-    return saved ? JSON.parse(saved) : { enabled: false, type: 'city', city: 'Cairo', country: 'Egypt', latitude: '30.0444', longitude: '31.2357' };
+    if (saved) return JSON.parse(saved);
+    return { enabled: true, type: 'coords', city: 'Cairo', country: 'Egypt', latitude: '30.0444', longitude: '31.2357' };
   });
 
   // ---- Planner Date & Data ----
@@ -337,6 +338,19 @@ function App() {
     }, 10000);
     return () => clearInterval(interval);
   }, [activeDate]);
+
+  // ---- Auto-detect location on first visit ----
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    const saved = localStorage.getItem('tarteeb_location_config');
+    if (saved) return;
+    navigator.geolocation.getCurrentPosition(pos => {
+      const cfg = { enabled: true, type: 'coords', city: '', country: '', latitude: String(pos.coords.latitude), longitude: String(pos.coords.longitude) };
+      setLocationConfig(cfg);
+      setSettingsForm(cfg);
+      localStorage.setItem('tarteeb_location_config', JSON.stringify(cfg));
+    }, () => { /* fallback to defaults */ }, { timeout: 10000 });
+  }, []);
 
   // ---- Load / Init day data ----
   useEffect(() => {
@@ -1796,17 +1810,15 @@ function App() {
                       const curHour = Math.floor(curParsed / 60);
                       const curMin = Math.floor(curParsed % 60);
                       const hour = allHours.includes(curHour) ? curHour : (allHours[0] ?? 0);
-                      const minsForHour = [...new Set(allMinutes.filter(m => Math.floor(m / 60) === hour).map(m => m % 60))].sort((a, b) => a - b);
-                      const minute = minsForHour.includes(curMin) ? curMin : (minsForHour[0] ?? 0);
                       const use12 = getUse12h();
+                      const allMinOpts = Array.from({length: 60}, (_, i) => i);
                       return (
                         <div className="time-select-row">
                           <select className="form-select time-select-hour"
                             value={hour}
                             onChange={e => {
                               const h = Number(e.target.value);
-                              const m = ([...new Set(allMinutes.filter(mm => Math.floor(mm / 60) === h).map(mm => mm % 60))].sort((a, b) => a - b)[0] ?? 0);
-                              setTaskForm(prev => ({ ...prev, endTime: formatMinutesToTime(h * 60 + m) }));
+                              setTaskForm(prev => ({ ...prev, endTime: formatMinutesToTime(h * 60 + curMin) }));
                             }}
                           >
                             {allHours.map(h => (
@@ -1817,13 +1829,13 @@ function App() {
                           </select>
                           <span className="time-colon">:</span>
                           <select className="form-select time-select-minute"
-                            value={minute}
+                            value={Math.min(59, Math.max(0, curMin))}
                             onChange={e => {
                               const m = Number(e.target.value);
                               setTaskForm(prev => ({ ...prev, endTime: formatMinutesToTime(hour * 60 + m) }));
                             }}
                           >
-                            {minsForHour.map(m => (
+                            {allMinOpts.map(m => (
                               <option key={m} value={m}>{String(m).padStart(2, '0')}</option>
                             ))}
                           </select>
