@@ -2791,11 +2791,17 @@ textarea.form-textarea {
 .block-task-duration {
   color: var(--text-tertiary);
   font-size: 0.58rem;
-  font-weight: 600;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
   flex-shrink: 0;
   margin-left: auto;
-  padding-left: 6px;
+  padding: 1px 8px;
+  border-radius: 100px;
+  background: linear-gradient(
+    135deg,
+    var(--bg-tertiary),
+    color-mix(in srgb, var(--border-color) 50%, var(--bg-tertiary))
+  );
 }
 
 .block-task-main p {
@@ -2994,6 +3000,23 @@ textarea.form-textarea {
   border: 2px solid var(--bg-secondary);
   transform: translateY(-50%);
   z-index: 4;
+}
+
+.timeline-prayer-marker::after {
+  content: '';
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  width: 28px;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    var(--color-emerald),
+    color-mix(in srgb, var(--color-emerald) 30%, transparent)
+  );
+  border-radius: 1px;
+  transform: translateY(-50%);
+  opacity: 0.35;
 }
 
 .timeline-now-time {
@@ -3561,6 +3584,16 @@ textarea.form-textarea {
     left: -4px;
   }
 
+  .timeline-prayer-marker::after {
+    left: 10px;
+    width: 16px;
+  }
+
+  [dir="rtl"] .timeline-prayer-marker::after {
+    left: auto;
+    right: 10px;
+  }
+
   .timeline-now-line::before {
     width: 8px;
     height: 8px;
@@ -4017,6 +4050,11 @@ textarea.form-textarea {
   right: -5px;
 }
 
+[dir="rtl"] .timeline-prayer-marker::after {
+  left: auto;
+  right: 12px;
+}
+
 [dir="rtl"] .timeline-now-line::before {
   left: auto;
   right: -5px;
@@ -4065,6 +4103,5 @@ textarea.form-textarea {
 [dir="rtl"] .block-task-duration {
   margin-left: 0;
   margin-right: auto;
-  padding-left: 0;
-  padding-right: 6px;
+  padding: 1px 8px;
 }
