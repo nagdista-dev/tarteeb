@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import {
   Check, Plus, Edit2, Trash2, Calendar, Settings, Moon, Sun,
-  BookOpen, Clock, Sparkles, MapPin, CheckCircle2, BarChart2, X, AlertCircle,
-  ChevronUp, ChevronDown, RefreshCw, Menu, Download
+  BookOpen, Clock, Sparkles, MapPin, CheckCircle2, X, AlertCircle,
+  ChevronUp, ChevronDown, RefreshCw, Menu, Download, HelpCircle, List
 } from 'lucide-react';
 import {
   formatDateLocal, addDays, getPrayerTimesForDate,
@@ -14,6 +14,8 @@ import {
   getTaskDisplayTime, sortTasksForPlannerDay, scheduledTimeToPlannerMinutes,
   formatMinutesToTime
 } from './utils/prayerService';
+
+import { t, setLanguage, getLanguage, translateTaskName } from './i18n';
 
 import './App.css';
 
@@ -37,6 +39,8 @@ let fallbackTaskId = 0;
 const createTaskId = () => (
   globalThis.crypto?.randomUUID ? globalThis.crypto.randomUUID() : `task_${fallbackTaskId += 1}`
 );
+
+const TASK_GAP = 10;
 
 const getTaskStartMinutes = (task, prayers) => scheduledTimeToPlannerMinutes(
   getTaskDisplayTime(task, prayers),
@@ -100,14 +104,14 @@ const normalizeTasksForPrayerBlocks = (tasks, prayers) => {
       start = Math.min(Math.max(blockStart, start), blockEnd - duration);
     }
 
-    while (usedStarts.has(start) && start + duration + 5 <= blockEnd) {
-      start += 5;
+    while (usedStarts.has(start) && start + duration + TASK_GAP <= blockEnd) {
+      start += TASK_GAP;
     }
 
     if (usedStarts.has(start)) {
       start = blockStart;
-      while (usedStarts.has(start) && start + duration + 5 <= blockEnd) {
-        start += 5;
+      while (usedStarts.has(start) && start + duration + TASK_GAP <= blockEnd) {
+        start += TASK_GAP;
       }
     }
 
@@ -127,7 +131,7 @@ const getFirstAvailableTimeForPeriod = (period, tasks, prayers, duration = 15) =
   const blockEnd = getPeriodEndMinutes(period, prayers);
   const occupied = getOccupiedSlots(period, tasks, prayers);
 
-  for (let start = blockStart; start + duration <= blockEnd; start += 5) {
+  for (let start = blockStart; start + duration <= blockEnd; start += TASK_GAP) {
     const overlaps = occupied.some(slot => start < slot.end && start + duration > slot.start);
     if (!overlaps) return formatMinutesToTime(start);
   }
@@ -152,7 +156,7 @@ const getAvailableStartSlots = (period, tasks, prayers) => {
   const occupied = getOccupiedSlots(period, tasks, prayers);
   const slots = [];
 
-  for (let start = blockStart; start < blockEnd; start += 5) {
+  for (let start = blockStart; start < blockEnd; start += TASK_GAP) {
     const overlaps = occupied.some(slot => start >= slot.start && start < slot.end);
     if (!overlaps) slots.push(start);
   }
@@ -165,7 +169,7 @@ const getAvailableEndSlots = (period, tasks, prayers, startMinutes) => {
   const occupied = getOccupiedSlots(period, tasks, prayers);
   const slots = [];
 
-  for (let end = startMinutes + 5; end <= blockEnd; end += 5) {
+  for (let end = startMinutes + TASK_GAP; end <= blockEnd; end += TASK_GAP) {
     const crossesOther = occupied.some(slot => startMinutes < slot.end && end > slot.start);
     if (!crossesOther) slots.push(end);
   }
@@ -173,12 +177,38 @@ const getAvailableEndSlots = (period, tasks, prayers, startMinutes) => {
   return slots;
 };
 
+const translateDuration = (minutes) => {
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  if (mins === 0) {
+    return hours === 1 ? t('duration.hour') : t('duration.hours').replace('%', hours);
+  }
+  if (hours === 0) {
+    return t('duration.mins').replace('%', mins);
+  }
+  return t('duration.hm').replace('%h', hours).replace('%m', mins);
+};
+
 function App() {
   // ---- UI Navigation ----
-  const [currentPage, setCurrentPage] = useState('home'); // home | overview | journal | history | settings
+  const [currentPage, setCurrentPage] = useState('home'); // home | tasks | journal | history | guide | settings
 
   // ---- Theme ----
   const [theme, setTheme] = useState(() => localStorage.getItem('tarteeb_theme') || 'light');
+
+  // ---- Language ----
+  const [lang, setLang] = useState(() => {
+    const saved = localStorage.getItem('tarteeb_lang') || 'en';
+    setLanguage(saved);
+    return saved;
+  });
+
+  useEffect(() => {
+    document.documentElement.setAttribute('lang', lang);
+    document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+    localStorage.setItem('tarteeb_lang', lang);
+    setLanguage(lang);
+  }, [lang]);
 
   // ---- Location Config ----
   const [locationConfig, setLocationConfig] = useState(() => {
@@ -213,6 +243,7 @@ function App() {
   const [manualTimesForm, setManualTimesForm] = useState({ fajr: '', dhuhr: '', asr: '', maghrib: '', isha: '' });
   const [diaryDraft, setDiaryDraft] = useState('');
   const [diarySaved, setDiarySaved] = useState(true);
+  const [collapsedPeriods, setCollapsedPeriods] = useState({ night: true, morning: true, afternoon: true, late_afternoon: true });
   const [dialog, setDialog] = useState(null);
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState(null);
@@ -340,6 +371,16 @@ function App() {
     }
   }, [currentTime, dayData, activeDate]);
 
+  // ---- Auto-scroll to current time line ----
+  useEffect(() => {
+    if (currentPage !== 'home' || !dayData) return;
+    const id = requestAnimationFrame(() => {
+      const el = document.querySelector('.timeline-now-line');
+      if (el) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [currentPage, dayData]);
+
   // ---- Forms sync ----
   useEffect(() => {
     const cached = getPrayerTimesForDate(activeDate);
@@ -458,7 +499,7 @@ function App() {
   const deleteTask = async (id) => {
     const task = dayData?.tasks.find(t => t.id === id);
     if (task?.type === 'fixed') return;
-    const confirmed = await showConfirm('Delete this task?');
+    const confirmed = await showConfirm(t('confirm.deleteTask'));
     if (confirmed) {
       const newTasks = dayData.tasks.filter(t => t.id !== id);
       updateDayData({ ...dayData, tasks: newTasks });
@@ -470,22 +511,23 @@ function App() {
     const { tasks, diary, date, hijriDate, prayerTimes, stats } = dayData;
     const lines = [];
     const d = new Date(date);
-    const title = d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const locale = lang === 'ar' ? 'ar-SA' : 'en-US';
+    const title = d.toLocaleDateString(locale, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
     lines.push(`# ${title}`);
     lines.push('');
     if (hijriDate) lines.push(`> ${hijriDate}`);
     lines.push('');
-    lines.push('## Prayer Times');
+    lines.push(`## ${t('export.prayerTimes')}`);
     lines.push('');
-    lines.push(`| Prayer | Time |`);
+    lines.push(`| ${t('export.prayer')} | ${t('export.time')} |`);
     lines.push(`|--------|------|`);
     ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'].forEach(p => {
       const key = p.toLowerCase();
-      if (prayerTimes[key]) lines.push(`| ${p} | ${prayerTimes[key]} |`);
+      if (prayerTimes[key]) lines.push(`| ${translateTaskName(p + ' Prayer') || p} | ${prayerTimes[key]} |`);
     });
     lines.push('');
-    lines.push(`## Tasks — ${stats.completedTasks}/${stats.totalTasks} completed`);
+    lines.push(`## ${t('export.tasks')} — ${stats.completedTasks}/${stats.totalTasks} ${t('export.completed')}`);
     lines.push('');
     tasks.forEach(t => {
       const checkbox = t.completed ? '[x]' : '[ ]';
@@ -493,12 +535,12 @@ function App() {
       const end = t.type === 'personal' || t.type === 'user'
         ? ` – ${formatMinutesToTime(getTaskStartMinutes(t, prayerTimes) + (Number(t.duration) || 15))}`
         : '';
-      lines.push(`- ${checkbox} **${t.name}** — ${time}${end}`);
+      lines.push(`- ${checkbox} **${translateTaskName(t.name)}** — ${time}${end}`);
       if (t.details) lines.push(`  - ${t.details}`);
     });
     if (diary) {
       lines.push('');
-      lines.push('## Notes');
+      lines.push(`## ${t('export.notes')}`);
       lines.push('');
       lines.push(diary);
     }
@@ -519,7 +561,7 @@ function App() {
   };
 
   const deleteHistoryDate = async (dateStr) => {
-    const confirmed = await showConfirm('Delete this day from history?');
+    const confirmed = await showConfirm(t('confirm.deleteHistory'));
     if (!confirmed) return;
     localStorage.removeItem(`tarteeb_day_${dateStr}`);
     setHistoryDates(prev => {
@@ -561,10 +603,10 @@ function App() {
       if (dayData) {
         updateDayData({ ...dayData, prayerTimes: { fajr: comp.fajr, dhuhr: comp.dhuhr, asr: comp.asr, maghrib: comp.maghrib, isha: comp.isha }, hijriDate: comp.hijriDate });
       }
-      showAlert('Settings saved and timings refreshed');
+      showAlert(t('alert.settingsSaved'));
     } catch (err) {
       console.error(err);
-      setApiError('Failed to fetch prayer times – check the location settings.');
+      setApiError(t('alert.apiError'));
     } finally {
       setLoading(false);
     }
@@ -579,13 +621,14 @@ function App() {
     if (dayData) {
       updateDayData({ ...dayData, prayerTimes: compiled });
     }
-    showAlert('Manual times applied');
+    showAlert(t('alert.manualApplied'));
   };
 
   const formatHumanDate = (dateStr) => {
     if (!dateStr) return '';
     const d = new Date(dateStr);
-    return d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const locale = lang === 'ar' ? 'ar-SA' : 'en-US';
+    return d.toLocaleDateString(locale, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   };
 
   const showAlert = (message) => new Promise((resolve) => {
@@ -602,7 +645,7 @@ function App() {
   };
 
   const validateTaskForm = (form, existingTasks, editingId = null) => {
-    if (!dayData?.prayerTimes) return 'Prayer times are not loaded yet.';
+    if (!dayData?.prayerTimes) return t('error.prayerTimesNotLoaded');
     const prayers = dayData.prayerTimes;
     const duration = Number(form.duration) || 0;
     const blockStart = getPeriodStartMinutes(form.period, prayers);
@@ -611,20 +654,20 @@ function App() {
     const start = scheduledTimeToPlannerMinutes(form.scheduledTime, form.period, prayers);
     const end = start + duration;
 
-    if (duration <= 0) return 'Task duration must be greater than 0 minutes.';
-    if (duration > blockDuration) return 'Task duration cannot exceed its prayer block.';
-    if (start < blockStart || start >= blockEnd) return 'Task start time must be inside its prayer block.';
-    if (end > blockEnd) return 'Task end time must stay inside its prayer block.';
+    if (duration <= 0) return t('error.durationZero');
+    if (duration > blockDuration) return t('error.durationExceeds');
+    if (start < blockStart || start >= blockEnd) return t('error.startOutside');
+    if (end > blockEnd) return t('error.endOutside');
 
     const conflictingTask = existingTasks.some(t => {
       const normalized = normalizeFixedTask(t, prayers);
       if (normalized.id === editingId || normalized.period !== form.period) return false;
       const existingStart = getTaskStartMinutes(normalized, prayers);
-      const existingEnd = existingStart + (Number(normalized.duration) || 15);
+      const existingEnd = existingStart + (Number(normalized.duration) || 15) + TASK_GAP;
       return start < existingEnd && end > existingStart;
     });
 
-    if (conflictingTask) return 'Another task already occupies this time in the same prayer block.';
+    if (conflictingTask) return t('error.conflict');
     return '';
   };
 
@@ -653,8 +696,8 @@ function App() {
       { key: 'maghrib_end', prayer: 'Maghrib', time: prayers.maghrib, minutes: dayEnd }
     ];
     const periodBands = [
-      { key: 'night-band', label: 'Night Period', start: dayStart, end: getPeriodStartMinutes('morning', prayers) },
-      { key: 'day-band', label: 'Day Period', start: getPeriodStartMinutes('morning', prayers), end: dayEnd }
+      { key: 'night-band', label: t('band.night'), start: dayStart, end: getPeriodStartMinutes('morning', prayers) },
+      { key: 'day-band', label: t('band.day'), start: getPeriodStartMinutes('morning', prayers), end: dayEnd }
     ];
     const formatTimelineTick = (minutes, exact = false) => {
       const normalized = ((minutes % 1440) + 1440) % 1440;
@@ -728,7 +771,7 @@ function App() {
                   key={marker.key}
                   className="timeline-prayer-marker"
                   style={{ top: `${toPercent(marker.minutes)}%` }}
-                  aria-label={`${marker.prayer} boundary`}
+                  aria-label={`${t('prayer.' + marker.prayer.toLowerCase())} ${t('prayer.boundary')}`}
                 />
               ))}
 
@@ -756,7 +799,7 @@ function App() {
                       type="button"
                       className={`task-checkbox block-task-check ${task.completed ? 'checked' : ''}`}
                       onClick={() => toggleTaskCompletion(task.id)}
-                      aria-label={task.completed ? 'Mark task incomplete' : 'Mark task complete'}
+                      aria-label={task.completed ? t('task.markIncomplete') : t('task.markComplete')}
                     >
                       {task.completed && <Check size={12} />}
                     </button>
@@ -764,16 +807,16 @@ function App() {
                         <div className="block-task-topline">
                           <span className="block-task-time">{getTaskDisplayTime(task, prayers)}</span>
                           <span className="block-task-endtime">– {formatMinutesToTime(taskEnd)}</span>
-                          <span className="block-task-name">{task.name}</span>
-                          <span className="block-task-duration">{formatDurationHours(duration)}</span>
+                          <span className="block-task-name">{translateTaskName(task.name)}</span>
+                          <span className="block-task-duration">{translateDuration(duration)}</span>
                         </div>
                       </div>
                     {task.type !== 'fixed' && (
                       <div className="block-task-actions">
-                        <button type="button" className="btn-task-action" onClick={() => openTaskModal('edit', task)} aria-label="Edit task">
+                        <button type="button" className="btn-task-action" onClick={() => openTaskModal('edit', task)} aria-label={t('task.edit')}>
                           <Edit2 size={12} />
                         </button>
-                        <button type="button" className="btn-task-action delete" onClick={() => deleteTask(task.id)} aria-label="Delete task">
+                        <button type="button" className="btn-task-action delete" onClick={() => deleteTask(task.id)} aria-label={t('task.deleteAria')}>
                           <Trash2 size={12} />
                         </button>
                       </div>
@@ -800,11 +843,12 @@ function App() {
 
   // ---- Sidebar navigation links ----
   const sidebarLinks = [
-    { id: 'home', label: 'Home', icon: Sparkles },
-    { id: 'overview', label: 'Overview', icon: BarChart2 },
-    { id: 'journal', label: 'Journal', icon: BookOpen },
-    { id: 'history', label: 'History', icon: Calendar },
-    { id: 'settings', label: 'Settings', icon: Settings }
+    { id: 'home', label: t('nav.home'), icon: Sparkles },
+    { id: 'tasks', label: t('nav.tasks'), icon: List },
+    { id: 'journal', label: t('nav.journal'), icon: BookOpen },
+    { id: 'history', label: t('nav.history'), icon: Calendar },
+    { id: 'guide', label: t('nav.guide'), icon: HelpCircle },
+    { id: 'settings', label: t('nav.settings'), icon: Settings }
   ];
 
   // ---- Main render ----
@@ -815,25 +859,28 @@ function App() {
         <div className="brand-section" onClick={() => setCurrentPage('home')} style={{ cursor: 'pointer' }}>
           <h1 className="brand-title">
             <Sparkles size={22} className="brand-icon" />
-            <span className="brand-latin">Tarteeb</span>
+            <span className="brand-latin">{t('brand.title')}</span>
           </h1>
-          <p className="brand-subtitle">Prayer-based daily planner</p>
+          <p className="brand-subtitle">{t('brand.subtitle')}</p>
         </div>
         <div className="header-actions">
           {dayData && (
             <button className="btn btn-primary btn-add-task" onClick={() => openTaskModal('add')}>
-              <Plus size={16} /> Add Task
+              <Plus size={16} /> {t('header.addTask')}
             </button>
           )}
           {dayData && (
-            <button className="btn btn-export" onClick={exportToMarkdown} title="Export to Markdown">
-              <Download size={16} /> Export
+            <button className="btn btn-export" onClick={exportToMarkdown} title={t('header.exportTitle')}>
+              <Download size={16} /> {t('header.export')}
             </button>
           )}
-          <button className="btn btn-icon sidebar-toggle-btn" onClick={() => setSidebarOpen(true)} aria-label="Open sidebar">
+          <button className="btn btn-icon btn-lang" onClick={() => setLang(l => l === 'en' ? 'ar' : 'en')} title={t('lang.switch')}>
+            <span style={{ fontSize: '14px', fontWeight: 700 }}>{lang === 'en' ? 'AR' : 'EN'}</span>
+          </button>
+          <button className="btn btn-icon sidebar-toggle-btn" onClick={() => setSidebarOpen(true)} aria-label={t('nav.openSidebar')}>
             <Menu size={18} />
           </button>
-          <button className="btn btn-icon" onClick={() => setTheme(t => t === 'light' ? 'dark' : 'light')} title="Toggle Light/Dark">
+          <button className="btn btn-icon" onClick={() => setTheme(t => t === 'light' ? 'dark' : 'light')} title={t('nav.toggleTheme')}>
             {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
           </button>
         </div>
@@ -845,20 +892,20 @@ function App() {
           {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
           {/* Left Sidebar */}
           <aside className={`full-sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
-            <button className="sidebar-close-btn" onClick={() => setSidebarOpen(false)} aria-label="Close sidebar">
+            <button className="sidebar-close-btn" onClick={() => setSidebarOpen(false)} aria-label={t('nav.closeSidebar')}>
               <X size={20} />
             </button>
             <div className="sidebar-planner-header">
-              <span className="sidebar-planner-eyebrow">Prayer-based daily planner</span>
+              <span className="sidebar-planner-eyebrow">{t('brand.subtitle')}</span>
               <span className="sidebar-planner-date">{formatHumanDate(dayData.date)}</span>
               {timelineStatus?.nextPrayerName && (
                 <span className="sidebar-planner-countdown">
-                  <Clock size={13} /> {timelineStatus.timeToNextPrayer} until {timelineStatus.nextPrayerName}
+                  <Clock size={13} /> {timelineStatus.timeToNextPrayer} {t('time.until')} {t('prayer.' + timelineStatus.nextPrayerName.toLowerCase())}
                 </span>
               )}
               <div className="sidebar-planner-meta">
                 {dayData.hijriDate && <span>{dayData.hijriDate}</span>}
-                <span>{dayData.stats.overallCompleted}% complete</span>
+                <span>{dayData.stats.overallCompleted}{t('sidebar.complete')}</span>
               </div>
             </div>
 
@@ -866,16 +913,18 @@ function App() {
               {(() => {
                 const p = dayData.prayerTimes;
                 const ds = getPeriodStartMinutes('evening', p);
+                const boxToPeriod = { maghrib: 'evening', isha: 'night', fajr: 'morning', dhuhr: 'afternoon', asr: 'late_afternoon' };
                 const boxes = [
-                  { key: 'maghrib', prayer: 'Maghrib', time: p.maghrib, minutes: ds },
-                  { key: 'isha', prayer: 'Isha', time: p.isha, minutes: getPeriodStartMinutes('night', p) },
-                  { key: 'fajr', prayer: 'Fajr', time: p.fajr, minutes: getPeriodStartMinutes('morning', p) },
-                  { key: 'dhuhr', prayer: 'Dhuhr', time: p.dhuhr, minutes: getPeriodStartMinutes('afternoon', p) },
-                  { key: 'asr', prayer: 'Asr', time: p.asr, minutes: getPeriodStartMinutes('late_afternoon', p) },
+                  { key: 'maghrib', prayer: t('prayer.maghrib'), time: p.maghrib, minutes: ds },
+                  { key: 'isha', prayer: t('prayer.isha'), time: p.isha, minutes: getPeriodStartMinutes('night', p) },
+                  { key: 'fajr', prayer: t('prayer.fajr'), time: p.fajr, minutes: getPeriodStartMinutes('morning', p) },
+                  { key: 'dhuhr', prayer: t('prayer.dhuhr'), time: p.dhuhr, minutes: getPeriodStartMinutes('afternoon', p) },
+                  { key: 'asr', prayer: t('prayer.asr'), time: p.asr, minutes: getPeriodStartMinutes('late_afternoon', p) },
                 ];
                 const cpm = getCurrentPlannerMinutes(currentTime, activeDate);
+                const activePeriod = timelineStatus?.activePeriod;
                 return boxes.map(box => (
-                  <div key={box.key} className={`sidebar-prayer-box sidebar-prayer-${box.key} ${cpm >= box.minutes ? 'sidebar-prayer-box-past' : ''}`}>
+                  <div key={box.key} className={`sidebar-prayer-box ${cpm >= box.minutes ? 'sidebar-prayer-box-past' : ''} ${boxToPeriod[box.key] === activePeriod ? 'sidebar-prayer-box-current' : ''}`}>
                     <span>{box.prayer}</span>
                     <strong>{box.time}</strong>
                   </div>
@@ -884,7 +933,7 @@ function App() {
             </div>
 
             <div className="sidebar-header">
-              <span className="sidebar-header-label">Navigation</span>
+              <span className="sidebar-header-label">{t('nav.navigation')}</span>
             </div>
             <nav className="sidebar-nav">
               {sidebarLinks.map(link => (
@@ -893,8 +942,8 @@ function App() {
                     className={`sidebar-link ${currentPage === link.id ? 'active' : ''}`}
                     onClick={() => { setCurrentPage(link.id); setSidebarOpen(false); }}
                   >
-                  <link.icon size={18} />
-                  <span>{link.label}</span>
+                  <span className="nav-icon-wrap"><link.icon size={17} /></span>
+                  <span className="nav-label">{link.label}</span>
                 </button>
               ))}
             </nav>
@@ -905,42 +954,92 @@ function App() {
             {loading && (
               <div style={{ textAlign: 'center', padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: 'var(--color-emerald)' }}>
                 <RefreshCw className="animate-spin" size={16} />
-                <span style={{ fontSize: '0.85rem' }}>Updating prayer times...</span>
+                <span style={{ fontSize: '0.85rem' }}>{t('header.loading')}</span>
               </div>
             )}
 
             {/* Conditional Pages */}
             {currentPage === 'home' && renderFullDayView()}
 
-            {currentPage === 'overview' && (
-              <div className="stats-section">
-                <div className="section-header">
-                  <CheckCircle2 size={18} style={{ color: 'var(--color-emerald)' }} />
-                  <h3>Daily Progress Overview</h3>
+            {currentPage === 'tasks' && dayData && (
+              <div className="tasks-page">
+                <div className="tasks-header">
+                  <List size={22} className="tasks-header-icon" />
+                  <h3 className="tasks-header-title">{t('tasks.title')}</h3>
+                  <span className="tasks-header-count">{dayData.stats.completedTasks}/{dayData.stats.totalTasks}</span>
                 </div>
-                <div className="stats-grid">
-                  <div className="stat-box">
-                    <div className="stat-header">
-                      <span className="stat-label">Overall Completed</span>
-                      <span className="stat-value">{dayData.stats.overallCompleted}%</span>
-                    </div>
-                    <div className="progress-container"><div className="progress-bar progress-overall" style={{ width: `${dayData.stats.overallCompleted}%` }}></div></div>
+                <div className="tasks-stats-bar">
+                  <div className="tasks-stat">
+                    <span className="tasks-stat-value">{dayData.stats.totalTasks}</span>
+                    <span className="tasks-stat-label">{t('tasks.total')}</span>
                   </div>
-                  <div className="stat-box">
-                    <div className="stat-header">
-                      <span className="stat-label">Islamic Duties</span>
-                      <span className="stat-value">{dayData.stats.fixedCompleted}%</span>
-                    </div>
-                    <div className="progress-container"><div className="progress-bar progress-fixed" style={{ width: `${dayData.stats.fixedCompleted}%` }}></div></div>
+                  <div className="tasks-stat">
+                    <span className="tasks-stat-value tasks-stat-done">{dayData.stats.completedTasks}</span>
+                    <span className="tasks-stat-label">{t('tasks.completed')}</span>
                   </div>
-                  <div className="stat-box">
-                    <div className="stat-header">
-                      <span className="stat-label">Personal Goals</span>
-                      <span className="stat-value">{dayData.stats.personalCompleted}%</span>
-                    </div>
-                    <div className="progress-container"><div className="progress-bar progress-personal" style={{ width: `${dayData.stats.personalCompleted}%` }}></div></div>
+                  <div className="tasks-stat">
+                    <span className="tasks-stat-value tasks-stat-left">{dayData.stats.totalTasks - dayData.stats.completedTasks}</span>
+                    <span className="tasks-stat-label">{t('tasks.remaining')}</span>
+                  </div>
+                  <div className="tasks-stat tasks-stat-pct">
+                    <span className="tasks-stat-value">{dayData.stats.overallCompleted}%</span>
+                    <span className="tasks-stat-label">{t('tasks.completion')}</span>
                   </div>
                 </div>
+                <div className="tasks-progress-wrap">
+                  <div className="tasks-progress-bar" style={{ width: `${dayData.stats.overallCompleted}%` }} />
+                </div>
+                  {PLANNER_PERIOD_ORDER.map(periodKey => {
+                  const periodTasks = dayData.tasks.filter(t => t.period === periodKey);
+                  if (!periodTasks.length) return null;
+                  const done = periodTasks.filter(t => t.completed).length;
+                  const pct = Math.round((done / periodTasks.length) * 100);
+                  const isCollapsed = !!collapsedPeriods[periodKey];
+                  return (
+                    <div key={periodKey} className={`tasks-block ${isCollapsed ? 'collapsed' : ''}`}>
+                      <div className="tasks-block-header" onClick={() => setCollapsedPeriods(prev => ({ ...prev, [periodKey]: !prev[periodKey] }))} style={{ cursor: 'pointer' }}>
+                        <span className="tasks-block-name">{t('period.' + periodKey)}</span>
+                        <span className="tasks-block-meta">
+                          {done}/{periodTasks.length} · {pct}%
+                          {isCollapsed ? <ChevronUp size={14} style={{ marginLeft: 6 }} /> : <ChevronDown size={14} style={{ marginLeft: 6 }} />}
+                        </span>
+                      </div>
+                      {!isCollapsed && (
+                        <div className="tasks-block-list">
+                          {periodTasks.map(task => {
+                            const taskStart = getTaskStartMinutes(task, dayData.prayerTimes);
+                            const taskEnd = taskStart + (Number(task.duration) || 15);
+                            return (
+                              <div key={task.id} className={`tasks-task-card ${task.completed ? 'completed' : ''}`}>
+                                <button
+                                  type="button"
+                                  className={`tasks-task-check ${task.completed ? 'checked' : ''}`}
+                                  onClick={() => toggleTaskCompletion(task.id)}
+                                >
+                                  {task.completed && <Check size={12} />}
+                                </button>
+                                <div className="tasks-task-body">
+                                  <span className="tasks-task-name">{translateTaskName(task.name)}</span>
+                                  <span className="tasks-task-time">{getTaskDisplayTime(task, dayData.prayerTimes)} – {formatMinutesToTime(taskEnd)} · {translateDuration(Number(task.duration) || 15)}</span>
+                                </div>
+                                {task.type !== 'fixed' && (
+                                  <div className="tasks-task-actions">
+                                    <button type="button" className="btn-task-action" onClick={() => openTaskModal('edit', task)} aria-label={t('task.edit')}>
+                                      <Edit2 size={13} />
+                                    </button>
+                                    <button type="button" className="btn-task-action delete" onClick={() => deleteTask(task.id)} aria-label={t('task.deleteAria')}>
+                                      <Trash2 size={13} />
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
 
@@ -950,15 +1049,15 @@ function App() {
                   <div className="journal-header-left">
                     <BookOpen size={18} className="journal-icon" />
                     <div>
-                      <h3 className="journal-title" dir="auto">Journal</h3>
+                      <h3 className="journal-title" dir="auto">{t('journal.title')}</h3>
                       <span className="journal-date" dir="auto">{formatHumanDate(dayData.date)}{dayData.hijriDate ? ` · ${dayData.hijriDate}` : ''}</span>
                     </div>
                   </div>
                   <button className="btn btn-primary btn-save-journal" onClick={handleDiarySave} disabled={diarySaved}>
-                    {diarySaved ? 'Saved' : 'Save'}
+                    {diarySaved ? t('journal.saved') : t('journal.save')}
                   </button>
                 </div>
-                <textarea className="diary-textarea" value={diaryDraft} onChange={handleDiaryChange} placeholder="Write your reflections for today..." dir="auto" />
+                <textarea className="diary-textarea" value={diaryDraft} onChange={handleDiaryChange} placeholder={t('journal.placeholder')} dir="auto" />
               </div>
             )}
 
@@ -966,11 +1065,11 @@ function App() {
               <div className="stats-section">
                 <div className="section-header">
                   <Calendar size={18} style={{ color: 'var(--color-gold)' }} />
-                  <h3>History Log</h3>
+                  <h3>{t('history.title')}</h3>
                 </div>
                 <div className="history-list">
                   {historyDates.length === 0 ? (
-                    <div className="history-empty">No history yet. Start planning your days!</div>
+                    <div className="history-empty">{t('history.empty')}</div>
                   ) : (
                     historyDates.map(dateStr => {
                       let hist = {};
@@ -996,10 +1095,10 @@ function App() {
                               )}
                               <div className="history-card-actions">
                                 <button className="btn btn-history-edit" onClick={(e) => { e.stopPropagation(); loadHistoryDate(dateStr); }}>
-                                  <Edit2 size={13} /> Open Day
+                                  <Edit2 size={13} /> {t('history.openDay')}
                                 </button>
                                 <button className="btn btn-history-delete" onClick={(e) => { e.stopPropagation(); deleteHistoryDate(dateStr); }}>
-                                  <Trash2 size={13} /> Delete
+                                  <Trash2 size={13} /> {t('history.delete')}
                                 </button>
                               </div>
                             </div>
@@ -1012,6 +1111,74 @@ function App() {
               </div>
             )}
 
+            {currentPage === 'guide' && (
+              <div className="guide-page">
+                <div className="guide-hero">
+                  <HelpCircle size={32} className="guide-hero-icon" />
+                  <h2 className="guide-title">{t('guide.title')}</h2>
+                  <p className="guide-subtitle">{t('guide.subtitle')}</p>
+                </div>
+                <div className="guide-sections">
+                  <div className="guide-card">
+                    <div className="guide-card-number">1</div>
+                    <div className="guide-card-content">
+                      <h3 className="guide-card-title">{t('guide.whatIs')}</h3>
+                      <p className="guide-card-desc">{t('guide.whatIsDesc')}</p>
+                    </div>
+                  </div>
+                  <div className="guide-card">
+                    <div className="guide-card-number">2</div>
+                    <div className="guide-card-content">
+                      <h3 className="guide-card-title">{t('guide.timeline')}</h3>
+                      <p className="guide-card-desc">{t('guide.timelineDesc')}</p>
+                    </div>
+                  </div>
+                  <div className="guide-card">
+                    <div className="guide-card-number">3</div>
+                    <div className="guide-card-content">
+                      <h3 className="guide-card-title">{t('guide.addTask')}</h3>
+                      <p className="guide-card-desc">{t('guide.addTaskDesc')}</p>
+                    </div>
+                  </div>
+                  <div className="guide-card">
+                    <div className="guide-card-number">4</div>
+                    <div className="guide-card-content">
+                      <h3 className="guide-card-title">{t('guide.journal')}</h3>
+                      <p className="guide-card-desc">{t('guide.journalDesc')}</p>
+                    </div>
+                  </div>
+                  <div className="guide-card">
+                    <div className="guide-card-number">5</div>
+                    <div className="guide-card-content">
+                      <h3 className="guide-card-title">{t('guide.history')}</h3>
+                      <p className="guide-card-desc">{t('guide.historyDesc')}</p>
+                    </div>
+                  </div>
+                  <div className="guide-card">
+                    <div className="guide-card-number">6</div>
+                    <div className="guide-card-content">
+                      <h3 className="guide-card-title">{t('guide.settings')}</h3>
+                      <p className="guide-card-desc">{t('guide.settingsDesc')}</p>
+                    </div>
+                  </div>
+                  <div className="guide-card">
+                    <div className="guide-card-number">7</div>
+                    <div className="guide-card-content">
+                      <h3 className="guide-card-title">{t('guide.export')}</h3>
+                      <p className="guide-card-desc">{t('guide.exportDesc')}</p>
+                    </div>
+                  </div>
+                  <div className="guide-card">
+                    <div className="guide-card-number">8</div>
+                    <div className="guide-card-content">
+                      <h3 className="guide-card-title">{t('guide.theme')}</h3>
+                      <p className="guide-card-desc">{t('guide.themeDesc')}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {currentPage === 'settings' && (
               <div className="settings-page">
                 {/* Location Settings */}
@@ -1019,8 +1186,8 @@ function App() {
                   <div className="settings-card-header">
                     <MapPin size={18} className="settings-card-icon settings-icon-green" />
                     <div>
-                      <h3 className="settings-card-title">Location</h3>
-                      <p className="settings-card-desc">Fetch prayer times for your city or coordinates</p>
+                      <h3 className="settings-card-title">{t('settings.locationTitle')}</h3>
+                      <p className="settings-card-desc">{t('settings.locationDesc')}</p>
                     </div>
                   </div>
                   {apiError && (
@@ -1032,35 +1199,35 @@ function App() {
                     <form onSubmit={handleSettingsSubmit}>
                       <label className="settings-toggle">
                         <input type="checkbox" checked={settingsForm.enabled} onChange={e => setSettingsForm(prev => ({ ...prev, enabled: e.target.checked }))} />
-                        <span className="settings-toggle-label">Use Aladhan API</span>
+                        <span className="settings-toggle-label">{t('settings.useApi')}</span>
                       </label>
                       {settingsForm.enabled && (
                         <div className="settings-fieldset">
                           <div className="settings-radio-group">
-                            <span className="settings-radio-label">Mode</span>
+                            <span className="settings-radio-label">{t('settings.mode')}</span>
                             <div className="settings-radio-options">
                               <label className="settings-radio">
                                 <input type="radio" name="locMode" checked={settingsForm.type === 'city'} onChange={() => setSettingsForm(prev => ({ ...prev, type: 'city' }))} />
-                                <span>City</span>
+                                <span>{t('settings.city')}</span>
                               </label>
                               <label className="settings-radio">
                                 <input type="radio" name="locMode" checked={settingsForm.type === 'coords'} onChange={() => setSettingsForm(prev => ({ ...prev, type: 'coords' }))} />
-                                <span>Coordinates</span>
+                                <span>{t('settings.coords')}</span>
                               </label>
                             </div>
                           </div>
                           {settingsForm.type === 'city' ? (
                             <div className="form-row">
-                              <div className="form-group"><label className="form-label">City</label><input className="form-input" type="text" value={settingsForm.city} onChange={e => setSettingsForm(prev => ({ ...prev, city: e.target.value }))} required/></div>
-                              <div className="form-group"><label className="form-label">Country</label><input className="form-input" type="text" value={settingsForm.country} onChange={e => setSettingsForm(prev => ({ ...prev, country: e.target.value }))} required/></div>
+                              <div className="form-group"><label className="form-label">{t('settings.cityLabel')}</label><input className="form-input" type="text" value={settingsForm.city} onChange={e => setSettingsForm(prev => ({ ...prev, city: e.target.value }))} required/></div>
+                              <div className="form-group"><label className="form-label">{t('settings.countryLabel')}</label><input className="form-input" type="text" value={settingsForm.country} onChange={e => setSettingsForm(prev => ({ ...prev, country: e.target.value }))} required/></div>
                             </div>
                           ) : (
                             <div className="form-row">
-                              <div className="form-group"><label className="form-label">Latitude</label><input className="form-input" type="number" step="0.0001" value={settingsForm.latitude} onChange={e => setSettingsForm(prev => ({ ...prev, latitude: e.target.value }))} required/></div>
-                              <div className="form-group"><label className="form-label">Longitude</label><input className="form-input" type="number" step="0.0001" value={settingsForm.longitude} onChange={e => setSettingsForm(prev => ({ ...prev, longitude: e.target.value }))} required/></div>
+                              <div className="form-group"><label className="form-label">{t('settings.latLabel')}</label><input className="form-input" type="number" step="0.0001" value={settingsForm.latitude} onChange={e => setSettingsForm(prev => ({ ...prev, latitude: e.target.value }))} required/></div>
+                              <div className="form-group"><label className="form-label">{t('settings.lngLabel')}</label><input className="form-input" type="number" step="0.0001" value={settingsForm.longitude} onChange={e => setSettingsForm(prev => ({ ...prev, longitude: e.target.value }))} required/></div>
                             </div>
                           )}
-                          <button type="submit" className="btn btn-primary" disabled={loading}>Save Settings</button>
+                          <button type="submit" className="btn btn-primary" disabled={loading}>{t('settings.saveSettings')}</button>
                         </div>
                       )}
                     </form>
@@ -1071,8 +1238,8 @@ function App() {
                   <div className="settings-card-header">
                     <Clock size={18} className="settings-card-icon settings-icon-gold" />
                     <div>
-                      <h3 className="settings-card-title">Manual Overrides</h3>
-                      <p className="settings-card-desc">Set prayer times manually</p>
+                      <h3 className="settings-card-title">{t('settings.manualTitle')}</h3>
+                      <p className="settings-card-desc">{t('settings.manualDesc')}</p>
                     </div>
                   </div>
                   <div className="settings-card-body">
@@ -1080,12 +1247,12 @@ function App() {
                       <div className="settings-times-grid">
                         {['fajr','dhuhr','asr','maghrib','isha'].map(p => (
                           <div key={p} className="form-group">
-                            <label className="form-label">{p.charAt(0).toUpperCase()+p.slice(1)}</label>
+                            <label className="form-label">{t('settings.' + p)}</label>
                             <input className="form-input" type="text" value={manualTimesForm[p]} onChange={e => setManualTimesForm(prev => ({ ...prev, [p]: e.target.value }))} required />
                           </div>
                         ))}
                       </div>
-                      <button type="submit" className="btn btn-primary">Apply Overrides</button>
+                      <button type="submit" className="btn btn-primary">{t('settings.apply')}</button>
                     </form>
                   </div>
                 </div>
@@ -1100,15 +1267,15 @@ function App() {
         <div className="modal-overlay">
           <div className="modal-content">
             <div className="modal-header">
-              <span className="modal-title">{taskModal.mode === 'add' ? 'Add Task' : 'Edit Task'}</span>
+              <span className="modal-title">{taskModal.mode === 'add' ? t('modal.addTitle') : t('modal.editTitle')}</span>
               <button className="btn-task-action" onClick={() => setTaskModal(prev => ({ ...prev, open: false }))}><X size={18} /></button>
             </div>
             <form onSubmit={handleTaskSubmit}>
               <div className="modal-body">
-                <div className="form-group"><label className="form-label">Task Name *</label><input className="form-input" type="text" value={taskForm.name} onChange={e => setTaskForm(prev => ({ ...prev, name: e.target.value }))} required/></div>
-                <div className="form-group"><label className="form-label">Details</label><textarea className="form-input" value={taskForm.details} onChange={e => setTaskForm(prev => ({ ...prev, details: e.target.value }))}></textarea></div>
+                <div className="form-group"><label className="form-label">{t('modal.taskName')}</label><input className="form-input" type="text" value={taskForm.name} onChange={e => setTaskForm(prev => ({ ...prev, name: e.target.value }))} required/></div>
+                <div className="form-group"><label className="form-label">{t('modal.details')}</label><textarea className="form-input" value={taskForm.details} onChange={e => setTaskForm(prev => ({ ...prev, details: e.target.value }))}></textarea></div>
                 <div className="form-group">
-                  <label className="form-label">Time of day</label>
+                  <label className="form-label">{t('modal.timeOfDay')}</label>
                   <select
                     className="form-select"
                     value={taskForm.period}
@@ -1129,14 +1296,14 @@ function App() {
                   >
                     {PLANNER_PERIOD_ORDER.map(key => (
                       <option key={key} value={key}>
-                        {PERIODS_META[key].name} — {PERIODS_META[key].range}
+                        {t('period.' + key)} — {t('period.' + key + 'Range')}
                       </option>
                     ))}
                   </select>
                 </div>
                 <div className="form-row">
                   <div className="form-group">
-                    <label className="form-label">Start time</label>
+                    <label className="form-label">{t('modal.startTime')}</label>
                     <select
                       className="form-select"
                       value={taskForm.scheduledTime}
@@ -1154,7 +1321,7 @@ function App() {
                     </select>
                   </div>
                   <div className="form-group">
-                    <label className="form-label">End time</label>
+                    <label className="form-label">{t('modal.endTime')}</label>
                     <select
                       className="form-select"
                       value={taskForm.endTime}
@@ -1167,12 +1334,12 @@ function App() {
                   </div>
                 </div>
                 {taskModal.task?.type !== 'fixed' && (
-                  <label className="checkbox-label"><input type="checkbox" checked={taskForm.isRecurring} onChange={e => setTaskForm(prev => ({ ...prev, isRecurring: e.target.checked }))}/> Recurring</label>
+                  <label className="checkbox-label"><input type="checkbox" checked={taskForm.isRecurring} onChange={e => setTaskForm(prev => ({ ...prev, isRecurring: e.target.checked }))}/> {t('modal.recurring')}</label>
                 )}
               </div>
               <div className="modal-footer">
-                <button type="button" className="btn" onClick={() => setTaskModal(prev => ({ ...prev, open: false }))}>Cancel</button>
-                <button type="submit" className="btn btn-primary">{taskModal.mode === 'add' ? 'Create' : 'Save'}</button>
+                <button type="button" className="btn" onClick={() => setTaskModal(prev => ({ ...prev, open: false }))}>{t('modal.cancel')}</button>
+                <button type="submit" className="btn btn-primary">{taskModal.mode === 'add' ? t('modal.create') : t('modal.save')}</button>
               </div>
             </form>
           </div>
@@ -1186,10 +1353,10 @@ function App() {
             <p className="dialog-message">{dialog.message}</p>
             <div className="dialog-actions">
               {dialog.type === 'confirm' && (
-                <button className="btn" onClick={() => closeDialog(false)}>Cancel</button>
+                <button className="btn" onClick={() => closeDialog(false)}>{t('dialog.cancel')}</button>
               )}
               <button className="btn btn-primary" onClick={() => closeDialog(dialog.type === 'confirm')}>
-                {dialog.type === 'confirm' ? 'Confirm' : 'OK'}
+                {dialog.type === 'confirm' ? t('dialog.confirm') : t('dialog.ok')}
               </button>
             </div>
           </div>

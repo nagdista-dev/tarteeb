@@ -84,7 +84,7 @@
 }
 
 body {
-  font-family: var(--font-sans);
+  font-family: var(--font-sans), var(--font-arabic);
   background-color: var(--bg-primary);
   color: var(--text-primary);
   transition: background-color 0.3s ease, color 0.3s ease;
@@ -1559,7 +1559,7 @@ a {
 }
 
 .sidebar-header {
-  padding: 12px 18px 8px;
+  padding: 16px 18px 10px;
 }
 
 .sidebar-header-label {
@@ -1573,32 +1573,47 @@ a {
 .sidebar-nav {
   display: flex;
   flex-direction: column;
-  padding: 8px;
-  gap: 2px;
+  padding: 8px 10px 16px;
+  gap: 3px;
   overflow-y: auto;
 }
 
 .sidebar-link {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 9px 14px;
-  font-size: 0.82rem;
+  gap: 12px;
+  padding: 11px 14px;
+  font-size: 0.85rem;
   font-weight: 500;
   color: var(--text-secondary);
   background: transparent;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s ease;
   width: 100%;
   text-align: left;
 }
 
+.sidebar-link .nav-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: var(--bg-primary);
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
 .sidebar-link svg {
   flex-shrink: 0;
-  opacity: 0.7;
-  transition: opacity 0.15s ease;
+}
+
+.sidebar-link .nav-label {
+  flex: 1;
 }
 
 .sidebar-link:hover {
@@ -1606,8 +1621,9 @@ a {
   color: var(--text-primary);
 }
 
-.sidebar-link:hover svg {
-  opacity: 1;
+.sidebar-link:hover .nav-icon-wrap {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
 }
 
 [data-theme="dark"] .sidebar-link:hover {
@@ -1620,9 +1636,13 @@ a {
   font-weight: 600;
 }
 
+.sidebar-link.active .nav-icon-wrap {
+  background: var(--color-emerald);
+  color: #fff;
+}
+
 .sidebar-link.active svg {
-  opacity: 1;
-  color: var(--color-emerald);
+  color: #fff;
 }
 
 .btn-add-task {
@@ -1717,31 +1737,24 @@ a {
   flex-direction: column;
   align-items: center;
   gap: 3px;
-  transition: opacity 0.2s ease;
+  background: var(--bg-primary);
+  transition: background 0.2s ease, opacity 0.2s ease;
 }
 
-.sidebar-prayer-maghrib {
-  background: rgba(17, 94, 59, 0.08);
+.sidebar-prayer-box.sidebar-prayer-box-current {
+  background: var(--color-emerald-light);
 }
 
-.sidebar-prayer-isha {
-  background: rgba(30, 41, 59, 0.06);
+.sidebar-prayer-box.sidebar-prayer-box-current span {
+  color: var(--color-emerald);
 }
 
-.sidebar-prayer-fajr {
-  background: rgba(245, 158, 11, 0.08);
-}
-
-.sidebar-prayer-dhuhr {
-  background: rgba(15, 118, 110, 0.06);
-}
-
-.sidebar-prayer-asr {
-  background: rgba(178, 94, 0, 0.08);
+.sidebar-prayer-box.sidebar-prayer-box-current strong {
+  color: var(--color-emerald);
 }
 
 .sidebar-prayer-box-past {
-  opacity: 0.45;
+  opacity: 0.6;
 }
 
 .sidebar-prayer-box-past span,
@@ -1844,7 +1857,7 @@ a {
   .sidebar-nav {
     flex-direction: column;
     padding: 12px;
-    gap: 2px;
+    gap: 4px;
   }
 
   .sidebar-header {
@@ -3020,4 +3033,510 @@ a {
   .day-prayer-time {
     display: none;
   }
+}
+
+/* ===== Guide Page ===== */
+.guide-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 20px 48px;
+}
+
+.guide-hero {
+  text-align: center;
+  margin-bottom: 36px;
+}
+
+.guide-hero-icon {
+  color: var(--color-emerald);
+  opacity: 0.8;
+  margin-bottom: 12px;
+}
+
+.guide-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 8px;
+}
+
+.guide-subtitle {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.guide-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.guide-card {
+  display: flex;
+  gap: 16px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 18px 20px;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.guide-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.guide-card-number {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-emerald-light);
+  color: var(--color-emerald);
+  font-size: 0.9rem;
+  font-weight: 800;
+  border-radius: 10px;
+}
+
+.guide-card-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.guide-card-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 6px;
+}
+
+.guide-card-desc {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.6;
+}
+
+[dir="rtl"] .guide-card {
+  text-align: right;
+}
+
+[dir="rtl"] .guide-hero {
+  text-align: center;
+}
+
+/* ===== Tasks Page ===== */
+.tasks-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.tasks-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.tasks-header-icon {
+  color: var(--color-emerald);
+  opacity: 0.8;
+}
+
+.tasks-header-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  flex: 1;
+}
+
+.tasks-header-count {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--color-emerald);
+  background: var(--color-emerald-light);
+  padding: 4px 14px;
+  border-radius: 20px;
+}
+
+.tasks-stats-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.tasks-stat {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 14px 10px;
+  text-align: center;
+}
+
+.tasks-stat-value {
+  display: block;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.tasks-stat-done {
+  color: var(--color-emerald);
+}
+
+.tasks-stat-left {
+  color: var(--color-gold);
+}
+
+.tasks-stat-label {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 4px;
+}
+
+.tasks-progress-wrap {
+  width: 100%;
+  height: 6px;
+  background: var(--bg-tertiary);
+  border-radius: 3px;
+  margin-bottom: 28px;
+  overflow: hidden;
+}
+
+.tasks-progress-bar {
+  height: 100%;
+  background: var(--color-emerald);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.tasks-block {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.tasks-block-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border-color);
+  transition: background 0.15s ease;
+  user-select: none;
+}
+
+.tasks-block-header:hover {
+  background: var(--bg-tertiary);
+}
+
+.tasks-block.collapsed .tasks-block-header {
+  border-bottom: none;
+}
+
+.tasks-block-list {
+  overflow: hidden;
+}
+
+.tasks-block-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.tasks-block-meta {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+}
+
+.tasks-block-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.tasks-task-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border-color);
+  transition: background 0.15s ease;
+}
+
+.tasks-task-card:last-child {
+  border-bottom: none;
+}
+
+.tasks-task-card:hover {
+  background: var(--bg-primary);
+}
+
+.tasks-task-card.completed .tasks-task-name {
+  text-decoration: line-through;
+  opacity: 0.55;
+}
+
+.tasks-task-check {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 2px solid var(--border-color);
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  padding: 0;
+}
+
+.tasks-task-check:hover {
+  border-color: var(--color-emerald);
+}
+
+.tasks-task-check.checked {
+  background: var(--color-emerald);
+  border-color: var(--color-emerald);
+  color: #fff;
+}
+
+.tasks-task-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tasks-task-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.tasks-task-time {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--text-tertiary);
+}
+
+.tasks-task-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+[dir="rtl"] .tasks-header {
+  text-align: right;
+}
+
+[dir="rtl"] .tasks-block-header {
+  text-align: right;
+}
+
+[dir="rtl"] .tasks-block-meta svg {
+  margin-left: 0;
+  margin-right: 6px;
+}
+
+[dir="rtl"] .tasks-task-card {
+  text-align: right;
+}
+
+/* ===== RTL Support ===== */
+[dir="rtl"] .sidebar-link {
+  text-align: right;
+}
+
+[dir="rtl"] .task-card.task-fixed {
+  border-left: none;
+  border-right: 4px solid var(--color-emerald);
+}
+
+[dir="rtl"] .task-card.task-personal {
+  border-left: none;
+  border-right: 4px solid var(--color-teal);
+}
+
+[dir="rtl"] .task-card.task-recurring {
+  border-left: none;
+  border-right: 4px solid var(--color-gold);
+}
+
+[dir="rtl"] .day-timeline-col {
+  border-right: none;
+  border-left: 1px solid var(--border-color);
+}
+
+[dir="rtl"] .sidebar-close-btn {
+  right: auto;
+  left: 12px;
+}
+
+[dir="rtl"] .sidebar-nav {
+  padding-right: 0;
+  padding-left: 4px;
+}
+
+[dir="rtl"] .day-hour-label {
+  left: auto;
+  right: calc(50% + 10px);
+}
+
+[dir="rtl"] .day-prayer-label {
+  right: auto;
+  left: calc(50% + 12px);
+  text-align: left;
+}
+
+[dir="rtl"] .day-prayer-time {
+  left: auto;
+  right: calc(50% + 12px);
+}
+
+@media (max-width: 768px) {
+  [dir="rtl"] .full-sidebar {
+    left: auto;
+    right: -300px;
+    border-radius: 16px 0 0 16px;
+  }
+
+  [dir="rtl"] .full-sidebar.sidebar-open {
+    right: 0;
+    left: auto;
+  }
+}
+
+[dir="rtl"] .settings-times-grid {
+  direction: ltr;
+}
+
+[dir="rtl"] .sidebar-prayer-box strong {
+  direction: ltr;
+  unicode-bidi: plaintext;
+}
+
+[dir="rtl"] body {
+  font-family: var(--font-arabic), var(--font-sans);
+}
+
+[dir="rtl"] .brand-latin {
+  font-family: var(--font-arabic), var(--font-sans);
+}
+
+[dir="rtl"] .brand-section {
+  text-align: right;
+}
+
+[dir="rtl"] .brand-subtitle {
+  margin-left: 0;
+  margin-right: 30px;
+}
+
+[dir="rtl"] .modal-header {
+  text-align: right;
+}
+
+[dir="rtl"] .journal-header-left {
+  text-align: right;
+}
+
+[dir="rtl"] .stat-header {
+  text-align: right;
+}
+
+[dir="rtl"] .section-header {
+  text-align: right;
+}
+
+[dir="rtl"] .history-card-header {
+  text-align: right;
+}
+
+[dir="rtl"] .timeline-time-column {
+  border-right: none;
+  border-left: 1px solid var(--border-color);
+}
+
+[dir="rtl"] .timeline-time-column span {
+  right: auto;
+  left: 8px;
+}
+
+[dir="rtl"] .timeline-now-time {
+  right: auto;
+  left: 8px;
+}
+
+[dir="rtl"] .timeline-prayer-marker {
+  left: auto;
+  right: -5px;
+}
+
+[dir="rtl"] .timeline-now-line::before {
+  left: auto;
+  right: -5px;
+}
+
+[dir="rtl"] .timeline-task-card {
+  left: 10px;
+  right: 12px;
+  border-left: none;
+  border-right: 3px solid var(--color-teal);
+}
+
+[dir="rtl"] .timeline-task-card.task-fixed {
+  border-right-color: var(--color-emerald);
+}
+
+[dir="rtl"] .timeline-task-card.task-recurring {
+  border-right-color: var(--color-gold);
+}
+
+[dir="rtl"] .block-task-card {
+  border-left: none;
+  border-right: 4px solid var(--color-teal);
+}
+
+[dir="rtl"] .block-task-card.task-fixed {
+  border-left: none;
+  border-right-color: var(--color-emerald);
+}
+
+[dir="rtl"] .block-task-card.task-recurring,
+[dir="rtl"] .block-task-card.task-user {
+  border-right-color: var(--color-gold);
+}
+
+[dir="rtl"] .content-area {
+  padding-right: 0;
+  padding-left: 4px;
+}
+
+[dir="rtl"] .block-task-endtime {
+  margin-right: 0;
+  margin-left: 2px;
+}
+
+[dir="rtl"] .block-task-duration {
+  margin-left: 0;
+  margin-right: auto;
+  padding-left: 0;
+  padding-right: 6px;
 }
