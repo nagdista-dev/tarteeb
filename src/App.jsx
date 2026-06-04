@@ -259,8 +259,8 @@ function App() {
   // ---- Location Config ----
   const [locationConfig, setLocationConfig] = useState(() => {
     const saved = localStorage.getItem('tarteeb_location_config');
-    if (saved) return JSON.parse(saved);
-    return { enabled: true, type: 'coords', city: 'Cairo', country: 'Egypt', latitude: '30.0444', longitude: '31.2357' };
+    const defaults = { enabled: true, type: 'city', city: 'Cairo', country: 'Egypt', latitude: '30.0444', longitude: '31.2357' };
+    return saved ? { ...defaults, ...JSON.parse(saved), enabled: true } : defaults;
   });
 
   // ---- Planner Date & Data ----
@@ -337,19 +337,6 @@ function App() {
     }, 10000);
     return () => clearInterval(interval);
   }, [activeDate]);
-
-  // ---- Auto-detect location on first visit ----
-  useEffect(() => {
-    if (!navigator.geolocation) return;
-    const saved = localStorage.getItem('tarteeb_location_config');
-    if (saved) return;
-    navigator.geolocation.getCurrentPosition(pos => {
-      const cfg = { enabled: true, type: 'coords', city: '', country: '', latitude: String(pos.coords.latitude), longitude: String(pos.coords.longitude) };
-      setLocationConfig(cfg);
-      setSettingsForm(cfg);
-      localStorage.setItem('tarteeb_location_config', JSON.stringify(cfg));
-    }, () => { /* fallback to defaults */ }, { timeout: 10000 });
-  }, []);
 
   // ---- Load / Init day data ----
   useEffect(() => {
