@@ -1082,50 +1082,53 @@ function App() {
       </header>
 
       {/* Full‑screen layout with left sidebar */}
-      {dayData && (
-        <div className="main-layout full-screen">
-          {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
-          {/* Left Sidebar */}
-          <aside className={`full-sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
+      {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
+      <div className="main-layout full-screen">
+        {/* Left Sidebar */}
+        <aside className={`full-sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
             <button className="sidebar-close-btn" onClick={() => setSidebarOpen(false)} aria-label={t('nav.closeSidebar')}>
               <X size={20} />
             </button>
-            <div className="sidebar-planner-header">
-              <span className="sidebar-planner-eyebrow">{t('brand.subtitle')}</span>
-              <span className="sidebar-planner-date">{formatHumanDate(dayData.date)}</span>
-              {timelineStatus?.nextPrayerName && (
-                <span className="sidebar-planner-countdown">
-                  <Clock size={13} /> {timelineStatus.timeToNextPrayer} {t('time.until')} {t('prayer.' + timelineStatus.nextPrayerName.toLowerCase())}
-                </span>
-              )}
-              <div className="sidebar-planner-meta">
-                {dayData.hijriDate && <span>{dayData.hijriDate}</span>}
-                <span>{dayData.stats.overallCompleted}{t('sidebar.complete')}</span>
+            {dayData && (
+              <div className="sidebar-planner-header">
+                <span className="sidebar-planner-eyebrow">{t('brand.subtitle')}</span>
+                <span className="sidebar-planner-date">{formatHumanDate(dayData.date)}</span>
+                {timelineStatus?.nextPrayerName && (
+                  <span className="sidebar-planner-countdown">
+                    <Clock size={13} /> {timelineStatus.timeToNextPrayer} {t('time.until')} {t('prayer.' + timelineStatus.nextPrayerName.toLowerCase())}
+                  </span>
+                )}
+                <div className="sidebar-planner-meta">
+                  {dayData.hijriDate && <span>{dayData.hijriDate}</span>}
+                  <span>{dayData.stats.overallCompleted}{t('sidebar.complete')}</span>
+                </div>
               </div>
-            </div>
+            )}
 
-            <div className="sidebar-prayer-strip">
-              {(() => {
-                const p = dayData.prayerTimes;
-                const ds = getPeriodStartMinutes('evening', p);
-                const boxToPeriod = { maghrib: 'evening', isha: 'night', fajr: 'morning', dhuhr: 'afternoon', asr: 'late_afternoon' };
-                const boxes = [
-                  { key: 'maghrib', prayer: t('prayer.maghrib'), time: formatMinutesToTime(parseTimeToMinutes(p.maghrib)), minutes: ds },
-                  { key: 'isha', prayer: t('prayer.isha'), time: formatMinutesToTime(parseTimeToMinutes(p.isha)), minutes: getPeriodStartMinutes('night', p) },
-                  { key: 'fajr', prayer: t('prayer.fajr'), time: formatMinutesToTime(parseTimeToMinutes(p.fajr)), minutes: getPeriodStartMinutes('morning', p) },
-                  { key: 'dhuhr', prayer: t('prayer.dhuhr'), time: formatMinutesToTime(parseTimeToMinutes(p.dhuhr)), minutes: getPeriodStartMinutes('afternoon', p) },
-                  { key: 'asr', prayer: t('prayer.asr'), time: formatMinutesToTime(parseTimeToMinutes(p.asr)), minutes: getPeriodStartMinutes('late_afternoon', p) },
-                ];
-                const cpm = getCurrentPlannerMinutes(currentTime, activeDate);
-                const activePeriod = timelineStatus?.activePeriod;
-                return boxes.map(box => (
-                  <div key={box.key} className={`sidebar-prayer-box sidebar-prayer-box-${box.key} ${cpm >= box.minutes ? 'sidebar-prayer-box-past' : ''} ${boxToPeriod[box.key] === activePeriod ? 'sidebar-prayer-box-current' : ''}`}>
-                    <span>{box.prayer}</span>
-                    <strong>{box.time}</strong>
-                  </div>
-                ));
-              })()}
-            </div>
+            {dayData && (
+              <div className="sidebar-prayer-strip">
+                {(() => {
+                  const p = dayData.prayerTimes;
+                  const ds = getPeriodStartMinutes('evening', p);
+                  const boxToPeriod = { maghrib: 'evening', isha: 'night', fajr: 'morning', dhuhr: 'afternoon', asr: 'late_afternoon' };
+                  const boxes = [
+                    { key: 'maghrib', prayer: t('prayer.maghrib'), time: formatMinutesToTime(parseTimeToMinutes(p.maghrib)), minutes: ds },
+                    { key: 'isha', prayer: t('prayer.isha'), time: formatMinutesToTime(parseTimeToMinutes(p.isha)), minutes: getPeriodStartMinutes('night', p) },
+                    { key: 'fajr', prayer: t('prayer.fajr'), time: formatMinutesToTime(parseTimeToMinutes(p.fajr)), minutes: getPeriodStartMinutes('morning', p) },
+                    { key: 'dhuhr', prayer: t('prayer.dhuhr'), time: formatMinutesToTime(parseTimeToMinutes(p.dhuhr)), minutes: getPeriodStartMinutes('afternoon', p) },
+                    { key: 'asr', prayer: t('prayer.asr'), time: formatMinutesToTime(parseTimeToMinutes(p.asr)), minutes: getPeriodStartMinutes('late_afternoon', p) },
+                  ];
+                  const cpm = getCurrentPlannerMinutes(currentTime, activeDate);
+                  const activePeriod = timelineStatus?.activePeriod;
+                  return boxes.map(box => (
+                    <div key={box.key} className={`sidebar-prayer-box sidebar-prayer-box-${box.key} ${cpm >= box.minutes ? 'sidebar-prayer-box-past' : ''} ${boxToPeriod[box.key] === activePeriod ? 'sidebar-prayer-box-current' : ''}`}>
+                      <span>{box.prayer}</span>
+                      <strong>{box.time}</strong>
+                    </div>
+                  ));
+                })()}
+              </div>
+            )}
 
             <div className="sidebar-header">
               <span className="sidebar-header-label">{t('nav.navigation')}</span>
@@ -1157,11 +1160,13 @@ function App() {
                 <span className="font-size-sidebar-label">{t('settings.fontSize_' + fontSize)}</span>
               </button>
             </div>
-            <div className="sidebar-export-wrap">
-              <button className="btn btn-export sidebar-export-btn" onClick={exportToMarkdown} title={t('header.exportTitle')}>
-                <Download size={16} /> {t('header.export')}
-              </button>
-            </div>
+            {dayData && (
+              <div className="sidebar-export-wrap">
+                <button className="btn btn-export sidebar-export-btn" onClick={exportToMarkdown} title={t('header.exportTitle')}>
+                  <Download size={16} /> {t('header.export')}
+                </button>
+              </div>
+            )}
           </aside>
 
           {/* Main Content Area */}
@@ -1174,7 +1179,7 @@ function App() {
             )}
 
             {/* Conditional Pages */}
-            {currentPage === 'home' && renderFullDayView()}
+            {currentPage === 'home' && dayData && renderFullDayView()}
 
             {currentPage === 'tasks' && dayData && (
               <div className="tasks-page">
@@ -1258,7 +1263,7 @@ function App() {
               </div>
             )}
 
-            {currentPage === 'journal' && (
+            {currentPage === 'journal' && dayData && (
               <div className="journal-card">
                 <div className="journal-header">
                   <div className="journal-header-left">
@@ -1706,7 +1711,6 @@ function App() {
             )}
           </main>
         </div>
-      )}
 
       {/* Task Modal */}
       {taskModal.open && (
