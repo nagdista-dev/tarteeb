@@ -1,0 +1,2194 @@
+/* Tarteeb — Modern Islamic Daily Planner CSS */
+@import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* Typography */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-arabic: 'Amiri', serif;
+
+  /* Theme Colors (Light Mode) */
+  --bg-primary: #f5f4ee;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #ebe8dc;
+  --border-color: #dbd8cb;
+  
+  --text-primary: #19201d;
+  --text-secondary: #535d59;
+  --text-tertiary: #84938e;
+
+  /* Accent Colors */
+  --color-emerald: #115e3b; /* Primary Islamic Green */
+  --color-emerald-light: #d3eade;
+  --color-emerald-hover: #15803d;
+  
+  --color-gold: #b25e00; /* Muted Gold / Amber */
+  --color-gold-bg: #fcf4dd;
+  --color-gold-border: #f3dfb1;
+  
+  --color-teal: #0f766e; /* Personal Tasks Accent */
+  --color-teal-bg: #e6f6f4;
+  --color-teal-border: #bfebe6;
+
+  --color-danger: #b91c1c;
+  --color-danger-bg: #fee2e2;
+
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+  
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  /* Transition */
+  --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Dark Mode Theme */
+[data-theme="dark"] {
+  --bg-primary: #0a0d0c;
+  --bg-secondary: #121816;
+  --bg-tertiary: #1b2421;
+  --border-color: #27332f;
+
+  --text-primary: #e3eae7;
+  --text-secondary: #9db0aa;
+  --text-tertiary: #657771;
+
+  --color-emerald: #16a34a;
+  --color-emerald-light: #14532d;
+  --color-emerald-hover: #22c55e;
+
+  --color-gold: #f59e0b;
+  --color-gold-bg: #2d200a;
+  --color-gold-border: #4d3612;
+
+  --color-teal: #14b8a6;
+  --color-teal-bg: #0d2e2b;
+  --color-teal-border: #115e59;
+
+  --color-danger: #ef4444;
+  --color-danger-bg: #450a0a;
+
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.4);
+}
+
+/* Reset & Base Styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+}
+
+#root {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+button, input, textarea, select {
+  font-family: inherit;
+  color: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Main Container: Full-screen layout */
+.app-container {
+  max-width: none;
+  width: 100%;
+  height: 100vh;
+  margin: 0;
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  overflow: hidden;
+}
+
+
+.app-header {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.brand-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-title {
+  font-family: var(--font-arabic);
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--color-emerald);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brand-subtitle {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+  letter-spacing: 0.8px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Split Layout System */
+.main-layout {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .main-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Side Section Tabs Card */
+.side-card {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 24px;
+  overflow: hidden;
+}
+
+.side-tabs-header {
+  display: flex;
+  background-color: var(--bg-primary);
+  border-bottom: 1px solid var(--border-color);
+  overflow-x: auto;
+}
+
+.side-tab-btn {
+  flex: 1;
+  padding: 14px 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: var(--transition);
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+}
+
+.side-tab-btn:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+  color: var(--text-primary);
+}
+
+.side-tab-btn.active {
+  color: var(--color-emerald);
+  border-bottom-color: var(--color-emerald);
+  background-color: var(--bg-secondary);
+}
+
+.side-tab-content {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-secondary);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn:hover {
+  background-color: var(--bg-primary);
+  border-color: var(--text-tertiary);
+}
+
+.btn-primary {
+  background-color: var(--color-emerald);
+  color: #ffffff;
+  border-color: var(--color-emerald);
+}
+
+.btn-primary:hover {
+  background-color: var(--color-emerald-hover);
+}
+
+.btn-icon {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: var(--radius-full);
+}
+
+/* Date Info Banner */
+.date-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--color-gold-bg);
+  border: 1px solid var(--color-gold-border);
+  padding: 14px 20px;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 12px;
+}
+
+.date-gregorian {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--color-gold);
+}
+
+.date-hijri {
+  font-family: var(--font-arabic);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-gold);
+}
+
+/* Separate Block Card (Section for each prayer interval) */
+.period-block-card {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  margin-bottom: 20px;
+  transition: var(--transition);
+  display: flex;
+  flex-direction: column;
+}
+
+.period-block-card:hover {
+  border-color: var(--text-tertiary);
+}
+
+.period-block-card.active-period {
+  border-color: var(--color-emerald);
+  box-shadow: var(--shadow-md), 0 0 0 2px rgba(17, 94, 59, 0.05);
+}
+
+/* Period Block Header */
+.period-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 18px;
+  background-color: var(--bg-primary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.period-block-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.period-block-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-tertiary);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.period-block-card.active-period .period-block-badge {
+  background-color: var(--color-emerald-light);
+  color: var(--color-emerald);
+}
+
+.period-block-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.period-block-title-ar {
+  font-family: var(--font-arabic);
+  font-size: 1.15rem;
+  color: var(--text-tertiary);
+  font-weight: 700;
+}
+
+.period-block-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.period-block-duration {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background-color: var(--bg-tertiary);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+}
+
+.period-block-card.active-period .period-block-duration {
+  background-color: var(--color-gold-bg);
+  color: var(--color-gold);
+}
+
+/* Period Block Main Layout (Timeline side-by-side with tasks) */
+.period-block-body {
+  display: grid;
+  grid-template-columns: 70px 1fr;
+  min-height: 120px;
+}
+
+/* Vertical Timeline Track Column */
+.timeline-track-col {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  background-color: rgba(0, 0, 0, 0.01);
+  border-right: 1px solid var(--border-color);
+}
+
+.timeline-track-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: var(--border-color);
+}
+
+.period-block-card.active-period .timeline-track-line {
+  background-color: var(--color-emerald);
+}
+
+/* Timeline Hour Node ticks */
+.timeline-hour-tick {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  background-color: var(--bg-secondary);
+  border: 2px solid var(--border-color);
+  z-index: 2;
+}
+
+.period-block-card.active-period .timeline-hour-tick {
+  border-color: var(--color-emerald);
+}
+
+.timeline-hour-label {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  background-color: var(--bg-secondary);
+  padding: 1px 4px;
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+  z-index: 3;
+}
+
+/* Timeline Start / End Boundary Labels */
+.timeline-boundary-label {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  background-color: var(--bg-tertiary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  z-index: 5;
+  white-space: nowrap;
+}
+
+.timeline-boundary-start {
+  top: 4px;
+}
+
+.timeline-boundary-end {
+  bottom: 4px;
+}
+
+/* Dynamic current time marker along the hours line */
+.timeline-current-marker {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--color-gold);
+  z-index: 8;
+  pointer-events: none;
+}
+
+.timeline-current-marker-dot {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-gold);
+  box-shadow: 0 0 8px var(--color-gold);
+  animation: pulse 1.5s infinite;
+}
+
+.timeline-current-marker-label {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, -100%);
+  margin-top: -6px;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #ffffff;
+  background-color: var(--color-gold);
+  padding: 1px 4px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+/* Tasks Column Layout inside period block */
+.period-tasks-col {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.period-tasks-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px dashed var(--border-color);
+  padding-bottom: 6px;
+}
+
+.tasks-count-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.btn-add-task {
+  font-size: 0.78rem;
+  padding: 4px 10px;
+  color: var(--text-secondary);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: var(--transition);
+}
+
+.btn-add-task:hover {
+  color: var(--text-primary);
+  border-color: var(--text-secondary);
+  background-color: var(--bg-primary);
+}
+
+/* Tasks list */
+.tasks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.no-tasks {
+  font-size: 0.85rem;
+  color: var(--text-tertiary);
+  padding: 16px;
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+
+/* Task Card Style */
+.task-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+  position: relative;
+}
+
+.task-card:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.task-card.task-fixed {
+  border-left: 4px solid var(--color-emerald);
+}
+.task-card.task-personal {
+  border-left: 4px solid var(--color-teal);
+}
+.task-card.task-recurring {
+  border-left: 4px solid var(--color-gold);
+}
+
+.task-card.completed {
+  opacity: 0.6;
+}
+
+/* Checkbox */
+.task-checkbox-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 2px;
+}
+
+.task-checkbox {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 2px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background-color: var(--bg-secondary);
+  transition: var(--transition);
+  color: white;
+}
+
+.task-card.task-fixed .task-checkbox.checked {
+  background-color: var(--color-emerald);
+  border-color: var(--color-emerald);
+}
+.task-card.task-personal .task-checkbox.checked {
+  background-color: var(--color-teal);
+  border-color: var(--color-teal);
+}
+.task-card.task-recurring .task-checkbox.checked {
+  background-color: var(--color-gold);
+  border-color: var(--color-gold);
+}
+
+.task-checkbox:hover {
+  border-color: var(--text-secondary);
+}
+
+.task-details {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.task-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.task-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.task-card.completed .task-name {
+  text-decoration: line-through;
+  color: var(--text-secondary);
+}
+
+.task-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.task-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.badge-fixed {
+  background-color: var(--color-emerald-light);
+  color: var(--color-emerald);
+}
+
+.badge-personal {
+  background-color: var(--color-teal-bg);
+  color: var(--color-teal);
+}
+
+.badge-recurring {
+  background-color: var(--color-gold-bg);
+  color: var(--color-gold);
+}
+
+.task-desc {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.task-actions {
+  display: flex;
+  gap: 4px;
+  align-self: flex-start;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.task-card:hover .task-actions {
+  opacity: 1;
+}
+
+.btn-task-action {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-tertiary);
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+}
+
+.btn-task-action:hover {
+  color: var(--text-primary);
+  background-color: var(--bg-tertiary);
+}
+
+.btn-task-action.delete:hover {
+  color: var(--color-danger);
+  background-color: var(--color-danger-bg);
+}
+
+/* Stats view (Overview Tab) */
+.stats-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.stats-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.stat-box {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.stat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+}
+
+.stat-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* Progress bar container */
+.progress-container {
+  width: 100%;
+  height: 6px;
+  background-color: var(--border-color);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width 0.4s ease-out;
+}
+
+.progress-fixed {
+  background-color: var(--color-emerald);
+}
+
+.progress-personal {
+  background-color: var(--color-teal);
+}
+
+.progress-overall {
+  background: linear-gradient(90deg, var(--color-emerald), var(--color-teal));
+}
+
+/* Journal tab textarea */
+.diary-textarea {
+  width: 100%;
+  min-height: 200px;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  font-size: 0.95rem;
+  resize: vertical;
+  outline: none;
+  transition: var(--transition);
+  line-height: 1.5;
+}
+
+.diary-textarea:focus {
+  border-color: var(--color-emerald);
+  box-shadow: 0 0 0 3px rgba(17, 94, 59, 0.08);
+}
+
+/* Modals */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.modal-content {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 460px;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.modal-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.form-input, .form-select, .form-textarea {
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-secondary);
+  font-size: 0.95rem;
+  outline: none;
+  transition: var(--transition);
+}
+
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color: var(--color-emerald);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.modal-footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  background-color: var(--bg-primary);
+}
+
+/* History view styles */
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.history-card {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.history-card:hover {
+  border-color: var(--color-gold);
+}
+
+.history-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.history-card-date {
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.history-card-stats {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.history-card-diary {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  background-color: var(--bg-secondary);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Pulsing dot animation */
+@keyframes pulse {
+  0% {
+    transform: translate(-50%, -50%) scale(0.95);
+    box-shadow: 0 0 0 0 rgba(178, 94, 0, 0.7);
+  }
+  70% {
+    transform: translate(-50%, -50%) scale(1);
+    box-shadow: 0 0 0 6px rgba(178, 94, 0, 0);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(0.95);
+    box-shadow: 0 0 0 0 rgba(178, 94, 0, 0);
+  }
+}
+
+/* Full-screen layout: sidebar + main content within app container */
+.main-layout.full-screen {
+  display: flex;
+  flex: 1;
+  gap: 24px;
+  align-items: flex-start;
+  width: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.full-sidebar {
+  flex-shrink: 0;
+  width: 220px;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.sidebar-header {
+  padding: 16px 18px 12px;
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--bg-primary);
+}
+
+.sidebar-header-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  gap: 4px;
+  overflow-y: auto;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 11px 14px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: var(--transition);
+  text-align: left;
+  border-left: 3px solid transparent;
+}
+
+.sidebar-link svg {
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
+.sidebar-link:hover {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .sidebar-link:hover {
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+.sidebar-link.active {
+  background-color: var(--color-emerald-light);
+  color: var(--color-emerald);
+  border-left-color: var(--color-emerald);
+}
+
+.sidebar-link.active svg {
+  opacity: 1;
+}
+
+.content-area {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+  padding-right: 4px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.content-area::-webkit-scrollbar,
+.day-tasks-list::-webkit-scrollbar,
+.sidebar-nav::-webkit-scrollbar {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .main-layout.full-screen {
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+  }
+
+  .full-sidebar {
+    width: 100%;
+    max-height: none;
+  }
+
+  .content-area {
+    flex: 1;
+    min-height: 0;
+    height: auto;
+    overflow-y: auto;
+    padding-right: 0;
+  }
+
+  .sidebar-nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding: 8px;
+    gap: 6px;
+    overflow-x: auto;
+  }
+
+  .sidebar-header {
+    display: none;
+  }
+
+  .sidebar-link {
+    flex: 1 1 auto;
+    justify-content: center;
+    padding: 10px 12px;
+    font-size: 0.8rem;
+    border-left: none;
+    border-bottom: 2px solid transparent;
+    min-width: fit-content;
+  }
+
+  .sidebar-link span {
+    white-space: nowrap;
+  }
+
+  .sidebar-link.active {
+    border-left: none;
+    border-bottom-color: var(--color-emerald);
+    background-color: var(--bg-secondary);
+  }
+}
+
+/* The app uses an internal scrolling content pane so the header and sidebar stay fixed. */
+
+.app-header {
+  flex-shrink: 0;
+}
+
+.full-day-view {
+  display: grid;
+  gap: 18px;
+  padding-bottom: 28px;
+}
+
+.homepage-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 20px;
+  padding: 22px 24px;
+  background:
+    linear-gradient(135deg, rgba(17, 94, 59, 0.1), transparent 42%),
+    linear-gradient(145deg, var(--bg-secondary), var(--bg-primary));
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.homepage-eyebrow {
+  display: inline-flex;
+  margin-bottom: 6px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-emerald);
+}
+
+.homepage-hero h1 {
+  font-size: clamp(1.45rem, 2vw, 2.1rem);
+  line-height: 1.1;
+  color: var(--text-primary);
+}
+
+.homepage-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin-top: 10px;
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.homepage-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.homepage-score-card {
+  min-width: 150px;
+  padding: 14px 16px;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  display: grid;
+  gap: 2px;
+  box-shadow: var(--shadow-sm);
+}
+
+.homepage-score-card span,
+.homepage-score-card small {
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.homepage-score-card strong {
+  color: var(--color-emerald);
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.daily-cycle-strip {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.cycle-node {
+  position: relative;
+  min-height: 70px;
+  padding: 12px 14px;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  overflow: hidden;
+  transition: var(--transition);
+}
+
+.cycle-node::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background-color: var(--color-emerald);
+  opacity: 0.65;
+}
+
+.cycle-node-night::before {
+  background-color: #4f46e5;
+}
+
+.cycle-node strong {
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.cycle-node small {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.cycle-node.active {
+  border-color: var(--color-emerald);
+  box-shadow: 0 0 0 3px rgba(17, 94, 59, 0.1);
+  transform: translateY(-1px);
+}
+
+.planner-period {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  background-color: rgba(255, 255, 255, 0.46);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+}
+
+[data-theme="dark"] .planner-period {
+  background-color: rgba(255, 255, 255, 0.025);
+}
+
+.planner-period-day {
+  border-top: 4px solid var(--color-emerald);
+}
+
+.planner-period-night {
+  border-top: 4px solid #4f46e5;
+}
+
+.planner-period-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.planner-period-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.planner-period-header h2 {
+  margin-top: 2px;
+  font-size: 1.25rem;
+  line-height: 1.2;
+}
+
+.planner-period-summary {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.planner-period-summary span {
+  padding: 6px 9px;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.prayer-blocks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+  align-items: start;
+}
+
+.prayer-block-card {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+}
+
+.prayer-block-card:hover,
+.active-prayer-block {
+  border-color: rgba(17, 94, 59, 0.45);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.prayer-block-night.active-prayer-block {
+  border-color: rgba(79, 70, 229, 0.55);
+}
+
+.prayer-block-header,
+.prayer-block-meta,
+.block-task-topline,
+.block-task-actions {
+  display: flex;
+  align-items: center;
+}
+
+.prayer-block-header {
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.prayer-block-kicker {
+  color: var(--text-tertiary);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.prayer-block-title {
+  font-size: 1.05rem;
+  line-height: 1.25;
+}
+
+.prayer-block-time {
+  display: grid;
+  justify-items: end;
+  gap: 2px;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.prayer-block-meta {
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.prayer-block-meta span {
+  padding: 4px 7px;
+  background-color: var(--bg-primary);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.prayer-block-canvas {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 10px;
+  min-height: var(--block-height);
+}
+
+.prayer-block-axis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  color: var(--text-tertiary);
+  font-size: 0.68rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  padding: 5px 0;
+}
+
+.prayer-block-task-layer {
+  position: relative;
+  min-height: var(--block-height);
+  background:
+    linear-gradient(var(--border-color) 1px, transparent 1px),
+    linear-gradient(180deg, var(--bg-primary), var(--bg-secondary));
+  background-size: 100% 25%;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.empty-block-button {
+  width: calc(100% - 20px);
+  min-height: 52px;
+  margin: 10px;
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-md);
+  background-color: rgba(255, 255, 255, 0.38);
+  color: var(--text-secondary);
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.empty-block-button:hover {
+  color: var(--color-emerald);
+  border-color: var(--color-emerald);
+  background-color: var(--color-emerald-light);
+}
+
+.block-task-card {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: start;
+  padding: 10px;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--color-teal);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  animation: taskRise 0.28s ease both;
+}
+
+.block-task-card.task-fixed {
+  border-left-color: var(--color-emerald);
+}
+
+.block-task-card.task-recurring,
+.block-task-card.task-user {
+  border-left-color: var(--color-gold);
+}
+
+.block-task-check {
+  width: 20px;
+  height: 20px;
+}
+
+.block-task-main {
+  min-width: 0;
+}
+
+.block-task-topline {
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.block-task-time,
+.block-task-duration {
+  color: var(--text-tertiary);
+  font-size: 0.68rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.block-task-main strong {
+  display: block;
+  color: var(--text-primary);
+  font-size: 0.86rem;
+  line-height: 1.25;
+}
+
+.block-task-main p {
+  margin-top: 3px;
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.block-task-actions {
+  gap: 4px;
+}
+
+.prayer-block-add {
+  width: 100%;
+  min-height: 38px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-primary);
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.prayer-block-add:hover {
+  color: var(--color-emerald);
+  border-color: var(--color-emerald);
+  background-color: var(--color-emerald-light);
+}
+
+@keyframes taskRise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.continuous-day-card {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.continuous-day-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--border-color);
+  background: linear-gradient(135deg, var(--bg-secondary), var(--bg-primary));
+}
+
+.continuous-day-header h2 {
+  font-size: 1.25rem;
+  line-height: 1.2;
+}
+
+.prayer-time-strip {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--bg-primary);
+}
+
+.prayer-time-box {
+  min-height: 62px;
+  padding: 11px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-secondary);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  transition: var(--transition);
+}
+
+.prayer-time-box span {
+  color: var(--text-tertiary);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.prayer-time-box strong {
+  color: var(--text-primary);
+  font-size: 1.05rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.prayer-time-box-past {
+  background-color: var(--color-emerald-light);
+  border-color: rgba(17, 94, 59, 0.28);
+}
+
+.prayer-time-box-past span,
+.prayer-time-box-past strong {
+  color: var(--color-emerald);
+}
+
+.continuous-timeline {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 14px;
+  padding: 18px;
+}
+
+.timeline-time-column,
+.timeline-board {
+  position: relative;
+  min-height: var(--timeline-height);
+}
+
+.timeline-time-column span {
+  position: absolute;
+  right: 0;
+  transform: translateY(-50%);
+  color: var(--text-tertiary);
+  font-size: 0.72rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.timeline-board {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-secondary);
+  overflow: hidden;
+}
+
+.timeline-board::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 22px;
+  width: 3px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(180deg, #4f46e5, var(--color-emerald), var(--color-gold));
+  z-index: 2;
+}
+
+.timeline-period-band {
+  position: absolute;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.night-band {
+  background: linear-gradient(90deg, rgba(79, 70, 229, 0.1), transparent 55%);
+}
+
+.day-band {
+  background: linear-gradient(90deg, rgba(17, 94, 59, 0.08), transparent 55%);
+}
+
+.timeline-period-band span {
+  position: sticky;
+  top: 10px;
+  display: inline-flex;
+  margin: 10px 0 0 44px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-tertiary);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.timeline-hour-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  transform: translateY(-50%);
+  background: linear-gradient(90deg, rgba(132, 147, 142, 0.18), transparent 90%);
+  z-index: 1;
+}
+
+.timeline-prayer-marker {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  height: 1px;
+  transform: translateY(-50%);
+  background: linear-gradient(90deg, var(--color-emerald), var(--border-color) 18%, transparent 76%);
+  z-index: 4;
+}
+
+.timeline-task-card {
+  position: absolute;
+  left: 44px;
+  right: 10px;
+  z-index: 6;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 10px;
+  padding: 10px;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--color-teal);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  animation: taskRise 0.28s ease both;
+  overflow: hidden;
+}
+
+.timeline-task-card.task-fixed {
+  border-left-color: var(--color-emerald);
+}
+
+.timeline-task-card.task-recurring,
+.timeline-task-card.task-user {
+  border-left-color: var(--color-gold);
+}
+
+.fixed-task-note {
+  display: block;
+  margin-top: 3px;
+  color: var(--text-tertiary);
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+/* Unified day planner (single block: Maghrib → Maghrib) */
+.day-planner-card {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.day-planner-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, var(--color-gold-bg) 0%, var(--bg-primary) 55%);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.day-planner-header-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 16px 24px;
+}
+
+.day-planner-date-text {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--color-gold);
+  line-height: 1.3;
+}
+
+.day-planner-next-prayer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+.day-planner-hijri {
+  font-family: var(--font-arabic);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--color-gold);
+}
+
+.day-planner-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+}
+
+.day-planner-stats {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.day-planner-stats-sep {
+  margin: 0 6px;
+  color: var(--text-tertiary);
+}
+
+.day-planner-add-btn {
+  padding: 10px 18px;
+  font-size: 0.88rem;
+}
+
+.day-planner-body {
+  display: grid;
+  grid-template-columns: 88px 1fr;
+  min-height: 520px;
+}
+
+.day-timeline-col {
+  border-right: 1px solid var(--border-color);
+  background-color: var(--bg-primary);
+  padding: 12px 8px;
+}
+
+.day-timeline-inner {
+  position: relative;
+  height: 100%;
+  min-height: 480px;
+}
+
+.day-period-zone {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background-color: rgba(0, 0, 0, 0.02);
+  border-top: 1px solid rgba(0, 0, 0, 0.04);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.day-period-zone:nth-child(odd) {
+  background-color: rgba(17, 94, 59, 0.03);
+}
+
+.day-period-zone--active {
+  background-color: rgba(17, 94, 59, 0.08);
+  border-top-color: rgba(17, 94, 59, 0.12);
+  border-bottom: 1px solid rgba(17, 94, 59, 0.12);
+  z-index: 1;
+}
+
+[data-theme="dark"] .day-period-zone {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+[data-theme="dark"] .day-period-zone--active {
+  background-color: rgba(22, 163, 74, 0.12);
+}
+
+.day-timeline-track {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  background: linear-gradient(180deg, var(--color-emerald), var(--color-teal));
+  z-index: 2;
+}
+
+.day-boundary-label {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  padding: 3px 6px;
+  border-radius: var(--radius-sm);
+  z-index: 6;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.day-boundary-label em {
+  font-style: normal;
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.day-boundary-start {
+  top: 2px;
+}
+
+.day-boundary-end {
+  bottom: 2px;
+}
+
+.day-hour-mark,
+.day-prayer-mark {
+  position: absolute;
+  left: 0;
+  right: 0;
+  transform: translateY(-50%);
+  z-index: 3;
+}
+
+.day-hour-tick {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.day-hour-label {
+  position: absolute;
+  left: calc(50% + 10px);
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+}
+
+.day-prayer-mark {
+  z-index: 5;
+}
+
+.day-prayer-dot {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-emerald);
+  border: 2px solid var(--bg-secondary);
+  box-shadow: 0 0 0 2px var(--color-emerald-light);
+}
+
+.day-prayer-label {
+  position: absolute;
+  right: calc(50% + 12px);
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--color-emerald);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.day-prayer-time {
+  position: absolute;
+  left: calc(50% + 12px);
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.day-now-marker {
+  z-index: 9;
+}
+
+.day-schedule-col {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.day-schedule-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--bg-primary);
+}
+
+.day-legend-item {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-tertiary);
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-tertiary);
+}
+
+.day-legend-item--active {
+  color: var(--color-emerald);
+  background-color: var(--color-emerald-light);
+}
+
+.day-tasks-list {
+  padding: 16px 20px 20px;
+  flex: 1;
+  overflow-y: auto;
+  max-height: 640px;
+}
+
+.task-schedule-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 76px;
+  flex-shrink: 0;
+}
+
+.task-time-chip {
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+
+.task-period-chip {
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-emerald);
+  background-color: var(--color-emerald-light);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+}
+
+.day-tasks-list .task-card {
+  display: grid;
+  grid-template-columns: auto auto 1fr auto;
+  align-items: start;
+  gap: 12px;
+}
+
+@media (max-width: 720px) {
+  .homepage-hero {
+    grid-template-columns: 1fr;
+    padding: 18px;
+  }
+
+  .homepage-score-card {
+    width: 100%;
+  }
+
+  .daily-cycle-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .cycle-node {
+    min-height: 56px;
+  }
+
+  .planner-period {
+    padding: 14px;
+  }
+
+  .planner-period-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .planner-period-summary {
+    justify-content: flex-start;
+  }
+
+  .prayer-blocks-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .prayer-block-canvas {
+    grid-template-columns: 40px minmax(0, 1fr);
+  }
+
+  .block-task-card {
+    left: 8px;
+    right: 8px;
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .block-task-actions {
+    grid-column: 2;
+  }
+
+  .continuous-day-header {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 16px;
+  }
+
+  .prayer-time-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 12px;
+  }
+
+  .continuous-timeline {
+    grid-template-columns: 48px minmax(0, 1fr);
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .timeline-board::before {
+    left: 16px;
+  }
+
+  .timeline-period-band span {
+    margin-left: 34px;
+  }
+
+  .timeline-task-card {
+    left: 34px;
+    right: 10px;
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .day-planner-body {
+    grid-template-columns: 1fr;
+  }
+
+  .day-timeline-col {
+    border-right: none;
+    border-bottom: 1px solid var(--border-color);
+    min-height: 280px;
+  }
+
+  .day-timeline-inner {
+    min-height: 260px;
+  }
+
+  .day-prayer-label,
+  .day-prayer-time {
+    display: none;
+  }
+}
