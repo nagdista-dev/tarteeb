@@ -4136,3 +4136,306 @@ textarea.form-textarea {
   margin-right: auto;
   padding: 1px 8px;
 }
+
+/* ===== Habits Page ===== */
+.habits-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 16px 20px 48px;
+}
+
+.habits-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.habits-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.habits-empty {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+}
+
+.habits-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.habit-card {
+  background: var(--bg-secondary);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.habit-card:hover {
+  border-color: var(--text-secondary);
+}
+
+.habit-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+}
+
+.habit-check {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 2px solid var(--border-color);
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.18s ease;
+  padding: 0;
+  color: #fff;
+}
+
+.habit-check:hover {
+  border-color: var(--color-emerald);
+}
+
+.habit-check.checked {
+  background: var(--color-emerald);
+  border-color: var(--color-emerald);
+}
+
+.habit-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.habit-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.habit-name:hover {
+  color: var(--color-emerald);
+}
+
+.habit-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.78rem;
+  color: var(--text-tertiary);
+}
+
+.habit-streak {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-gold);
+  font-weight: 700;
+}
+
+.habit-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.habit-notes-toggle {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+}
+
+.habit-notes-toggle:hover {
+  color: var(--color-emerald);
+  background: var(--bg-primary);
+}
+
+.habit-notes-toggle.has-notes {
+  color: var(--color-emerald);
+}
+
+.habit-notes-area {
+  padding: 0 16px 14px;
+}
+
+.habit-notes-input {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border-color);
+  background: var(--bg-primary);
+  font-family: var(--font-sans), var(--font-arabic);
+  font-size: 0.82rem;
+  color: var(--text-primary);
+  outline: none;
+  resize: vertical;
+  min-height: 36px;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.habit-notes-input:focus {
+  border-color: var(--color-emerald);
+}
+
+/* Habit Stats */
+.habit-stats-panel {
+  border-top: 1px solid var(--border-color);
+  padding: 14px 16px;
+}
+
+.habit-stats-toggle {
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  transition: color 0.15s;
+}
+
+.habit-stats-toggle:hover {
+  color: var(--color-emerald);
+}
+
+.habit-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.habit-stat-card {
+  background: var(--bg-primary);
+  border-radius: 8px;
+  padding: 10px 8px;
+  text-align: center;
+}
+
+.habit-stat-value {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.habit-stat-label {
+  font-size: 0.65rem;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-top: 2px;
+}
+
+.habit-stats-chart {
+  display: flex;
+  gap: 3px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.habit-chart-day {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  background: var(--border-color);
+  flex-shrink: 0;
+}
+
+.habit-chart-day.done {
+  background: var(--color-emerald);
+}
+
+.habit-chart-day.missed {
+  background: var(--color-danger);
+  opacity: 0.5;
+}
+
+.habit-chart-day.today {
+  outline: 2px solid var(--color-gold);
+  outline-offset: 1px;
+}
+
+.habit-chart-legend {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+  font-size: 0.7rem;
+  color: var(--text-tertiary);
+}
+
+.habit-chart-legend span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.habit-chart-legend .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.habit-chart-legend .dot.done {
+  background: var(--color-emerald);
+}
+
+.habit-chart-legend .dot.missed {
+  background: var(--color-danger);
+  opacity: 0.5;
+}
+
+.habit-chart-legend .dot.empty {
+  background: var(--border-color);
+}
+
+/* Habit Modal */
+.habit-modal-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+@media (max-width: 600px) {
+  .habit-main {
+    flex-wrap: wrap;
+  }
+
+  .habit-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .habit-meta {
+    flex-wrap: wrap;
+  }
+}

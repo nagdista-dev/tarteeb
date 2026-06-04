@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import {
   Check, Plus, Minus, Edit2, Trash2, Calendar, Settings, Moon, Sun,
   BookOpen, Clock, Sparkles, MapPin, X, AlertCircle,
-  ChevronUp, ChevronDown, RefreshCw, Download, HelpCircle, List, Type, Menu
+  ChevronUp, ChevronDown, RefreshCw, Download, HelpCircle, List, Type, Menu, Target
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import {
@@ -296,6 +296,14 @@ function App() {
   const [showWelcome, setShowWelcome] = useState(() => !localStorage.getItem('tarteeb_welcome_dismissed'));
   const [prayerNotif, setPrayerNotif] = useState(null);
   const lastActivePeriod = useRef(null);
+  const [habits, setHabits] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('tarteeb_habits') || '[]'); }
+    catch { return []; }
+  });
+  const [habitModal, setHabitModal] = useState({ open: false, mode: 'add', habit: null });
+  const [habitForm, setHabitForm] = useState({ name: '' });
+  const [expandedNotes, setExpandedNotes] = useState({});
+  const [expandedStats, setExpandedStats] = useState({});
 
   const dismissWelcome = () => {
     localStorage.setItem('tarteeb_welcome_dismissed', 'true');
@@ -312,6 +320,11 @@ function App() {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('tarteeb_theme', theme);
   }, [theme]);
+
+  // ---- Persist habits ----
+  useEffect(() => {
+    localStorage.setItem('tarteeb_habits', JSON.stringify(habits));
+  }, [habits]);
 
   // ---- Clock ticker (10s) ----
   useEffect(() => {
@@ -583,6 +596,111 @@ function App() {
     }
   };
 
+  // ---- Habit Functions ----
+  const getTodayStr = () => formatDateLocal(new Date());
+
+  const calcHabitStreak = (entries) => {
+    const today = getTodayStr();
+    const d = new Date(today);
+    let streak = 0;
+    while (true) {
+      const key = formatDateLocal(d);
+      const entry = entries[key];
+      if (entry && entry.completed) {
+        streak++;
+        d.setDate(d.getDate() - 1);
+      } else break;
+    }
+    return streak;
+  };
+
+  const calcLongestStreak = (entries) => {
+    const dates = Object.keys(entries).sort();
+    if (!dates.length) return 0;
+    let longest = 0, cur = 0;
+    for (const dateStr of dates) {
+      if (entries[dateStr].completed) {
+        cur++;
+        longest = Math.max(longest, cur);
+      } else cur = 0;
+    }
+    return longest;
+  };
+
+  const calcHabitStats = (habit) => {
+    const entries = habit.entries || {};
+    const dates = Object.keys(entries).sort();
+    const total = dates.length;
+    const completed = dates.filter(d => entries[d].completed).length;
+    return {
+      total,
+      completed,
+      rate: total ? Math.round((completed / total) * 100) : 0,
+      currentStreak: calcHabitStreak(entries),
+      longestStreak: calcLongestStreak(entries)
+    };
+  };
+
+  const toggleHabit = (id) => {
+    const today = getTodayStr();
+    setHabits(prev => prev.map(h => {
+      if (h.id !== id) return h;
+      const entries = { ...(h.entries || {}) };
+      const current = entries[today];
+      entries[today] = { completed: !current?.completed, notes: current?.notes || '' };
+      return { ...h, entries };
+    }));
+  };
+
+  const updateHabitNotes = (id, notes) => {
+    const today = getTodayStr();
+    setHabits(prev => prev.map(h => {
+      if (h.id !== id) return h;
+      const entries = { ...(h.entries || {}) };
+      entries[today] = { completed: entries[today]?.completed || false, notes };
+      return { ...h, entries };
+    }));
+  };
+
+  const addHabit = (name) => {
+    const habit = {
+      id: createTaskId(),
+      name: name.trim(),
+      createdAt: getTodayStr(),
+      entries: {}
+    };
+    setHabits(prev => [...prev, habit]);
+  };
+
+  const deleteHabit = async (id) => {
+    const confirmed = await showConfirm(t('habits.deleteConfirm'));
+    if (confirmed) setHabits(prev => prev.filter(h => h.id !== id));
+  };
+
+  const exportHabitsMarkdown = () => {
+    if (!habits.length) return;
+    let md = `# ${t('habits.title')}\n\n`;
+    habits.forEach(h => {
+      const stats = calcHabitStats(h);
+      md += `## ${h.name}\n`;
+      md += `- ${t('habits.currentStreak')}: ${stats.currentStreak}\n`;
+      md += `- ${t('habits.longestStreak')}: ${stats.longestStreak}\n`;
+      md += `- ${t('habits.totalCompletions')}: ${stats.completed}/${stats.total}\n`;
+      md += `- ${t('habits.completionRate')}: ${stats.rate}%\n\n`;
+      const dates = Object.keys(h.entries || {}).sort();
+      if (dates.length) {
+        md += `| ${t('export.date')} | ${t('habits.today')} | ${t('habits.notes')} |\n`;
+        md += `|---|---|---|\n`;
+        for (const d of dates) {
+          const e = h.entries[d];
+          md += `| ${d} | ${e.completed ? '✓' : '✗'} | ${e.notes || ''} |\n`;
+        }
+        md += '\n';
+      }
+    });
+    return md;
+  };
+
   const exportToMarkdown = () => {
     if (!dayData) return;
     const { tasks, diary, date, hijriDate, prayerTimes, stats } = dayData;
@@ -620,6 +738,11 @@ function App() {
       lines.push(`## ${t('export.notes')}`);
       lines.push('');
       lines.push(diary);
+    }
+    const habitsMd = exportHabitsMarkdown();
+    if (habitsMd) {
+      lines.push('');
+      lines.push(habitsMd);
     }
     const blob = new Blob([lines.join('\n')], { type: 'text/markdown' });
     const url = URL.createObjectURL(blob);
@@ -927,6 +1050,7 @@ function App() {
   const sidebarLinks = [
     { id: 'home', label: t('nav.home'), icon: Sparkles },
     { id: 'tasks', label: t('nav.tasks'), icon: List },
+    { id: 'habits', label: t('nav.habits'), icon: Target },
     { id: 'journal', label: t('nav.journal'), icon: BookOpen },
     { id: 'history', label: t('nav.history'), icon: Calendar },
     { id: 'guide', label: t('nav.guide'), icon: HelpCircle },
@@ -1269,6 +1393,152 @@ function App() {
               </div>
             )}
 
+            {currentPage === 'habits' && (
+              <div className="habits-page">
+                <div className="habits-header">
+                  <h2 className="habits-title">{t('habits.title')}</h2>
+                  <button className="btn btn-primary" onClick={() => { setHabitForm({ name: '' }); setHabitModal({ open: true, mode: 'add', habit: null }); }}>
+                    <Plus size={16} /> {t('habits.add')}
+                  </button>
+                </div>
+                {habits.length === 0 ? (
+                  <div className="habits-empty">{t('habits.noHabits')}</div>
+                ) : (
+                  <div className="habits-list">
+                    {habits.map(habit => {
+                      const entries = habit.entries || {};
+                      const today = formatDateLocal(new Date());
+                      const todayEntry = entries[today];
+                      const isDone = todayEntry?.completed || false;
+                      const stats = calcHabitStats(habit);
+                      const sortedDates = Object.keys(entries).sort().slice(-60);
+                      return (
+                        <div key={habit.id} className="habit-card">
+                          <div className="habit-main">
+                            <button
+                              type="button"
+                              className={`habit-check ${isDone ? 'checked' : ''}`}
+                              onClick={() => toggleHabit(habit.id)}
+                            >
+                              {isDone && <Check size={16} />}
+                            </button>
+                            <div className="habit-info">
+                              <span className="habit-name" onClick={() => setExpandedStats(prev => ({ ...prev, [habit.id]: !prev[habit.id] }))}>
+                                {habit.name}
+                              </span>
+                              <div className="habit-meta">
+                                <span className="habit-streak">
+                                  🔥 {stats.currentStreak} {t('habits.streak')}
+                                </span>
+                                <span>{stats.completed}/{stats.total}</span>
+                                <span>{stats.rate}%</span>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              className={`habit-notes-toggle ${todayEntry?.notes ? 'has-notes' : ''}`}
+                              onClick={() => setExpandedNotes(prev => ({ ...prev, [habit.id]: !prev[habit.id] }))}
+                              title={t('habits.notes')}
+                            >
+                              <Edit2 size={15} />
+                            </button>
+                            <div className="habit-actions">
+                              <button type="button" className="btn-task-action delete" onClick={() => deleteHabit(habit.id)} title={t('habits.delete')}>
+                                <Trash2 size={13} />
+                              </button>
+                            </div>
+                          </div>
+                          {expandedNotes[habit.id] && (
+                            <div className="habit-notes-area">
+                              <textarea
+                                className="habit-notes-input"
+                                placeholder={t('habits.notesPlaceholder')}
+                                value={todayEntry?.notes || ''}
+                                onChange={e => updateHabitNotes(habit.id, e.target.value)}
+                                rows={2}
+                              />
+                            </div>
+                          )}
+                          <div className="habit-stats-panel">
+                            <button
+                              type="button"
+                              className="habit-stats-toggle"
+                              onClick={() => setExpandedStats(prev => ({ ...prev, [habit.id]: !prev[habit.id] }))}
+                            >
+                              {expandedStats[habit.id] ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                              {' '}{t('habits.stats')}
+                            </button>
+                            {expandedStats[habit.id] && (
+                              <>
+                                <div className="habit-stats-grid">
+                                  <div className="habit-stat-card">
+                                    <div className="habit-stat-value">{stats.currentStreak}</div>
+                                    <div className="habit-stat-label">{t('habits.currentStreak')}</div>
+                                  </div>
+                                  <div className="habit-stat-card">
+                                    <div className="habit-stat-value">{stats.longestStreak}</div>
+                                    <div className="habit-stat-label">{t('habits.longestStreak')}</div>
+                                  </div>
+                                  <div className="habit-stat-card">
+                                    <div className="habit-stat-value">{stats.completed}</div>
+                                    <div className="habit-stat-label">{t('habits.totalCompletions')}</div>
+                                  </div>
+                                  <div className="habit-stat-card">
+                                    <div className="habit-stat-value">{stats.rate}%</div>
+                                    <div className="habit-stat-label">{t('habits.completionRate')}</div>
+                                  </div>
+                                </div>
+                                {sortedDates.length > 0 && (
+                                  <>
+                                    <div className="habit-stats-chart">
+                                      {sortedDates.map(d => {
+                                        const e = entries[d];
+                                        const isToday = d === today;
+                                        let cls = 'habit-chart-day';
+                                        if (e?.completed) cls += ' done';
+                                        else if (e) cls += ' missed';
+                                        else cls += ' empty';
+                                        if (isToday) cls += ' today';
+                                        return <div key={d} className={cls} title={`${d}: ${e?.completed ? '✓' : e ? '✗' : '–'}`} />;
+                                      })}
+                                    </div>
+                                    <div className="habit-chart-legend">
+                                      <span><span className="dot done" /> {t('habits.today')}</span>
+                                      <span><span className="dot missed" /> Missed</span>
+                                      <span><span className="dot empty" /> Empty</span>
+                                    </div>
+                                  </>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                {habits.length > 0 && (
+                  <div style={{ marginTop: 16, textAlign: 'center' }}>
+                    <button className="btn" onClick={() => {
+                      const md = exportHabitsMarkdown();
+                      if (!md) return;
+                      const blob = new Blob([md], { type: 'text/markdown' });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `habits_${formatDateLocal(new Date())}.md`;
+                      document.body.appendChild(a);
+                      a.click();
+                      document.body.removeChild(a);
+                      URL.revokeObjectURL(url);
+                    }}>
+                      <Download size={14} /> {t('habits.export')}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
             {currentPage === 'settings' && (
               <div className="settings-page">
                 <div className="settings-section-label">{t('settings.appearance')}</div>
@@ -1570,6 +1840,36 @@ function App() {
               <div className="modal-footer">
                 <button type="button" className="btn" onClick={() => setTaskModal(prev => ({ ...prev, open: false }))}>{t('modal.cancel')}</button>
                 <button type="submit" className="btn btn-primary">{taskModal.mode === 'add' ? t('modal.create') : t('modal.save')}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Habit Modal */}
+      {habitModal.open && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <span className="modal-title">{habitModal.mode === 'add' ? t('habits.add') : t('habits.edit')}</span>
+              <button className="btn-task-action" onClick={() => setHabitModal(prev => ({ ...prev, open: false }))}><X size={18} /></button>
+            </div>
+            <form onSubmit={e => {
+              e.preventDefault();
+              if (!habitForm.name.trim()) return;
+              if (habitModal.mode === 'add') addHabit(habitForm.name);
+              else setHabits(prev => prev.map(h => h.id === habitModal.habit.id ? { ...h, name: habitForm.name.trim() } : h));
+              setHabitModal({ open: false, mode: 'add', habit: null });
+            }}>
+              <div className="modal-body">
+                <div className="form-group">
+                  <label className="form-label">{t('habits.name')}</label>
+                  <input className="form-input" type="text" value={habitForm.name} onChange={e => setHabitForm(prev => ({ ...prev, name: e.target.value }))} required autoFocus />
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn" onClick={() => setHabitModal(prev => ({ ...prev, open: false }))}>{t('habits.cancel')}</button>
+                <button type="submit" className="btn btn-primary">{habitModal.mode === 'add' ? t('habits.create') : t('habits.save')}</button>
               </div>
             </form>
           </div>

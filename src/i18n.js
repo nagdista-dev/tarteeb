@@ -208,6 +208,30 @@ const en = {
   'time.until': 'until',
   'prayer.boundary': 'boundary',
   'lang.switch': 'العربية',
+
+  /* Habits */
+  'nav.habits': 'Habits',
+  'habits.title': 'Habits',
+  'habits.add': 'Add Habit',
+  'habits.edit': 'Edit Habit',
+  'habits.name': 'Habit Name *',
+  'habits.create': 'Create',
+  'habits.save': 'Save',
+  'habits.cancel': 'Cancel',
+  'habits.delete': 'Delete',
+  'habits.deleteConfirm': 'Delete this habit? This action cannot be undone.',
+  'habits.noHabits': 'No habits yet. Add your first habit!',
+  'habits.today': 'Today',
+  'habits.notes': 'Notes',
+  'habits.notesPlaceholder': 'Add note...',
+  'habits.streak': 'Streak',
+  'habits.currentStreak': 'Current Streak',
+  'habits.longestStreak': 'Longest Streak',
+  'habits.totalCompletions': 'Total Completions',
+  'habits.completionRate': 'Completion Rate',
+  'habits.daysTracked': 'Days Tracked',
+  'habits.stats': 'Statistics',
+  'habits.export': 'Export Habits',
 };
 
 const ar = {
@@ -419,6 +443,30 @@ const ar = {
   'time.until': 'حتى',
   'prayer.boundary': 'الحدود',
   'lang.switch': 'English',
+
+  /* Habits */
+  'nav.habits': 'العادات',
+  'habits.title': 'العادات',
+  'habits.add': 'إضافة عادة',
+  'habits.edit': 'تعديل العادة',
+  'habits.name': 'اسم العادة *',
+  'habits.create': 'إنشاء',
+  'habits.save': 'حفظ',
+  'habits.cancel': 'إلغاء',
+  'habits.delete': 'حذف',
+  'habits.deleteConfirm': 'حذف هذه العادة؟ لا يمكن التراجع عن هذا الإجراء.',
+  'habits.noHabits': 'لا توجد عادات بعد. أضف عادتك الأولى!',
+  'habits.today': 'اليوم',
+  'habits.notes': 'ملاحظات',
+  'habits.notesPlaceholder': 'أضف ملاحظة...',
+  'habits.streak': 'التسلسل',
+  'habits.currentStreak': 'التسلسل الحالي',
+  'habits.longestStreak': 'أطول تسلسل',
+  'habits.totalCompletions': 'إجمالي الإنجازات',
+  'habits.completionRate': 'معدل الإنجاز',
+  'habits.daysTracked': 'الأيام المتتبعة',
+  'habits.stats': 'الإحصائيات',
+  'habits.export': 'تصدير العادات',
 };
 
 const translations = { en, ar };
