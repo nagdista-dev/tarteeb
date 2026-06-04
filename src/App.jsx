@@ -1515,15 +1515,52 @@ function App() {
                   </div>
                   <div className="form-group">
                     <label className="form-label">{t('modal.endTime')}</label>
-                    <select
-                      className="form-select"
-                      value={taskForm.endTime}
-                      onChange={e => setTaskForm(prev => ({ ...prev, endTime: e.target.value }))}
-                    >
-                      {(dayData ? getAvailableEndSlots(taskForm.period, dayData.tasks, dayData.prayerTimes, scheduledTimeToPlannerMinutes(taskForm.scheduledTime, taskForm.period, dayData.prayerTimes), taskModal.task?.id) : []).map(min => (
-                        <option key={min} value={formatMinutesToTime(min)}>{formatMinutesToTime(min)}</option>
-                      ))}
-                    </select>
+                    {(() => {
+                      const prayerTimes = dayData?.prayerTimes;
+                      if (!prayerTimes) return <select className="form-select" disabled><option>--:--</option></select>;
+                      const endMin = scheduledTimeToPlannerMinutes(taskForm.scheduledTime, taskForm.period, prayerTimes);
+                      const slots = getAvailableEndSlots(taskForm.period, dayData.tasks, prayerTimes, endMin, taskModal.task?.id);
+                      const allMinutes = slots.map(m => m % 1440);
+                      const allHours = [...new Set(allMinutes.map(m => Math.floor(m / 60)))].sort((a, b) => a - b);
+                      const curParsed = parseTimeToMinutes(taskForm.endTime);
+                      const curHour = Math.floor(curParsed / 60);
+                      const curMin = Math.floor(curParsed % 60);
+                      const hour = allHours.includes(curHour) ? curHour : (allHours[0] ?? 0);
+                      const minsForHour = [...new Set(allMinutes.filter(m => Math.floor(m / 60) === hour).map(m => m % 60))].sort((a, b) => a - b);
+                      const minute = minsForHour.includes(curMin) ? curMin : (minsForHour[0] ?? 0);
+                      const use12 = getUse12h();
+                      return (
+                        <div className="time-select-row">
+                          <select className="form-select time-select-hour"
+                            value={hour}
+                            onChange={e => {
+                              const h = Number(e.target.value);
+                              const m = ([...new Set(allMinutes.filter(mm => Math.floor(mm / 60) === h).map(mm => mm % 60))].sort((a, b) => a - b)[0] ?? 0);
+                              setTaskForm(prev => ({ ...prev, endTime: formatMinutesToTime(h * 60 + m) }));
+                            }}
+                          >
+                            {allHours.map(h => (
+                              <option key={h} value={h}>
+                                {use12 ? (h % 12 || 12) : String(h).padStart(2, '0')}
+                              </option>
+                            ))}
+                          </select>
+                          <span className="time-colon">:</span>
+                          <select className="form-select time-select-minute"
+                            value={minute}
+                            onChange={e => {
+                              const m = Number(e.target.value);
+                              setTaskForm(prev => ({ ...prev, endTime: formatMinutesToTime(hour * 60 + m) }));
+                            }}
+                          >
+                            {minsForHour.map(m => (
+                              <option key={m} value={m}>{String(m).padStart(2, '0')}</option>
+                            ))}
+                          </select>
+                          {use12 && <span className="time-ampm">{hour < 12 ? 'AM' : 'PM'}</span>}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
                 {taskModal.task?.type !== 'fixed' && (

@@ -1147,6 +1147,38 @@ a {
   text-transform: uppercase;
 }
 
+.time-select-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.time-select-hour {
+  flex: 1;
+  min-width: 0;
+}
+
+.time-select-minute {
+  flex: 1;
+  min-width: 0;
+}
+
+.time-colon {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  line-height: 1;
+  margin-top: -2px;
+}
+
+.time-ampm {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-emerald);
+  white-space: nowrap;
+  margin-top: -2px;
+}
+
 .form-input, .form-select, .form-textarea {
   padding: 11px 14px;
   border-radius: 10px;
