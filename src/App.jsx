@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import {
-  Check, Plus, Edit2, Trash2, Calendar, Settings, Moon, Sun,
+  Check, Plus, Minus, Edit2, Trash2, Calendar, Settings, Moon, Sun,
   BookOpen, Clock, Sparkles, MapPin, CheckCircle2, X, AlertCircle,
-  ChevronUp, ChevronDown, RefreshCw, Menu, Download, HelpCircle, List
+  ChevronUp, ChevronDown, RefreshCw, Menu, Download, HelpCircle, List, Type
 } from 'lucide-react';
 import {
   formatDateLocal, addDays, getPrayerTimesForDate,
@@ -209,6 +209,19 @@ function App() {
     localStorage.setItem('tarteeb_lang', lang);
     setLanguage(lang);
   }, [lang]);
+
+  // ---- Font Size ----
+  const FONT_SIZES = ['small', 'normal', 'large', 'xlarge'];
+  const FONT_SIZE_VALUES = { small: '14px', normal: '16px', large: '18px', xlarge: '20px' };
+  const [fontSize, setFontSize] = useState(() => {
+    const saved = localStorage.getItem('tarteeb_font_size');
+    return FONT_SIZES.includes(saved) ? saved : 'normal';
+  });
+
+  useEffect(() => {
+    document.documentElement.style.fontSize = FONT_SIZE_VALUES[fontSize];
+    localStorage.setItem('tarteeb_font_size', fontSize);
+  }, [fontSize]);
 
   // ---- Location Config ----
   const [locationConfig, setLocationConfig] = useState(() => {
@@ -1181,10 +1194,41 @@ function App() {
 
             {currentPage === 'settings' && (
               <div className="settings-page">
+                <div className="settings-section-label">{t('settings.appearance')}</div>
+
+                {/* Font Size */}
+                <div className="settings-card">
+                  <div className="settings-card-header">
+                    <span className="settings-card-icon-wrap"><Type size={20} /></span>
+                    <div>
+                      <h3 className="settings-card-title">{t('settings.fontSize')}</h3>
+                      <p className="settings-card-desc">{t('settings.fontSizeDesc')}</p>
+                    </div>
+                  </div>
+                  <div className="settings-card-body">
+                    <div className="font-size-control">
+                      <button className="btn btn-icon font-size-btn" onClick={() => setFontSize(s => {
+                        const idx = FONT_SIZES.indexOf(s);
+                        return FONT_SIZES[Math.max(0, idx - 1)];
+                      })} disabled={fontSize === 'small'}><Minus size={18} /></button>
+                      <div className="font-size-display">
+                        <span className="font-size-label">{t('settings.fontSize_' + fontSize)}</span>
+                        <span className="font-size-preview">{t('settings.fontSizePreview')}</span>
+                      </div>
+                      <button className="btn btn-icon font-size-btn" onClick={() => setFontSize(s => {
+                        const idx = FONT_SIZES.indexOf(s);
+                        return FONT_SIZES[Math.min(FONT_SIZES.length - 1, idx + 1)];
+                      })} disabled={fontSize === 'xlarge'}><Plus size={18} /></button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="settings-section-label">{t('settings.prayerTimes')}</div>
+
                 {/* Location Settings */}
                 <div className="settings-card">
                   <div className="settings-card-header">
-                    <MapPin size={18} className="settings-card-icon settings-icon-green" />
+                    <span className="settings-card-icon-wrap"><MapPin size={20} /></span>
                     <div>
                       <h3 className="settings-card-title">{t('settings.locationTitle')}</h3>
                       <p className="settings-card-desc">{t('settings.locationDesc')}</p>
@@ -1233,10 +1277,11 @@ function App() {
                     </form>
                   </div>
                 </div>
+
                 {/* Manual Overrides */}
                 <div className="settings-card">
                   <div className="settings-card-header">
-                    <Clock size={18} className="settings-card-icon settings-icon-gold" />
+                    <span className="settings-card-icon-wrap"><Clock size={20} /></span>
                     <div>
                       <h3 className="settings-card-title">{t('settings.manualTitle')}</h3>
                       <p className="settings-card-desc">{t('settings.manualDesc')}</p>
