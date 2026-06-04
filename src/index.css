@@ -2708,6 +2708,26 @@ textarea.form-textarea {
   z-index: 8;
 }
 
+.block-task-card.completed {
+  opacity: 0.5;
+  border-color: var(--border-color);
+}
+
+.block-task-card.completed .block-task-name {
+  text-decoration: line-through;
+  opacity: 0.55;
+}
+
+.block-task-card.completed .block-task-time,
+.block-task-card.completed .block-task-endtime,
+.block-task-card.completed .block-task-duration {
+  opacity: 0.5;
+}
+
+.block-task-card.completed:hover {
+  opacity: 0.65;
+}
+
 .block-task-card.task-fixed {
   border-left-color: var(--color-emerald);
   border-color: color-mix(in srgb, var(--color-emerald) 20%, var(--border-color));
@@ -3105,11 +3125,23 @@ textarea.form-textarea {
 }
 
 .timeline-task-card.completed {
+  opacity: 0.5;
+  border-color: var(--border-color);
+}
+
+.timeline-task-card.completed .block-task-name {
+  text-decoration: line-through;
   opacity: 0.55;
 }
 
+.timeline-task-card.completed .block-task-time,
+.timeline-task-card.completed .block-task-endtime,
+.timeline-task-card.completed .block-task-duration {
+  opacity: 0.5;
+}
+
 .timeline-task-card.completed:hover {
-  opacity: 0.7;
+  opacity: 0.65;
 }
 
 .timeline-task-card .task-checkbox.checked {
@@ -3844,6 +3876,15 @@ textarea.form-textarea {
 .tasks-task-card.completed .tasks-task-name {
   text-decoration: line-through;
   opacity: 0.55;
+}
+
+.tasks-task-card.completed {
+  opacity: 0.65;
+  background: var(--bg-primary);
+}
+
+.tasks-task-card.completed .tasks-task-time {
+  opacity: 0.5;
 }
 
 .tasks-task-check {
