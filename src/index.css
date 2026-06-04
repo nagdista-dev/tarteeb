@@ -2689,8 +2689,18 @@ textarea.form-textarea {
   border: 1px solid var(--border-color);
   border-left: 4px solid var(--color-teal);
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
+  box-shadow:
+    0 1px 2px rgba(0,0,0,0.04),
+    0 2px 6px rgba(0,0,0,0.03);
   animation: taskRise 0.28s ease both;
+  transition: box-shadow 0.25s ease, transform 0.2s ease;
+}
+
+.block-task-card:hover {
+  box-shadow:
+    0 2px 4px rgba(0,0,0,0.05),
+    0 6px 16px rgba(0,0,0,0.07);
+  transform: translateY(-1px);
 }
 
 .block-task-card.task-fixed {
@@ -2997,27 +3007,75 @@ textarea.form-textarea {
   border: 1px solid var(--border-color);
   border-left: 3px solid var(--color-teal);
   border-radius: 10px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-  transition: border-color 0.2s, box-shadow 0.2s;
+  box-shadow:
+    0 1px 2px rgba(0,0,0,0.04),
+    0 2px 6px rgba(0,0,0,0.03);
+  transition: border-color 0.2s, box-shadow 0.25s ease, transform 0.2s ease;
   animation: taskRise 0.28s ease both;
   min-height: 38px;
 }
 
 .timeline-task-card:hover {
   border-color: var(--text-tertiary);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  box-shadow:
+    0 2px 4px rgba(0,0,0,0.05),
+    0 6px 16px rgba(0,0,0,0.07);
+  transform: translateY(-1px);
 }
 
 .timeline-task-card.task-fixed {
   border-left-color: var(--color-emerald);
+  background: linear-gradient(135deg, var(--bg-secondary), color-mix(in srgb, var(--color-emerald-light) 30%, var(--bg-secondary)));
+}
+
+.timeline-task-card.task-recurring {
+  border-left-color: var(--color-gold);
+  background: linear-gradient(135deg, var(--bg-secondary), color-mix(in srgb, var(--color-gold-bg) 40%, var(--bg-secondary)));
+}
+
+.timeline-task-card.task-personal {
+  border-left-color: var(--color-teal);
+  background: linear-gradient(135deg, var(--bg-secondary), color-mix(in srgb, var(--color-teal-bg) 40%, var(--bg-secondary)));
+}
+
+.timeline-task-card.completed {
+  opacity: 0.55;
+}
+
+.timeline-task-card.completed:hover {
+  opacity: 0.7;
+}
+
+.timeline-task-card .task-checkbox.checked {
+  background-color: var(--color-emerald);
+  border-color: var(--color-emerald);
+}
+
+.timeline-task-card.task-personal .task-checkbox.checked {
+  background-color: var(--color-teal);
+  border-color: var(--color-teal);
+}
+
+.timeline-task-card.task-recurring .task-checkbox.checked {
+  background-color: var(--color-gold);
+  border-color: var(--color-gold);
+}
+
+.timeline-task-card .block-task-name {
+  font-weight: 600;
+}
+
+.timeline-task-card .block-task-time {
+  font-weight: 600;
+  color: var(--color-emerald);
 }
 
 .timeline-task-card.prayer-bg-night {
-  background: rgba(17, 94, 59, 0.08);
+  background: linear-gradient(135deg, var(--bg-secondary), color-mix(in srgb, var(--color-emerald-light) 30%, var(--bg-secondary)));
 }
 
 .timeline-task-card.prayer-bg-day {
-  background: rgba(217, 119, 6, 0.08);
+  background: linear-gradient(135deg, var(--bg-secondary), color-mix(in srgb, var(--color-gold-bg) 40%, var(--bg-secondary)));
 }
 
 .fixed-task-note {

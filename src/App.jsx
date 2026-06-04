@@ -38,7 +38,7 @@ const createTaskId = () => (
   globalThis.crypto?.randomUUID ? globalThis.crypto.randomUUID() : `task_${fallbackTaskId += 1}`
 );
 
-const TASK_GAP = 10;
+const TASK_GAP = 5;
 
 const getTaskStartMinutes = (task, prayers) => scheduledTimeToPlannerMinutes(
   getTaskDisplayTime(task, prayers),
@@ -124,12 +124,12 @@ const normalizeTasksForPrayerBlocks = (tasks, prayers) => {
   });
 };
 
-const getFirstAvailableTimeForPeriod = (period, tasks, prayers, duration = 15, excludeTaskId = null) => {
+const getFirstAvailableTimeForPeriod = (period, tasks, prayers, duration = 15, excludeTaskId = null, minTime = null) => {
   const blockStart = getPeriodStartMinutes(period, prayers);
   const blockEnd = getPeriodEndMinutes(period, prayers);
   const occupied = getOccupiedSlots(period, tasks, prayers, excludeTaskId);
 
-  for (let start = blockStart; start + duration <= blockEnd; start += TASK_GAP) {
+  for (let start = Math.max(blockStart, minTime ?? blockStart); start + duration <= blockEnd; start += TASK_GAP) {
     const overlaps = occupied.some(slot => start < slot.end && start + duration > slot.start);
     if (!overlaps) return formatMinutesToTime(start);
   }
@@ -148,13 +148,14 @@ const getOccupiedSlots = (period, tasks, prayers, excludeTaskId = null) => {
     .sort((a, b) => a.start - b.start);
 };
 
-const getAvailableStartSlots = (period, tasks, prayers, excludeTaskId = null) => {
+const getAvailableStartSlots = (period, tasks, prayers, excludeTaskId = null, minTime = null) => {
   const blockStart = getPeriodStartMinutes(period, prayers);
   const blockEnd = getPeriodEndMinutes(period, prayers);
   const occupied = getOccupiedSlots(period, tasks, prayers, excludeTaskId);
   const slots = [];
 
   for (let start = blockStart; start < blockEnd; start += TASK_GAP) {
+    if (minTime !== null && start < minTime) continue;
     const overlaps = occupied.some(slot => start >= slot.start && start < slot.end);
     if (!overlaps) slots.push(start);
   }
@@ -489,7 +490,8 @@ function App() {
     if (mode === 'edit' && task?.type === 'fixed') return;
     if (mode === 'add' && prayers) {
       const period = periodOverride || getDefaultPeriod();
-      const startTime = getFirstAvailableTimeForPeriod(period, dayData.tasks, prayers);
+      const nowMin = getCurrentPlannerMinutes(currentTime, activeDate);
+      const startTime = getFirstAvailableTimeForPeriod(period, dayData.tasks, prayers, 15, null, nowMin);
       const startMin = scheduledTimeToPlannerMinutes(startTime, period, prayers);
       const endSlots = getAvailableEndSlots(period, dayData.tasks, prayers, startMin);
       const endTime = endSlots.length > 0 ? formatMinutesToTime(endSlots[0]) : formatMinutesToTime(startMin + 15);
@@ -1462,7 +1464,8 @@ function App() {
                     onChange={e => {
                       const period = e.target.value;
                       const excludeId = taskModal.task?.id;
-                      const slots = dayData ? getAvailableStartSlots(period, dayData.tasks, dayData.prayerTimes, excludeId) : [];
+                      const nowMin = taskModal.mode === 'add' ? getCurrentPlannerMinutes(currentTime, activeDate) : null;
+                      const slots = dayData ? getAvailableStartSlots(period, dayData.tasks, dayData.prayerTimes, excludeId, nowMin) : [];
                       const firstStart = slots.length > 0 ? formatMinutesToTime(slots[0]) : '00:00';
                       const firstStartMin = scheduledTimeToPlannerMinutes(firstStart, period, dayData.prayerTimes);
                       const endSlots = dayData ? getAvailableEndSlots(period, dayData.tasks, dayData.prayerTimes, firstStartMin, excludeId) : [];
@@ -1496,7 +1499,7 @@ function App() {
                         setTaskForm(prev => ({ ...prev, scheduledTime: startTime, endTime }));
                       }}
                     >
-                      {(dayData ? getAvailableStartSlots(taskForm.period, dayData.tasks, dayData.prayerTimes, taskModal.task?.id) : []).map(min => (
+                      {(dayData ? getAvailableStartSlots(taskForm.period, dayData.tasks, dayData.prayerTimes, taskModal.task?.id, taskModal.mode === 'add' ? getCurrentPlannerMinutes(currentTime, activeDate) : null) : []).map(min => (
                         <option key={min} value={formatMinutesToTime(min)}>{formatMinutesToTime(min)}</option>
                       ))}
                     </select>
