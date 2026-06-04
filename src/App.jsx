@@ -4,6 +4,7 @@ import {
   BookOpen, Clock, Sparkles, MapPin, X, AlertCircle,
   ChevronUp, ChevronDown, RefreshCw, Download, HelpCircle, List, Type, Menu
 } from 'lucide-react';
+import confetti from 'canvas-confetti';
 import {
   formatDateLocal, addDays, getPrayerTimesForDate,
   getLogicalPlannerDate, getCompiledPrayersForPlannerDate,
@@ -50,7 +51,7 @@ const FIXED_TASK_SCHEDULE = {
   'Maghrib Prayer': { period: 'evening', offset: 0 },
   'Isha Prayer': { period: 'night', offset: 0 },
   'Fajr Prayer': { period: 'morning', offset: 0 },
-  'Morning Adhkar': { period: 'morning', offset: 30 },
+  'Morning Adhkar': { period: 'morning', offset: 15 },
   'Dhuhr Prayer': { period: 'afternoon', offset: 0 },
   'Asr Prayer': { period: 'late_afternoon', offset: 0 },
   'Evening Adhkar': { period: 'late_afternoon', offset: 0 }
@@ -476,6 +477,15 @@ function App() {
 
   const toggleTaskCompletion = (id) => {
     if (!dayData) return;
+    const task = dayData.tasks.find(t => t.id === id);
+    if (task && !task.completed) {
+      confetti({
+        particleCount: 120,
+        spread: 80,
+        origin: { x: 0.5, y: 0.5 },
+        colors: ['#059669', '#0d9488', '#d97706', '#f59e0b', '#10b981']
+      });
+    }
     const updTasks = dayData.tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t);
     updateDayData({ ...dayData, tasks: updTasks });
   };
@@ -933,7 +943,6 @@ function App() {
             <Sparkles size={22} className="brand-icon" />
             <span className="brand-latin">{t('brand.title')}</span>
           </h1>
-          <p className="brand-subtitle">{t('brand.subtitle')}</p>
         </div>
         <div className="header-actions">
           <button className="btn btn-menu-mobile" onClick={() => setSidebarOpen(true)} aria-label={t('nav.openSidebar')}>

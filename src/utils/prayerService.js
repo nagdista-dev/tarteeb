@@ -232,7 +232,7 @@ export const FIXED_TASKS_TEMPLATES = [
   { name: "Maghrib Prayer", period: "evening", duration: 15, type: "fixed" },
   { name: "Isha Prayer", period: "night", duration: 15, type: "fixed" },
   { name: "Fajr Prayer", period: "morning", duration: 15, type: "fixed" },
-  { name: "Morning Adhkar", period: "morning", duration: 15, type: "fixed" },
+  { name: "Morning Adhkar", period: "morning", duration: 10, type: "fixed" },
   { name: "Dhuhr Prayer", period: "afternoon", duration: 15, type: "fixed" },
   { name: "Asr Prayer", period: "late_afternoon", duration: 15, type: "fixed" },
   { name: "Evening Adhkar", period: "late_afternoon", duration: 15, type: "fixed" }

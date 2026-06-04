@@ -2711,12 +2711,6 @@ textarea.form-textarea {
 .block-task-card.task-fixed {
   border-left-color: var(--color-emerald);
   border-color: color-mix(in srgb, var(--color-emerald) 20%, var(--border-color));
-  background:
-    linear-gradient(
-      135deg,
-      color-mix(in srgb, var(--color-emerald-light) 55%, var(--bg-secondary)),
-      var(--bg-secondary) 70%
-    );
 }
 
 .block-task-card.task-fixed:hover {
@@ -2727,12 +2721,6 @@ textarea.form-textarea {
 .block-task-card.task-user {
   border-left-color: var(--color-gold);
   border-color: color-mix(in srgb, var(--color-gold) 20%, var(--border-color));
-  background:
-    linear-gradient(
-      135deg,
-      color-mix(in srgb, var(--color-gold-bg) 60%, var(--bg-secondary)),
-      var(--bg-secondary) 70%
-    );
 }
 
 .block-task-card.task-recurring:hover,
@@ -3092,12 +3080,6 @@ textarea.form-textarea {
 .timeline-task-card.task-fixed {
   border-left-color: var(--color-emerald);
   border-color: color-mix(in srgb, var(--color-emerald) 20%, var(--border-color));
-  background:
-    linear-gradient(
-      135deg,
-      color-mix(in srgb, var(--color-emerald-light) 55%, var(--bg-secondary)),
-      var(--bg-secondary) 70%
-    );
 }
 
 .timeline-task-card.task-fixed:hover {
@@ -3107,12 +3089,6 @@ textarea.form-textarea {
 .timeline-task-card.task-recurring {
   border-left-color: var(--color-gold);
   border-color: color-mix(in srgb, var(--color-gold) 20%, var(--border-color));
-  background:
-    linear-gradient(
-      135deg,
-      color-mix(in srgb, var(--color-gold-bg) 60%, var(--bg-secondary)),
-      var(--bg-secondary) 70%
-    );
 }
 
 .timeline-task-card.task-recurring:hover {
@@ -3122,12 +3098,6 @@ textarea.form-textarea {
 .timeline-task-card.task-personal {
   border-left-color: var(--color-teal);
   border-color: color-mix(in srgb, var(--color-teal) 20%, var(--border-color));
-  background:
-    linear-gradient(
-      135deg,
-      color-mix(in srgb, var(--color-teal-bg) 60%, var(--bg-secondary)),
-      var(--bg-secondary) 70%
-    );
 }
 
 .timeline-task-card.task-personal:hover {
@@ -3167,21 +3137,9 @@ textarea.form-textarea {
 }
 
 .timeline-task-card.prayer-bg-night {
-  background:
-    linear-gradient(
-      135deg,
-      color-mix(in srgb, var(--color-emerald-light) 55%, var(--bg-secondary)),
-      var(--bg-secondary) 70%
-    );
 }
 
 .timeline-task-card.prayer-bg-day {
-  background:
-    linear-gradient(
-      135deg,
-      color-mix(in srgb, var(--color-gold-bg) 60%, var(--bg-secondary)),
-      var(--bg-secondary) 70%
-    );
 }
 
 .fixed-task-note {
