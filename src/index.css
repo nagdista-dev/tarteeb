@@ -1406,6 +1406,63 @@ a {
   line-height: 1;
 }
 
+/* Time Format Control */
+.time-format-control {
+  display: flex;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.time-format-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 12px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border-color);
+  background: var(--bg-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.time-format-btn:hover {
+  border-color: var(--color-emerald);
+  background: var(--color-emerald-light);
+}
+
+.time-format-btn.active {
+  border-color: var(--color-emerald);
+  background: var(--color-emerald-light);
+  box-shadow: 0 0 0 2px var(--color-emerald-light);
+}
+
+.time-format-sample {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  transition: color 0.2s ease;
+}
+
+.time-format-btn.active .time-format-sample {
+  color: var(--color-emerald);
+}
+
+.time-format-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  transition: color 0.2s ease;
+}
+
+.time-format-btn.active .time-format-label {
+  color: var(--color-emerald);
+}
+
 .modal-footer {
   padding: 16px 20px;
   border-top: 1px solid var(--border-color);

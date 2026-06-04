@@ -34,11 +34,27 @@ export function parseTimeToMinutes(timeStr) {
   return (h || 0) * 60 + (m || 0);
 }
 
-// Convert minutes from midnight to "HH:MM" string
+// 12h / 24h time format preference
+let _use12h = false;
+
+export function setUse12h(val) {
+  _use12h = val;
+}
+
+export function getUse12h() {
+  return _use12h;
+}
+
+// Convert minutes from midnight to time string
 export function formatMinutesToTime(totalMinutes) {
   const h = Math.floor((totalMinutes % 1440) / 60);
   const m = Math.floor(totalMinutes % 60);
-  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  if (!_use12h) {
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  }
+  const period = h < 12 ? 'AM' : 'PM';
+  const h12 = h % 12 || 12;
+  return `${h12}:${String(m).padStart(2, '0')} ${period}`;
 }
 
 /**

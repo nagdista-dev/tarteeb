@@ -12,7 +12,7 @@ import {
   getPeriodStartMinutes, getPeriodEndMinutes, formatDurationHours,
   PLANNER_PERIOD_ORDER, getDefaultTimeForPeriod, getCurrentPlannerMinutes,
   getTaskDisplayTime, sortTasksForPlannerDay, scheduledTimeToPlannerMinutes,
-  formatMinutesToTime
+  formatMinutesToTime, setUse12h, getUse12h
 } from './utils/prayerService';
 
 import { t, setLanguage, getLanguage, translateTaskName } from './i18n';
@@ -222,6 +222,17 @@ function App() {
     document.documentElement.style.fontSize = FONT_SIZE_VALUES[fontSize];
     localStorage.setItem('tarteeb_font_size', fontSize);
   }, [fontSize]);
+
+  // ---- Time Format ----
+  const [use12h, setUse12hState] = useState(() => {
+    const saved = localStorage.getItem('tarteeb_use12h');
+    return saved === 'true';
+  });
+
+  useEffect(() => {
+    setUse12h(use12h);
+    localStorage.setItem('tarteeb_use12h', use12h);
+  }, [use12h]);
 
   // ---- Location Config ----
   const [locationConfig, setLocationConfig] = useState(() => {
@@ -716,8 +727,13 @@ function App() {
       const normalized = ((minutes % 1440) + 1440) % 1440;
       const hour = Math.floor(normalized / 60);
       const minute = normalized % 60;
-      const hour12 = hour % 12 || 12;
-      return exact || minute !== 0 ? `${hour12}:${String(minute).padStart(2, '0')}` : `${hour12}`;
+      if (getUse12h()) {
+        const period = hour < 12 ? 'AM' : 'PM';
+        const h12 = hour % 12 || 12;
+        const time = exact || minute !== 0 ? `${h12}:${String(minute).padStart(2, '0')}` : `${h12}`;
+        return `${time} ${period}`;
+      }
+      return exact || minute !== 0 ? `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}` : `${hour}`;
     };
     const hourTicks = [
       { key: 'start', label: formatTimelineTick(dayStart, true), minutes: dayStart },
@@ -1219,6 +1235,29 @@ function App() {
                         const idx = FONT_SIZES.indexOf(s);
                         return FONT_SIZES[Math.min(FONT_SIZES.length - 1, idx + 1)];
                       })} disabled={fontSize === 'xlarge'}><Plus size={18} /></button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Time Format */}
+                <div className="settings-card">
+                  <div className="settings-card-header">
+                    <span className="settings-card-icon-wrap"><Clock size={20} /></span>
+                    <div>
+                      <h3 className="settings-card-title">{t('settings.timeFormat')}</h3>
+                      <p className="settings-card-desc">{t('settings.timeFormatDesc')}</p>
+                    </div>
+                  </div>
+                  <div className="settings-card-body">
+                    <div className="time-format-control">
+                      <button className={`time-format-btn ${!use12h ? 'active' : ''}`} onClick={() => setUse12hState(false)}>
+                        <span className="time-format-sample">23:59</span>
+                        <span className="time-format-label">{t('settings.format24h')}</span>
+                      </button>
+                      <button className={`time-format-btn ${use12h ? 'active' : ''}`} onClick={() => setUse12hState(true)}>
+                        <span className="time-format-sample">11:59 PM</span>
+                        <span className="time-format-label">{t('settings.format12h')}</span>
+                      </button>
                     </div>
                   </div>
                 </div>
