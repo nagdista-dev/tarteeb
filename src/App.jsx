@@ -464,9 +464,11 @@ function App() {
     }
   }, [currentTime, dayData, activeDate, prayerNotif]);
 
-  // ---- Auto-scroll to current time line ----
+  // ---- Auto-scroll to current time line (once) ----
+  const hasScrolledRef = useRef(false);
   useEffect(() => {
-    if (currentPage !== 'home' || !dayData) return;
+    if (currentPage !== 'home' || !dayData || hasScrolledRef.current) return;
+    hasScrolledRef.current = true;
     const id = requestAnimationFrame(() => {
       const el = document.querySelector('.timeline-now-line');
       if (el) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
