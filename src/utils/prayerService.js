@@ -30,8 +30,15 @@ export const DEFAULT_PRAYER_TIMES = {
 // Convert "HH:MM" to minutes from midnight
 export function parseTimeToMinutes(timeStr) {
   if (!timeStr) return 0;
-  const [h, m] = timeStr.split(':').map(Number);
-  return (h || 0) * 60 + (m || 0);
+  const normalized = timeStr.trim();
+  const isPM = /pm/i.test(normalized);
+  const isAM = /am/i.test(normalized);
+  const cleaned = normalized.replace(/\s*[ap]m\s*/i, '');
+  const [h, m] = cleaned.split(':').map(Number);
+  let hours = h || 0;
+  if (isPM && hours < 12) hours += 12;
+  if (isAM && hours === 12) hours = 0;
+  return hours * 60 + (m || 0);
 }
 
 // 12h / 24h time format preference

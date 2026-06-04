@@ -40,6 +40,7 @@ const en = {
   'modal.editTitle': 'Edit Task',
   'modal.taskName': 'Task Name *',
   'modal.details': 'Details',
+  'modal.detailsPlaceholder': 'Add notes, location, link…',
   'modal.timeOfDay': 'Time of day',
   'modal.startTime': 'Start time',
   'modal.endTime': 'End time',
@@ -96,6 +97,7 @@ const en = {
   'settings.manualTitle': 'Manual Overrides',
   'settings.manualDesc': 'Set prayer times manually',
   'settings.appearance': 'Appearance',
+  'settings.prayerTimes': 'Prayer Times',
   'settings.fontSize': 'Font Size',
   'settings.fontSizeDesc': 'Adjust the text size across the website',
   'settings.fontSize_small': 'Small',
@@ -107,6 +109,14 @@ const en = {
   'settings.timeFormatDesc': 'Choose between 12-hour and 24-hour display',
   'settings.format24h': '24-Hour',
   'settings.format12h': '12-Hour',
+  'settings.theme': 'Theme',
+  'settings.themeDesc': 'Switch between light and dark mode',
+  'settings.light': 'Light',
+  'settings.dark': 'Dark',
+  'settings.language': 'Language',
+  'settings.languageDesc': 'Choose your preferred language',
+  'settings.english': 'English',
+  'settings.arabic': 'العربية',
   'settings.fajr': 'Fajr',
   'settings.dhuhr': 'Dhuhr',
   'settings.asr': 'Asr',
@@ -118,6 +128,18 @@ const en = {
   'dialog.cancel': 'Cancel',
   'dialog.confirm': 'Confirm',
   'dialog.ok': 'OK',
+
+  /* Welcome modal */
+  'welcome.title': 'Welcome to Tarteeb',
+  'welcome.desc': 'You can fully customize your experience — change the theme, language, font size, time format, and prayer time settings.',
+  'welcome.settings': 'Open Settings',
+  'welcome.guide': 'How to Use',
+  'welcome.ok': 'Get Started',
+
+  /* Prayer notification */
+  'prayerNotif.title': 'It\'s Time for Prayer',
+  'prayerNotif.text': 'The call to prayer has arrived. May Allah accept your devotion.',
+  'prayerNotif.ok': 'OK',
 
   /* Confirm / alert messages */
   'confirm.deleteTask': 'Delete this task?',
@@ -229,6 +251,7 @@ const ar = {
   'modal.editTitle': 'تعديل المهمة',
   'modal.taskName': 'اسم المهمة *',
   'modal.details': 'تفاصيل',
+  'modal.detailsPlaceholder': 'أضف ملاحظات، موقع، رابط…',
   'modal.timeOfDay': 'الوقت من اليوم',
   'modal.startTime': 'وقت البداية',
   'modal.endTime': 'وقت النهاية',
@@ -272,6 +295,7 @@ const ar = {
 
   /* Settings page */
   'settings.appearance': 'المظهر',
+  'settings.prayerTimes': 'أوقات الصلاة',
   'settings.fontSize': 'حجم الخط',
   'settings.fontSizeDesc': 'تعديل حجم النص في جميع أنحاء الموقع',
   'settings.fontSize_small': 'صغير',
@@ -283,6 +307,14 @@ const ar = {
   'settings.timeFormatDesc': 'اختر بين عرض الوقت بنظام ١٢ أو ٢٤ ساعة',
   'settings.format24h': '٢٤ ساعة',
   'settings.format12h': '١٢ ساعة',
+  'settings.theme': 'السمة',
+  'settings.themeDesc': 'التبديل بين الوضع الفاتح والداكن',
+  'settings.light': 'فاتح',
+  'settings.dark': 'داكن',
+  'settings.language': 'اللغة',
+  'settings.languageDesc': 'اختر لغتك المفضلة',
+  'settings.english': 'English',
+  'settings.arabic': 'العربية',
   'settings.locationTitle': 'الموقع',
   'settings.locationDesc': 'احصل على أوقات الصلاة لمدينتك أو إحداثياتك',
   'settings.useApi': 'استخدام API الأذان',
@@ -307,6 +339,18 @@ const ar = {
   'dialog.cancel': 'إلغاء',
   'dialog.confirm': 'تأكيد',
   'dialog.ok': 'موافق',
+
+  /* Welcome modal */
+  'welcome.title': 'مرحباً بك في ترتيب',
+  'welcome.desc': 'يمكنك تخصيص تجربتك بالكامل — تغيير السمة، اللغة، حجم الخط، تنسيق الوقت، وإعدادات أوقات الصلاة.',
+  'welcome.settings': 'فتح الإعدادات',
+  'welcome.guide': 'كيفية الاستخدام',
+  'welcome.ok': 'ابدأ الآن',
+
+  /* Prayer notification */
+  'prayerNotif.title': 'حان وقت الصلاة',
+  'prayerNotif.text': 'لقد حان الأذان. تقبل الله طاعتكم.',
+  'prayerNotif.ok': 'حسناً',
 
   /* Confirm / alert messages */
   'confirm.deleteTask': 'حذف هذه المهمة؟',

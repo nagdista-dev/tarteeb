@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Check, Plus, Minus, Edit2, Trash2, Calendar, Settings, Moon, Sun,
-  BookOpen, Clock, Sparkles, MapPin, CheckCircle2, X, AlertCircle,
-  ChevronUp, ChevronDown, RefreshCw, Menu, Download, HelpCircle, List, Type
+  BookOpen, Clock, Sparkles, MapPin, X, AlertCircle,
+  ChevronUp, ChevronDown, RefreshCw, Download, HelpCircle, List, Type, Menu
 } from 'lucide-react';
 import {
   formatDateLocal, addDays, getPrayerTimesForDate,
@@ -16,8 +16,6 @@ import {
 } from './utils/prayerService';
 
 import { t, setLanguage, getLanguage, translateTaskName } from './i18n';
-
-import './App.css';
 
 const calculateStats = (tasks) => {
   const total = tasks.length;
@@ -293,6 +291,19 @@ function App() {
   const [dialog, setDialog] = useState(null);
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState(null);
+  const [showWelcome, setShowWelcome] = useState(() => !localStorage.getItem('tarteeb_welcome_dismissed'));
+  const [prayerNotif, setPrayerNotif] = useState(null);
+  const lastActivePeriod = useRef(null);
+
+  const dismissWelcome = () => {
+    localStorage.setItem('tarteeb_welcome_dismissed', 'true');
+    setShowWelcome(false);
+  };
+
+  const dismissPrayerNotif = () => {
+    lastActivePeriod.current = prayerNotif;
+    setPrayerNotif(null);
+  };
 
   // ---- Theme Sync ----
   useEffect(() => {
@@ -413,9 +424,17 @@ function App() {
   // ---- Timeline status (next prayer etc.) ----
   useEffect(() => {
     if (dayData?.prayerTimes) {
-      setTimelineStatus(calculateTimelineStatus(currentTime, dayData.prayerTimes, activeDate));
+      const status = calculateTimelineStatus(currentTime, dayData.prayerTimes, activeDate);
+      setTimelineStatus(status);
+
+      if (status.activePeriod !== 'none' && status.activePeriod !== lastActivePeriod.current && lastActivePeriod.current !== null && !prayerNotif) {
+        setPrayerNotif(status.activePeriod);
+      }
+      if (!prayerNotif) {
+        lastActivePeriod.current = status.activePeriod;
+      }
     }
-  }, [currentTime, dayData, activeDate]);
+  }, [currentTime, dayData, activeDate, prayerNotif]);
 
   // ---- Auto-scroll to current time line ----
   useEffect(() => {
@@ -727,7 +746,7 @@ function App() {
     const visualStart = dayStart - padTop;
     const visualEnd = dayEnd + padBottom;
     const visualDuration = visualEnd - visualStart;
-    const timelineHeight = Math.max(2200, Math.min(5000, visualDuration * 2.5));
+    const timelineHeight = Math.max(2800, Math.min(8000, visualDuration * 4));
     const toPercent = (minutes) => ((minutes - visualStart) / visualDuration) * 100;
     const nowMinutes = getCurrentPlannerMinutes(currentTime, activeDate);
     const nowInRange = nowMinutes >= visualStart && nowMinutes <= visualEnd;
@@ -915,23 +934,12 @@ function App() {
           <p className="brand-subtitle">{t('brand.subtitle')}</p>
         </div>
         <div className="header-actions">
-          <button className="btn btn-icon" onClick={() => setTheme(t => t === 'light' ? 'dark' : 'light')} title={t('nav.toggleTheme')}>
-            {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
-          </button>
-          <button className="btn btn-icon btn-lang" onClick={() => setLang(l => l === 'en' ? 'ar' : 'en')} title={t('lang.switch')}>
-            <span style={{ fontSize: '14px', fontWeight: 700 }}>{lang === 'en' ? 'AR' : 'EN'}</span>
-          </button>
-          <button className="btn btn-icon sidebar-toggle-btn" onClick={() => setSidebarOpen(true)} aria-label={t('nav.openSidebar')}>
+          <button className="btn btn-menu-mobile" onClick={() => setSidebarOpen(true)} aria-label={t('nav.openSidebar')}>
             <Menu size={18} />
           </button>
           {dayData && (
             <button className="btn btn-primary btn-add-task" onClick={() => openTaskModal('add')}>
               <Plus size={16} /> {t('header.addTask')}
-            </button>
-          )}
-          {dayData && (
-            <button className="btn btn-export" onClick={exportToMarkdown} title={t('header.exportTitle')}>
-              <Download size={16} /> {t('header.export')}
             </button>
           )}
         </div>
@@ -975,7 +983,7 @@ function App() {
                 const cpm = getCurrentPlannerMinutes(currentTime, activeDate);
                 const activePeriod = timelineStatus?.activePeriod;
                 return boxes.map(box => (
-                  <div key={box.key} className={`sidebar-prayer-box ${cpm >= box.minutes ? 'sidebar-prayer-box-past' : ''} ${boxToPeriod[box.key] === activePeriod ? 'sidebar-prayer-box-current' : ''}`}>
+                  <div key={box.key} className={`sidebar-prayer-box sidebar-prayer-box-${box.key} ${cpm >= box.minutes ? 'sidebar-prayer-box-past' : ''} ${boxToPeriod[box.key] === activePeriod ? 'sidebar-prayer-box-current' : ''}`}>
                     <span>{box.prayer}</span>
                     <strong>{box.time}</strong>
                   </div>
@@ -998,6 +1006,19 @@ function App() {
                 </button>
               ))}
             </nav>
+            <div className="sidebar-quick-toggles">
+              <button className="sidebar-toggle-btn" onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} title={t('settings.theme')}>
+                {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
+              </button>
+              <button className="sidebar-toggle-btn" onClick={() => setLang(lang === 'en' ? 'ar' : 'en')} title={t('settings.language')}>
+                {lang === 'en' ? 'AR' : 'EN'}
+              </button>
+            </div>
+            <div className="sidebar-export-wrap">
+              <button className="btn btn-export sidebar-export-btn" onClick={exportToMarkdown} title={t('header.exportTitle')}>
+                <Download size={16} /> {t('header.export')}
+              </button>
+            </div>
           </aside>
 
           {/* Main Content Area */}
@@ -1052,7 +1073,7 @@ function App() {
                         <span className="tasks-block-name">{t('period.' + periodKey)}</span>
                         <span className="tasks-block-meta">
                           {done}/{periodTasks.length} · {pct}%
-                          {isCollapsed ? <ChevronUp size={14} style={{ marginLeft: 6 }} /> : <ChevronDown size={14} style={{ marginLeft: 6 }} />}
+                          {isCollapsed ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                         </span>
                       </div>
                       {!isCollapsed && (
@@ -1284,6 +1305,52 @@ function App() {
                   </div>
                 </div>
 
+                {/* Theme */}
+                <div className="settings-card">
+                  <div className="settings-card-header">
+                    <span className="settings-card-icon-wrap">{theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}</span>
+                    <div>
+                      <h3 className="settings-card-title">{t('settings.theme')}</h3>
+                      <p className="settings-card-desc">{t('settings.themeDesc')}</p>
+                    </div>
+                  </div>
+                  <div className="settings-card-body">
+                    <div className="time-format-control">
+                      <button className={`time-format-btn ${theme === 'light' ? 'active' : ''}`} onClick={() => setTheme('light')}>
+                        <Sun size={22} />
+                        <span className="time-format-label">{t('settings.light')}</span>
+                      </button>
+                      <button className={`time-format-btn ${theme === 'dark' ? 'active' : ''}`} onClick={() => setTheme('dark')}>
+                        <Moon size={22} />
+                        <span className="time-format-label">{t('settings.dark')}</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Language */}
+                <div className="settings-card">
+                  <div className="settings-card-header">
+                    <span className="settings-card-icon-wrap"><span style={{ fontSize: '1.1rem', fontWeight: 700 }}>{lang === 'en' ? 'EN' : 'AR'}</span></span>
+                    <div>
+                      <h3 className="settings-card-title">{t('settings.language')}</h3>
+                      <p className="settings-card-desc">{t('settings.languageDesc')}</p>
+                    </div>
+                  </div>
+                  <div className="settings-card-body">
+                    <div className="time-format-control">
+                      <button className={`time-format-btn ${lang === 'en' ? 'active' : ''}`} onClick={() => setLang('en')}>
+                        <span className="time-format-sample" style={{ fontSize: '1rem', fontWeight: 700 }}>EN</span>
+                        <span className="time-format-label">{t('settings.english')}</span>
+                      </button>
+                      <button className={`time-format-btn ${lang === 'ar' ? 'active' : ''}`} onClick={() => setLang('ar')}>
+                        <span className="time-format-sample" style={{ fontSize: '1rem', fontWeight: 700 }}>AR</span>
+                        <span className="time-format-label">{t('settings.arabic')}</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="settings-section-label">{t('settings.prayerTimes')}</div>
 
                 {/* Location Settings */}
@@ -1379,7 +1446,7 @@ function App() {
             <form onSubmit={handleTaskSubmit}>
               <div className="modal-body">
                 <div className="form-group"><label className="form-label">{t('modal.taskName')}</label><input className="form-input" type="text" value={taskForm.name} onChange={e => setTaskForm(prev => ({ ...prev, name: e.target.value }))} required/></div>
-                <div className="form-group"><label className="form-label">{t('modal.details')}</label><textarea className="form-input" value={taskForm.details} onChange={e => setTaskForm(prev => ({ ...prev, details: e.target.value }))}></textarea></div>
+                <div className="form-group"><label className="form-label">{t('modal.details')}</label><textarea className="form-input" placeholder={t('modal.detailsPlaceholder')} value={taskForm.details} onChange={e => setTaskForm(prev => ({ ...prev, details: e.target.value }))}></textarea></div>
                 <div className="form-group">
                   <label className="form-label">{t('modal.timeOfDay')}</label>
                   <select
@@ -1448,6 +1515,44 @@ function App() {
                 <button type="submit" className="btn btn-primary">{taskModal.mode === 'add' ? t('modal.create') : t('modal.save')}</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Welcome Modal */}
+      {showWelcome && (
+        <div className="dialog-overlay">
+          <div className="welcome-modal" onClick={e => e.stopPropagation()}>
+            <div className="welcome-modal-icon">
+              <Sparkles size={28} />
+            </div>
+            <h2 className="welcome-modal-title">{t('welcome.title')}</h2>
+            <p className="welcome-modal-desc">{t('welcome.desc')}</p>
+            <div className="welcome-modal-links">
+              <button className="welcome-modal-link" onClick={() => { setCurrentPage('settings'); dismissWelcome(); }}>
+                <Settings size={16} /> {t('welcome.settings')}
+              </button>
+              <button className="welcome-modal-link" onClick={() => { setCurrentPage('guide'); dismissWelcome(); }}>
+                <HelpCircle size={16} /> {t('welcome.guide')}
+              </button>
+            </div>
+            <button className="btn btn-primary welcome-modal-ok" onClick={dismissWelcome}>
+              {t('welcome.ok')}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Prayer Time Notification */}
+      {prayerNotif && (
+        <div className="dialog-overlay">
+          <div className="prayer-notif" onClick={e => e.stopPropagation()}>
+            <div className="prayer-notif-icon">ﷲ</div>
+            <h2 className="prayer-notif-title">{t('prayerNotif.title')}</h2>
+            <p className="prayer-notif-text">{t('prayerNotif.text')}</p>
+            <button className="btn btn-primary prayer-notif-ok" onClick={dismissPrayerNotif}>
+              {t('prayerNotif.ok')}
+            </button>
           </div>
         </div>
       )}
