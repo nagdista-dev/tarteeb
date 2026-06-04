@@ -660,7 +660,16 @@ function App() {
       if (h.id !== id) return h;
       const entries = { ...(h.entries || {}) };
       const current = entries[today];
-      entries[today] = { completed: !current?.completed, notes: current?.notes || '' };
+      const wasDone = current?.completed || false;
+      if (!wasDone) {
+        confetti({
+          particleCount: 80,
+          spread: 70,
+          origin: { x: 0.5, y: 0.5 },
+          colors: ['#059669', '#0d9488', '#d97706', '#f59e0b', '#10b981']
+        });
+      }
+      entries[today] = { completed: !wasDone, notes: current?.notes || '' };
       return { ...h, entries };
     }));
   };
