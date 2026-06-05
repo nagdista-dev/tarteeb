@@ -3,7 +3,7 @@ import {
   Check, Plus, Minus, Edit2, Trash2, Calendar, Settings, Moon, Sun,
   BookOpen, Clock, Sparkles, MapPin, X, AlertCircle,
   ChevronUp, ChevronDown, RefreshCw, Download, HelpCircle, List, Type, Menu, Target,
-  Smartphone, Lock, Unlock
+  Smartphone, Lock, Unlock, Upload
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import {
@@ -370,6 +370,35 @@ function App() {
     }, 10000);
     return () => clearInterval(interval);
   }, [activeDate]);
+
+  // ---- Keyboard Shortcuts ----
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+      if (taskModal.open || habitModal.open || dialog || showWelcome || prayerNotif) {
+        if (e.key === 'Escape') {
+          if (taskModal.open) setTaskModal(prev => ({ ...prev, open: false }));
+          else if (habitModal.open) setHabitModal(prev => ({ ...prev, open: false }));
+          else if (dialog && dialog.type === 'alert') closeDialog();
+          else if (showWelcome) dismissWelcome();
+          else if (prayerNotif) dismissPrayerNotif();
+        }
+        return;
+      }
+      if (e.key === 'h') setCurrentPage('home');
+      else if (e.key === 't') setCurrentPage('tasks');
+      else if (e.key === 'j') setCurrentPage('journal');
+      else if (e.key === 'g') setCurrentPage('guide');
+      else if (e.key === 's') setCurrentPage('settings');
+      else if (e.key === 'b') setCurrentPage('habits');
+      else if (e.key === 'p') setCurrentPage('prayers');
+      else if (e.key === 'n' && (currentPage === 'home' || currentPage === 'tasks') && dayData) {
+        openTaskModal('add');
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  });
 
   // ---- Load / Init day data ----
   useEffect(() => {
@@ -1170,6 +1199,7 @@ function App() {
     { id: 'home', label: t('nav.home'), icon: Sparkles },
     { id: 'tasks', label: t('nav.tasks'), icon: List },
     { id: 'habits', label: t('nav.habits'), icon: Target },
+    { id: 'prayers', label: t('nav.prayers'), icon: Clock },
     { id: 'journal', label: t('nav.journal'), icon: BookOpen },
     { id: 'history', label: t('nav.history'), icon: Calendar },
     { id: 'guide', label: t('nav.guide'), icon: HelpCircle },
@@ -1456,7 +1486,12 @@ function App() {
                     const activePeriod = timelineStatus?.activePeriod;
                     const allNotes = dayData.studyNotes || [];
                     if (allNotes.length === 0) {
-                      return <div className="study-empty">{t('journal.noNotes')}</div>;
+                      return (
+                        <div className="empty-state">
+                          <div className="empty-state-icon"><BookOpen size={24} /></div>
+                          <span className="empty-state-title">{t('journal.noNotes')}</span>
+                        </div>
+                      );
                     }
                     return PLANNER_PERIOD_ORDER.map(periodKey => {
                       const notes = getNotesForPeriod(periodKey);
@@ -1503,9 +1538,45 @@ function App() {
                   <Calendar size={18} style={{ color: 'var(--color-gold)' }} />
                   <h3>{t('history.title')}</h3>
                 </div>
+
+                {/* Summary stats */}
+                {historyDates.length > 0 && (() => {
+                  let totalPct = 0;
+                  let totalDays = historyDates.length;
+                  let maxPct = 0;
+                  historyDates.forEach(dateStr => {
+                    try {
+                      const hist = JSON.parse(localStorage.getItem(`tarteeb_day_${dateStr}`) || '{}');
+                      const pct = hist.stats?.overallCompleted ?? 0;
+                      totalPct += pct;
+                      if (pct > maxPct) maxPct = pct;
+                    } catch {}
+                  });
+                  const avgPct = totalDays > 0 ? Math.round(totalPct / totalDays) : 0;
+                  return (
+                    <div className="history-summary">
+                      <div className="history-summary-card">
+                        <span className="history-summary-value">{totalDays}</span>
+                        <span className="history-summary-label">Days</span>
+                      </div>
+                      <div className="history-summary-card">
+                        <span className="history-summary-value emerald">{avgPct}%</span>
+                        <span className="history-summary-label">Avg</span>
+                      </div>
+                      <div className="history-summary-card">
+                        <span className="history-summary-value gold">{maxPct}%</span>
+                        <span className="history-summary-label">Best</span>
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 <div className="history-list">
                   {historyDates.length === 0 ? (
-                    <div className="history-empty">{t('history.empty')}</div>
+                    <div className="empty-state">
+                      <div className="empty-state-icon"><Calendar size={24} /></div>
+                      <span className="empty-state-title">{t('history.empty')}</span>
+                    </div>
                   ) : (
                     historyDates.map(dateStr => {
                       let hist = {};
@@ -1637,7 +1708,10 @@ function App() {
                   </button>
                 </div>
                 {habits.length === 0 ? (
-                  <div className="habits-empty">{t('habits.noHabits')}</div>
+                  <div className="empty-state">
+                    <div className="empty-state-icon"><Target size={24} /></div>
+                    <span className="empty-state-title">{t('habits.noHabits')}</span>
+                  </div>
                 ) : (
                   <div className="habits-list">
                     {habits.map((habit, index) => {
@@ -1657,16 +1731,25 @@ function App() {
                             >
                               {isDone && <Check size={16} />}
                             </button>
+                            <div className="habit-progress-ring">
+                              <svg viewBox="0 0 36 36" width="40" height="40">
+                                <circle className="habit-progress-ring-bg" cx="18" cy="18" r="15.5" />
+                                <circle className="habit-progress-ring-fg" cx="18" cy="18" r="15.5"
+                                  strokeDasharray={Math.PI * 31}
+                                  strokeDashoffset={Math.PI * 31 * (1 - stats.rate / 100)}
+                                />
+                              </svg>
+                              <span className="habit-progress-ring-text">{stats.rate}%</span>
+                            </div>
                             <div className="habit-info">
                               <span className="habit-name" onClick={() => { setHabitForm({ name: habit.name }); setHabitModal({ open: true, mode: 'edit', habit }); }}>
                                 {habit.name}
                               </span>
                               <div className="habit-meta">
-                                <span className="habit-streak">
-                                  🔥 {stats.currentStreak} {t('habits.streak')}
+                                <span className="habit-streak-badge">
+                                  {stats.currentStreak} {t('habits.streak')}
                                 </span>
                                 <span>{stats.completed}/{stats.total}</span>
-                                <span>{stats.rate}%</span>
                               </div>
                             </div>
                             <div className="habit-actions">
@@ -1763,6 +1846,65 @@ function App() {
                     </button>
                   </div>
                 )}
+              </div>
+            )}
+
+            {currentPage === 'prayers' && dayData && (
+              <div className="prayers-page">
+                <div className="prayers-header">
+                  <Clock size={20} className="prayers-header-icon" />
+                  <h2 className="prayers-header-title">{t('prayerTimes.title')}</h2>
+                  <span className="kbd-hint"><kbd>P</kbd></span>
+                </div>
+
+                {/* Next Prayer Card */}
+                {timelineStatus?.nextPrayerName && (() => {
+                  const nextKey = timelineStatus.nextPrayerName.toLowerCase();
+                  const nextTime = dayData.prayerTimes[nextKey];
+                  return (
+                    <div className="prayers-next-card">
+                      <span className="prayers-next-label">{t('prayerTimes.nextPrayer')}</span>
+                      <span className="prayers-next-name">{t('prayer.' + nextKey)}</span>
+                      <span className="prayers-next-time">{nextTime ? formatMinutesToTime(parseTimeToMinutes(nextTime)) : '--:--'}</span>
+                      <span className="prayers-next-countdown">
+                        <Clock size={14} />
+                        {timelineStatus.timeToNextPrayer} {t('time.until')} {t('prayer.' + nextKey)}
+                      </span>
+                    </div>
+                  );
+                })()}
+
+                {/* Schedule Table */}
+                <div className="prayers-table">
+                  {['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'].map((key, idx) => {
+                    const timeStr = dayData.prayerTimes[key];
+                    const timeMinutes = timeStr ? parseTimeToMinutes(timeStr) : 0;
+                    const nowMinutes = currentTime.getHours() * 60 + currentTime.getMinutes();
+                    const prevPrayerTimes = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha']
+                      .map(k => dayData.prayerTimes[k] ? parseTimeToMinutes(dayData.prayerTimes[k]) : -1)
+                      .filter(m => m >= 0);
+                    const nextPrayerIdx = prevPrayerTimes.findIndex(m => m > nowMinutes);
+                    const currentIdx = nextPrayerIdx > 0 ? nextPrayerIdx - 1 : (nextPrayerIdx === -1 ? prevPrayerTimes.length - 1 : -1);
+                    const isPast = idx < currentIdx || (currentIdx === -1 && idx < prevPrayerTimes.length - 1);
+                    const isCurrent = idx === currentIdx;
+
+                    let statusClass = isPast ? 'past' : '';
+                    if (isCurrent) statusClass += ' current';
+
+                    let statusText = t('prayerTimes.upcoming');
+                    if (isCurrent) statusText = t('prayerTimes.current');
+                    if (isPast) statusText = t('prayerTimes.completed');
+
+                    return (
+                      <div key={key} className={`prayers-row ${statusClass}`}>
+                        <div className="prayers-row-indicator" />
+                        <span className="prayers-row-name">{t('prayer.' + key)}</span>
+                        <span className="prayers-row-time">{timeStr ? formatMinutesToTime(parseTimeToMinutes(timeStr)) : '--:--'}</span>
+                        <span className="prayers-row-status">{statusText}</span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
 
@@ -1942,6 +2084,60 @@ function App() {
                       </div>
                       <button type="submit" className="btn btn-primary">{t('settings.apply')}</button>
                     </form>
+                  </div>
+                </div>
+
+                {/* Backup & Restore */}
+                <div className="settings-card">
+                  <div className="settings-card-header">
+                    <span className="settings-card-icon-wrap"><Download size={20} /></span>
+                    <div>
+                      <h3 className="settings-card-title">{t('settings.backupTitle')}</h3>
+                      <p className="settings-card-desc">{t('settings.backupDesc')}</p>
+                    </div>
+                  </div>
+                  <div className="settings-card-body">
+                    <div className="backup-actions">
+                      <button className="btn btn-primary" onClick={() => {
+                        const keys = Object.keys(localStorage).filter(k => k.startsWith('tarteeb_'));
+                        const data = {};
+                        keys.forEach(k => { data[k] = localStorage.getItem(k); });
+                        data._exportedAt = new Date().toISOString();
+                        data._version = '1.0';
+                        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `tarteeb_backup_${formatDateLocal(new Date())}.json`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                      }}>
+                        <Download size={16} /> {t('settings.exportData')}
+                      </button>
+                      <button className="btn" onClick={() => document.getElementById('backup-import-input').click()}>
+                        <Upload size={16} /> {t('settings.importData')}
+                      </button>
+                      <input id="backup-import-input" className="backup-import-hidden" type="file" accept=".json" onChange={e => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        const reader = new FileReader();
+                        reader.onload = (ev) => {
+                          try {
+                            const data = JSON.parse(ev.target.result);
+                            const keys = Object.keys(data).filter(k => k.startsWith('tarteeb_'));
+                            if (keys.length === 0) throw new Error('Invalid');
+                            keys.forEach(k => localStorage.setItem(k, data[k]));
+                            showAlert(t('settings.importSuccess')).then(() => window.location.reload());
+                          } catch {
+                            showAlert(t('settings.importError'));
+                          }
+                        };
+                        reader.readAsText(file);
+                        e.target.value = '';
+                      }} />
+                    </div>
                   </div>
                 </div>
               </div>

@@ -14,6 +14,7 @@ const en = {
   'nav.history': 'History',
   'nav.settings': 'Settings',
   'nav.guide': 'How to Use',
+  'nav.prayers': 'Prayer Times',
   'nav.navigation': 'Navigation',
   'nav.openSidebar': 'Open sidebar',
   'nav.closeSidebar': 'Close sidebar',
@@ -90,6 +91,15 @@ const en = {
   'history.openDay': 'Open Day',
   'history.delete': 'Delete',
 
+  /* Prayer Times page */
+  'prayerTimes.title': 'Prayer Times',
+  'prayerTimes.nextPrayer': 'Next Prayer',
+  'prayerTimes.timeRemaining': 'Time Remaining',
+  'prayerTimes.schedule': 'Schedule',
+  'prayerTimes.current': 'Current',
+  'prayerTimes.upcoming': 'Upcoming',
+  'prayerTimes.completed': 'Completed',
+
   /* Settings page */
   'settings.locationTitle': 'Location',
   'settings.locationDesc': 'Fetch prayer times for your city or coordinates',
@@ -131,6 +141,12 @@ const en = {
   'settings.maghrib': 'Maghrib',
   'settings.isha': 'Isha',
   'settings.apply': 'Apply Overrides',
+  'settings.backupTitle': 'Backup & Restore',
+  'settings.backupDesc': 'Export or import all your data as JSON',
+  'settings.exportData': 'Export All Data',
+  'settings.importData': 'Import Data',
+  'settings.importSuccess': 'Data imported successfully! Reloading…',
+  'settings.importError': 'Invalid backup file',
 
   /* Dialog */
   'dialog.cancel': 'Cancel',
@@ -260,6 +276,7 @@ const ar = {
   'nav.history': 'السجل',
   'nav.settings': 'الإعدادات',
   'nav.guide': 'كيفية الاستخدام',
+  'nav.prayers': 'أوقات الصلاة',
   'nav.navigation': 'التنقل',
   'nav.openSidebar': 'فتح الشريط الجانبي',
   'nav.closeSidebar': 'إغلاق الشريط الجانبي',
@@ -336,6 +353,15 @@ const ar = {
   'history.openDay': 'فتح اليوم',
   'history.delete': 'حذف',
 
+  /* Prayer Times page */
+  'prayerTimes.title': 'أوقات الصلاة',
+  'prayerTimes.nextPrayer': 'الصلاة القادمة',
+  'prayerTimes.timeRemaining': 'الوقت المتبقي',
+  'prayerTimes.schedule': 'الجدول',
+  'prayerTimes.current': 'الحالي',
+  'prayerTimes.upcoming': 'القادمة',
+  'prayerTimes.completed': 'انتهت',
+
   /* Settings page */
   'settings.appearance': 'المظهر',
   'settings.prayerTimes': 'أوقات الصلاة',
@@ -377,6 +403,12 @@ const ar = {
   'settings.maghrib': 'المغرب',
   'settings.isha': 'العشاء',
   'settings.apply': 'تطبيق',
+  'settings.backupTitle': 'النسخ الاحتياطي',
+  'settings.backupDesc': 'تصدير أو استيراد جميع بياناتك بصيغة JSON',
+  'settings.exportData': 'تصدير جميع البيانات',
+  'settings.importData': 'استيراد البيانات',
+  'settings.importSuccess': 'تم استيراد البيانات بنجاح! جاري إعادة التحميل…',
+  'settings.importError': 'ملف نسخ احتياطي غير صالح',
 
   /* Dialog */
   'dialog.cancel': 'إلغاء',

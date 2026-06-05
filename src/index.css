@@ -5074,6 +5074,393 @@ textarea.form-textarea {
   }
 }
 
+/* ===== Modal Animation Enhancements ===== */
+.modal-overlay {
+  animation: overlayIn 0.2s ease;
+}
+
+.modal-content {
+  animation: modalIn 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes overlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(16px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.dialog-overlay {
+  animation: overlayIn 0.2s ease;
+}
+
+.dialog-content,
+.welcome-modal,
+.prayer-notif {
+  animation: modalIn 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (max-width: 600px) {
+  .modal-content {
+    margin-top: auto;
+    margin-bottom: auto;
+    border-radius: 16px 16px 0 0;
+    animation: modalSlideUp 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  @keyframes modalSlideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+}
+
+/* ===== Empty State Styles ===== */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+  gap: 12px;
+}
+
+.empty-state-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-tertiary);
+  background: var(--bg-secondary);
+  border: 1.5px solid var(--border-color);
+  margin-bottom: 4px;
+}
+
+.empty-state-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.empty-state-desc {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  max-width: 280px;
+}
+
+/* ===== Prayer Times Page ===== */
+.prayers-page {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 8px 0 48px;
+  width: 100%;
+}
+
+.prayers-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.prayers-header-icon {
+  color: var(--color-emerald);
+  opacity: 0.8;
+}
+
+.prayers-header-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  flex: 1;
+}
+
+/* Next Prayer Card */
+.prayers-next-card {
+  background: linear-gradient(135deg, var(--color-emerald), #0d4d30);
+  border-radius: var(--radius-lg);
+  padding: 24px 24px;
+  margin-bottom: 20px;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 4px 16px rgba(17, 94, 59, 0.25);
+}
+
+.prayers-next-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.8;
+}
+
+.prayers-next-name {
+  font-size: 1.4rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.prayers-next-time {
+  font-size: 2rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.9;
+}
+
+.prayers-next-countdown {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  opacity: 0.85;
+  margin-top: 4px;
+}
+
+/* Prayer Schedule Table */
+.prayers-table {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.prayers-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--bg-secondary);
+  border: 1.5px solid var(--border-color);
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.prayers-row:hover {
+  border-color: var(--text-tertiary);
+}
+
+.prayers-row.current {
+  border-color: var(--color-emerald);
+  background: var(--color-emerald-light);
+  box-shadow: 0 0 0 3px rgba(17, 94, 59, 0.06);
+}
+
+.prayers-row.past {
+  opacity: 0.55;
+}
+
+.prayers-row-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--border-color);
+}
+
+.prayers-row.current .prayers-row-indicator {
+  background: var(--color-emerald);
+  box-shadow: 0 0 0 3px rgba(17, 94, 59, 0.15);
+}
+
+.prayers-row.past .prayers-row-indicator {
+  background: var(--text-tertiary);
+}
+
+.prayers-row.past.current .prayers-row-indicator {
+  background: var(--color-emerald);
+}
+
+.prayers-row-name {
+  flex: 1;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.prayers-row.current .prayers-row-name {
+  color: var(--color-emerald);
+}
+
+.prayers-row-time {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.prayers-row.current .prayers-row-time {
+  color: var(--color-emerald);
+}
+
+.prayers-row-status {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: var(--bg-primary);
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+}
+
+.prayers-row.current .prayers-row-status {
+  background: var(--color-emerald);
+  color: #fff;
+}
+
+.prayers-row.past .prayers-row-status {
+  background: transparent;
+  color: var(--text-tertiary);
+}
+
+/* ===== History Redesign ===== */
+.history-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.history-summary-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 14px 12px;
+  text-align: center;
+}
+
+.history-summary-value {
+  display: block;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.history-summary-label {
+  display: block;
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 3px;
+}
+
+.history-summary-value.emerald {
+  color: var(--color-emerald);
+}
+
+.history-summary-value.gold {
+  color: var(--color-gold);
+}
+
+/* ===== Habits Redesign ===== */
+.habit-progress-ring {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  position: relative;
+}
+
+.habit-progress-ring svg {
+  transform: rotate(-90deg);
+}
+
+.habit-progress-ring-bg {
+  fill: none;
+  stroke: var(--bg-tertiary);
+  stroke-width: 3;
+}
+
+.habit-progress-ring-fg {
+  fill: none;
+  stroke: var(--color-emerald);
+  stroke-width: 3;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.5s ease;
+}
+
+.habit-progress-ring-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+  font-weight: 800;
+  color: var(--color-emerald);
+}
+
+.habit-streak-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: var(--color-gold-bg);
+  color: var(--color-gold);
+}
+
+/* ===== Backup Section ===== */
+.backup-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.backup-actions .btn {
+  flex: 1;
+  justify-content: center;
+  min-width: 120px;
+}
+
+.backup-import-hidden {
+  display: none;
+}
+
+/* ===== Keyboard Shortcut Hint ===== */
+.kbd-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.65rem;
+  color: var(--text-tertiary);
+  opacity: 0.6;
+}
+
+.kbd-hint kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 4px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  font-family: inherit;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+
 /* === General Mobile Improvements === */
 @media (max-width: 600px) {
   /* App container tighter */
@@ -5329,6 +5716,91 @@ textarea.form-textarea {
   .app-footer {
     padding: 16px 12px 20px;
     font-size: 0.68rem;
+  }
+
+  /* Prayer Times mobile */
+  .prayers-page {
+    padding: 4px 0 36px;
+  }
+
+  .prayers-next-card {
+    padding: 18px 18px;
+  }
+
+  .prayers-next-name {
+    font-size: 1.15rem;
+  }
+
+  .prayers-next-time {
+    font-size: 1.5rem;
+  }
+
+  .prayers-row {
+    padding: 12px 12px;
+    gap: 10px;
+  }
+
+  .prayers-row-name {
+    font-size: 0.85rem;
+  }
+
+  .prayers-row-time {
+    font-size: 0.85rem;
+  }
+
+  .prayers-row-status {
+    font-size: 0.6rem;
+    padding: 2px 8px;
+  }
+
+  /* History summary mobile */
+  .history-summary {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  .history-summary-card {
+    padding: 10px 6px;
+  }
+
+  .history-summary-value {
+    font-size: 1.05rem;
+  }
+
+  .history-summary-label {
+    font-size: 0.55rem;
+  }
+
+  /* Backup actions mobile */
+  .backup-actions {
+    flex-direction: column;
+  }
+
+  .backup-actions .btn {
+    width: 100%;
+  }
+
+  /* Empty state mobile */
+  .empty-state {
+    padding: 32px 16px;
+  }
+
+  .empty-state-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .empty-state-title {
+    font-size: 0.92rem;
+  }
+
+  .empty-state-desc {
+    font-size: 0.8rem;
+  }
+
+  /* Hide keyboard hints on mobile */
+  .kbd-hint {
+    display: none;
   }
 }
 
