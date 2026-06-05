@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import {
-  Check, Plus, Minus, Edit2, Trash2, Calendar, Settings, Moon, Sun,
+  Check, Plus, Minus, Edit2, Trash2, Settings, Moon, Sun,
   BookOpen, Clock, Sparkles, MapPin, X, AlertCircle,
   ChevronUp, ChevronDown, RefreshCw, Download, HelpCircle, List, Type, Menu, Target,
   Smartphone, Lock, Unlock, Upload
@@ -192,7 +192,7 @@ const translateDuration = (minutes) => {
 
 function App() {
   // ---- UI Navigation ----
-  const [currentPage, setCurrentPage] = useState('home'); // home | tasks | journal | history | guide | settings | study | habits
+  const [currentPage, setCurrentPage] = useState('home'); // home | tasks | journal | guide | settings | study | habits
 
   // ---- Theme ----
   const [theme, setTheme] = useState(() => localStorage.getItem('tarteeb_theme') || 'light');
@@ -276,13 +276,6 @@ function App() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [timelineStatus, setTimelineStatus] = useState(null);
 
-  // ---- History ----
-  const [historyDates, setHistoryDates] = useState(() => {
-    const saved = localStorage.getItem('tarteeb_history_dates');
-    return saved ? JSON.parse(saved) : [];
-  });
-  const [expandedHistoryDate, setExpandedHistoryDate] = useState(null);
-
   // ---- Modals & Forms ----
   const [taskModal, setTaskModal] = useState({ open: false, mode: 'add', task: null });
   const [taskForm, setTaskForm] = useState({
@@ -307,7 +300,7 @@ function App() {
   });
   const [habitModal, setHabitModal] = useState({ open: false, mode: 'add', habit: null });
   const [habitForm, setHabitForm] = useState({ name: '' });
-  const [expandedStats, setExpandedStats] = useState({});
+
 
   const dismissWelcome = () => {
     localStorage.setItem('tarteeb_welcome_dismissed', 'true');
@@ -482,15 +475,6 @@ function App() {
           stats: calculateStats(initialTasks)
         };
         localStorage.setItem(storageKey, JSON.stringify(newDay));
-        // update history list
-        setHistoryDates(prev => {
-          if (!prev.includes(activeDate)) {
-            const upd = [...prev, activeDate].sort((a, b) => b.localeCompare(a));
-            localStorage.setItem('tarteeb_history_dates', JSON.stringify(upd));
-            return upd;
-          }
-          return prev;
-        });
         setDayData(newDay);
       }
       setLoading(false);
@@ -673,48 +657,6 @@ function App() {
   // ---- Habit Functions ----
   const getTodayStr = () => formatDateLocal(new Date());
 
-  const calcHabitStreak = (entries) => {
-    const today = getTodayStr();
-    const d = new Date(today);
-    let streak = 0;
-    while (true) {
-      const key = formatDateLocal(d);
-      const entry = entries[key];
-      if (entry && entry.completed) {
-        streak++;
-        d.setDate(d.getDate() - 1);
-      } else break;
-    }
-    return streak;
-  };
-
-  const calcLongestStreak = (entries) => {
-    const dates = Object.keys(entries).sort();
-    if (!dates.length) return 0;
-    let longest = 0, cur = 0;
-    for (const dateStr of dates) {
-      if (entries[dateStr].completed) {
-        cur++;
-        longest = Math.max(longest, cur);
-      } else cur = 0;
-    }
-    return longest;
-  };
-
-  const calcHabitStats = (habit) => {
-    const entries = habit.entries || {};
-    const dates = Object.keys(entries).sort();
-    const total = dates.length;
-    const completed = dates.filter(d => entries[d].completed).length;
-    return {
-      total,
-      completed,
-      rate: total ? Math.round((completed / total) * 100) : 0,
-      currentStreak: calcHabitStreak(entries),
-      longestStreak: calcLongestStreak(entries)
-    };
-  };
-
   const toggleHabit = (id) => {
     const today = getTodayStr();
     setHabits(prev => prev.map(h => {
@@ -802,12 +744,7 @@ function App() {
     if (!habits.length) return;
     let md = `# ${t('habits.title')}\n\n`;
     habits.forEach(h => {
-      const stats = calcHabitStats(h);
       md += `## ${h.name}\n`;
-      md += `- ${t('habits.currentStreak')}: ${stats.currentStreak}\n`;
-      md += `- ${t('habits.longestStreak')}: ${stats.longestStreak}\n`;
-      md += `- ${t('habits.totalCompletions')}: ${stats.completed}/${stats.total}\n`;
-      md += `- ${t('habits.completionRate')}: ${stats.rate}%\n\n`;
       const dates = Object.keys(h.entries || {}).sort();
       if (dates.length) {
         md += `| ${t('export.date')} | ${t('habits.today')} | ${t('habits.notes')} |\n`;
@@ -901,22 +838,6 @@ function App() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-  };
-
-  const loadHistoryDate = (dateStr) => {
-    setActiveDate(dateStr);
-    setCurrentPage('home');
-  };
-
-  const deleteHistoryDate = async (dateStr) => {
-    const confirmed = await showConfirm(t('confirm.deleteHistory'));
-    if (!confirmed) return;
-    localStorage.removeItem(`tarteeb_day_${dateStr}`);
-    setHistoryDates(prev => {
-      const upd = prev.filter(d => d !== dateStr);
-      localStorage.setItem('tarteeb_history_dates', JSON.stringify(upd));
-      return upd;
-    });
   };
 
   const handleDiaryChange = (e) => {
@@ -1201,7 +1122,6 @@ function App() {
     { id: 'habits', label: t('nav.habits'), icon: Target },
     { id: 'prayers', label: t('nav.prayers'), icon: Clock },
     { id: 'journal', label: t('nav.journal'), icon: BookOpen },
-    { id: 'history', label: t('nav.history'), icon: Calendar },
     { id: 'guide', label: t('nav.guide'), icon: HelpCircle },
     { id: 'settings', label: t('nav.settings'), icon: Settings }
   ];
@@ -1532,92 +1452,6 @@ function App() {
               </div>
             )}
 
-            {currentPage === 'history' && (
-              <div className="stats-section">
-                <div className="section-header">
-                  <Calendar size={18} style={{ color: 'var(--color-gold)' }} />
-                  <h3>{t('history.title')}</h3>
-                </div>
-
-                {/* Summary stats */}
-                {historyDates.length > 0 && (() => {
-                  let totalPct = 0;
-                  let totalDays = historyDates.length;
-                  let maxPct = 0;
-                  historyDates.forEach(dateStr => {
-                    try {
-                      const hist = JSON.parse(localStorage.getItem(`tarteeb_day_${dateStr}`) || '{}');
-                      const pct = hist.stats?.overallCompleted ?? 0;
-                      totalPct += pct;
-                      if (pct > maxPct) maxPct = pct;
-                    } catch {}
-                  });
-                  const avgPct = totalDays > 0 ? Math.round(totalPct / totalDays) : 0;
-                  return (
-                    <div className="history-summary">
-                      <div className="history-summary-card">
-                        <span className="history-summary-value">{totalDays}</span>
-                        <span className="history-summary-label">Days</span>
-                      </div>
-                      <div className="history-summary-card">
-                        <span className="history-summary-value emerald">{avgPct}%</span>
-                        <span className="history-summary-label">Avg</span>
-                      </div>
-                      <div className="history-summary-card">
-                        <span className="history-summary-value gold">{maxPct}%</span>
-                        <span className="history-summary-label">Best</span>
-                      </div>
-                    </div>
-                  );
-                })()}
-
-                <div className="history-list">
-                  {historyDates.length === 0 ? (
-                    <div className="empty-state">
-                      <div className="empty-state-icon"><Calendar size={24} /></div>
-                      <span className="empty-state-title">{t('history.empty')}</span>
-                    </div>
-                  ) : (
-                    historyDates.map(dateStr => {
-                      let hist = {};
-                      try {
-                        hist = JSON.parse(localStorage.getItem(`tarteeb_day_${dateStr}`) || '{}');
-                      } catch {
-                        hist = {};
-                      }
-                      const expanded = expandedHistoryDate === dateStr;
-                      return (
-                        <div key={dateStr} className={`history-card${expanded ? ' expanded' : ''}`}>
-                          <div className="history-card-header" onClick={() => setExpandedHistoryDate(expanded ? null : dateStr)}>
-                            <span className="history-card-date">{formatHumanDate(dateStr)}</span>
-                            <div className="history-card-stats">
-                              <span className="history-card-pct">{hist.stats?.overallCompleted ?? 0}%</span>
-                              {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                            </div>
-                          </div>
-                          {expanded && (
-                            <div className="history-card-body">
-                              {hist.diary && (
-                                <div className="history-card-diary" dir="auto">{hist.diary}</div>
-                              )}
-                              <div className="history-card-actions">
-                                <button className="btn btn-history-edit" onClick={(e) => { e.stopPropagation(); loadHistoryDate(dateStr); }}>
-                                  <Edit2 size={13} /> {t('history.openDay')}
-                                </button>
-                                <button className="btn btn-history-delete" onClick={(e) => { e.stopPropagation(); deleteHistoryDate(dateStr); }}>
-                                  <Trash2 size={13} /> {t('history.delete')}
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
-              </div>
-            )}
-
             {currentPage === 'guide' && (
               <div className="guide-page">
                 <div className="guide-hero">
@@ -1627,7 +1461,7 @@ function App() {
                   <h2 className="guide-title">{t('guide.title')}</h2>
                   <p className="guide-subtitle">{t('guide.subtitle')}</p>
                   <div className="guide-steps-badge">
-                    <span>8 {t('guide.steps')}</span>
+                    <span>7 {t('guide.steps')}</span>
                   </div>
                 </div>
                 <div className="guide-sections">
@@ -1663,16 +1497,8 @@ function App() {
                       <p className="guide-card-desc">{t('guide.journalDesc')}</p>
                     </div>
                   </div>
-                  <div className="guide-card" style={{ '--card-accent': 'var(--color-teal)' }}>
-                    <div className="guide-card-step">05</div>
-                    <div className="guide-card-icon-wrap"><Calendar size={22} /></div>
-                    <div className="guide-card-content">
-                      <h3 className="guide-card-title">{t('guide.history')}</h3>
-                      <p className="guide-card-desc">{t('guide.historyDesc')}</p>
-                    </div>
-                  </div>
                   <div className="guide-card" style={{ '--card-accent': 'var(--color-gold)' }}>
-                    <div className="guide-card-step">06</div>
+                    <div className="guide-card-step">05</div>
                     <div className="guide-card-icon-wrap"><Settings size={22} /></div>
                     <div className="guide-card-content">
                       <h3 className="guide-card-title">{t('guide.settings')}</h3>
@@ -1680,7 +1506,7 @@ function App() {
                     </div>
                   </div>
                   <div className="guide-card" style={{ '--card-accent': 'var(--color-emerald)' }}>
-                    <div className="guide-card-step">07</div>
+                    <div className="guide-card-step">06</div>
                     <div className="guide-card-icon-wrap"><Download size={22} /></div>
                     <div className="guide-card-content">
                       <h3 className="guide-card-title">{t('guide.export')}</h3>
@@ -1688,7 +1514,7 @@ function App() {
                     </div>
                   </div>
                   <div className="guide-card" style={{ '--card-accent': 'var(--color-teal)' }}>
-                    <div className="guide-card-step">08</div>
+                    <div className="guide-card-step">07</div>
                     <div className="guide-card-icon-wrap"><Sun size={22} /></div>
                     <div className="guide-card-content">
                       <h3 className="guide-card-title">{t('guide.theme')}</h3>
@@ -1715,12 +1541,9 @@ function App() {
                 ) : (
                   <div className="habits-list">
                     {habits.map((habit, index) => {
-                      const entries = habit.entries || {};
                       const today = formatDateLocal(new Date());
-                      const todayEntry = entries[today];
+                      const todayEntry = (habit.entries || {})[today];
                       const isDone = todayEntry?.completed || false;
-                      const stats = calcHabitStats(habit);
-                      const sortedDates = Object.keys(entries).sort().slice(-60);
                       return (
                         <div key={habit.id} className="habit-card">
                           <div className="habit-main">
@@ -1731,26 +1554,10 @@ function App() {
                             >
                               {isDone && <Check size={16} />}
                             </button>
-                            <div className="habit-progress-ring">
-                              <svg viewBox="0 0 36 36" width="40" height="40">
-                                <circle className="habit-progress-ring-bg" cx="18" cy="18" r="15.5" />
-                                <circle className="habit-progress-ring-fg" cx="18" cy="18" r="15.5"
-                                  strokeDasharray={Math.PI * 31}
-                                  strokeDashoffset={Math.PI * 31 * (1 - stats.rate / 100)}
-                                />
-                              </svg>
-                              <span className="habit-progress-ring-text">{stats.rate}%</span>
-                            </div>
                             <div className="habit-info">
                               <span className="habit-name" onClick={() => { setHabitForm({ name: habit.name }); setHabitModal({ open: true, mode: 'edit', habit }); }}>
                                 {habit.name}
                               </span>
-                              <div className="habit-meta">
-                                <span className="habit-streak-badge">
-                                  {stats.currentStreak} {t('habits.streak')}
-                                </span>
-                                <span>{stats.completed}/{stats.total}</span>
-                              </div>
                             </div>
                             <div className="habit-actions">
                               <span className="habit-reorder">
@@ -1768,59 +1575,6 @@ function App() {
                                 <Trash2 size={13} />
                               </button>
                             </div>
-                          </div>
-                          <div className="habit-stats-panel">
-                            <button
-                              type="button"
-                              className="habit-stats-toggle"
-                              onClick={() => setExpandedStats(prev => ({ ...prev, [habit.id]: !prev[habit.id] }))}
-                            >
-                              {expandedStats[habit.id] ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                              {' '}{t('habits.stats')}
-                            </button>
-                            {expandedStats[habit.id] && (
-                              <>
-                                <div className="habit-stats-grid">
-                                  <div className="habit-stat-card">
-                                    <div className="habit-stat-value">{stats.currentStreak}</div>
-                                    <div className="habit-stat-label">{t('habits.currentStreak')}</div>
-                                  </div>
-                                  <div className="habit-stat-card">
-                                    <div className="habit-stat-value">{stats.longestStreak}</div>
-                                    <div className="habit-stat-label">{t('habits.longestStreak')}</div>
-                                  </div>
-                                  <div className="habit-stat-card">
-                                    <div className="habit-stat-value">{stats.completed}</div>
-                                    <div className="habit-stat-label">{t('habits.totalCompletions')}</div>
-                                  </div>
-                                  <div className="habit-stat-card">
-                                    <div className="habit-stat-value">{stats.rate}%</div>
-                                    <div className="habit-stat-label">{t('habits.completionRate')}</div>
-                                  </div>
-                                </div>
-                                {sortedDates.length > 0 && (
-                                  <>
-                                    <div className="habit-stats-chart">
-                                      {sortedDates.map(d => {
-                                        const e = entries[d];
-                                        const isToday = d === today;
-                                        let cls = 'habit-chart-day';
-                                        if (e?.completed) cls += ' done';
-                                        else if (e) cls += ' missed';
-                                        else cls += ' empty';
-                                        if (isToday) cls += ' today';
-                                        return <div key={d} className={cls} title={`${d}: ${e?.completed ? '✓' : e ? '✗' : '–'}`} />;
-                                      })}
-                                    </div>
-                                    <div className="habit-chart-legend">
-                                      <span><span className="dot done" /> {t('habits.today')}</span>
-                                      <span><span className="dot missed" /> Missed</span>
-                                      <span><span className="dot empty" /> Empty</span>
-                                    </div>
-                                  </>
-                                )}
-                              </>
-                            )}
                           </div>
                         </div>
                       );
