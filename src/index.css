@@ -990,18 +990,19 @@ a {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   overflow: hidden;
-  transition: box-shadow 0.2s ease;
+  transition: box-shadow 0.25s ease, border-color 0.25s ease;
 }
 
 .journal-card:focus-within {
-  box-shadow: 0 0 0 2px rgba(17, 94, 59, 0.08), var(--shadow-md);
+  border-color: var(--color-emerald);
+  box-shadow: 0 0 0 3px rgba(17, 94, 59, 0.06), var(--shadow-md);
 }
 
 .journal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 20px;
+  padding: 18px 22px;
   border-bottom: 1px solid var(--border-color);
   background-color: var(--bg-primary);
 }
@@ -1009,68 +1010,37 @@ a {
 .journal-header-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
 }
 
 .journal-icon {
   color: var(--color-gold);
   flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-gold-bg);
+  border-radius: 10px;
 }
 
 .journal-title {
-  font-size: 1rem;
+  font-size: 1.05rem;
   font-weight: 700;
   color: var(--text-primary);
   font-family: var(--font-arabic), var(--font-sans);
 }
 
 .journal-date {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: var(--text-tertiary);
   font-weight: 500;
   font-family: var(--font-arabic), var(--font-sans);
+  margin-top: 1px;
 }
 
-.btn-save-journal {
-  padding: 6px 16px;
-  font-size: 0.8rem;
-  min-width: 72px;
-}
 
-.btn-save-journal:disabled {
-  opacity: 0.5;
-  cursor: default;
-  transform: none;
-  box-shadow: none;
-}
-
-.btn-save-journal:not(:disabled):hover {
-  transform: translateY(-1px);
-}
-
-.diary-textarea {
-  width: 100%;
-  min-height: 260px;
-  border: none;
-  border-radius: 0;
-  background-color: var(--bg-secondary);
-  padding: 20px;
-  font-size: 0.95rem;
-  resize: none;
-  outline: none;
-  line-height: 1.7;
-  color: var(--text-primary);
-  font-family: var(--font-arabic), var(--font-sans);
-}
-
-.diary-textarea:focus {
-  background-color: var(--bg-secondary);
-}
-
-.diary-textarea::placeholder {
-  color: var(--text-tertiary);
-  font-style: italic;
-}
 
 /* Modals */
 .modal-overlay {
@@ -2264,11 +2234,11 @@ textarea.form-textarea {
     border-radius: 0 16px 16px 0;
     box-shadow: 4px 0 24px rgba(0, 0, 0, 0.12);
     transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow-y: auto;
   }
 
   .full-sidebar.sidebar-open {
     left: 0;
-    overflow-y: auto;
   }
 
   .sidebar-close-btn {
@@ -4390,5 +4360,328 @@ textarea.form-textarea {
 
   .habit-meta {
     flex-wrap: wrap;
+  }
+}
+
+/* === Study Notes Page === */
+.journal-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 8px 0 48px;
+  width: 100%;
+}
+
+/* === Add-card (the top input area) === */
+.journal-add-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.journal-add-card:focus-within {
+  border-color: var(--color-emerald);
+  box-shadow: 0 0 0 3px rgba(17, 94, 59, 0.06), var(--shadow-md);
+}
+
+.study-add-area {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.study-add-area .study-input {
+  width: 100%;
+  border: none;
+  border-radius: 0;
+  background: var(--bg-secondary);
+  padding: 18px 22px;
+  font-size: 0.95rem;
+  resize: vertical;
+  outline: none;
+  line-height: 1.7;
+  color: var(--text-primary);
+  font-family: inherit;
+  min-height: 80px;
+  transition: background-color 0.2s ease;
+}
+
+.study-add-area .study-input:focus {
+  background: var(--bg-secondary);
+}
+
+.study-add-area .study-input::placeholder {
+  color: var(--text-tertiary);
+  font-style: italic;
+}
+
+.study-add-footer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-primary);
+}
+
+.study-period-select-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.study-period-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.study-period-select {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border-color);
+  background: var(--bg-secondary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+  font-family: inherit;
+  appearance: auto;
+}
+
+.study-period-select:focus {
+  border-color: var(--color-emerald);
+}
+
+.study-add-btn {
+  flex-shrink: 0;
+  height: 40px;
+  padding: 0 20px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* === Divider === */
+.journal-section-divider {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: var(--text-tertiary);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0 4px;
+}
+
+.journal-section-divider::before,
+.journal-section-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border-color);
+}
+
+/* === Notes list container === */
+.journal-study-notes {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* === Empty state === */
+.study-empty {
+  font-size: 0.88rem;
+  color: var(--text-tertiary);
+  padding: 32px 20px;
+  text-align: center;
+  font-style: italic;
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-lg);
+  background: var(--bg-secondary);
+}
+
+/* === Period group === */
+.study-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.study-group.active .study-group-header {
+  background: var(--color-emerald-light);
+  border-color: var(--color-emerald);
+}
+
+.study-group-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  transition: all 0.2s ease;
+}
+
+.study-group-badge {
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 6px;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.study-group.active .study-group-badge {
+  background: var(--color-emerald);
+  color: #fff;
+}
+
+.study-group-range {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  flex: 1;
+}
+
+.study-group-count {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  background: var(--bg-primary);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  font-variant-numeric: tabular-nums;
+}
+
+.study-group.active .study-group-count {
+  background: var(--color-emerald-light);
+  color: var(--color-emerald);
+}
+
+/* === Notes within a group === */
+.study-group-notes {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-left: 8px;
+}
+
+.study-note-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 16px 12px 14px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--border-color);
+  transition: all 0.15s ease;
+}
+
+.study-note-card:hover {
+  border-color: var(--text-tertiary);
+  border-left-color: var(--text-tertiary);
+}
+
+.study-group.active .study-note-card {
+  border-left-color: var(--color-emerald-light);
+}
+
+.study-group.active .study-note-card:hover {
+  border-left-color: var(--color-emerald);
+}
+
+.study-note-text {
+  font-size: 0.92rem;
+  color: var(--text-primary);
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.study-note-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.study-note-time {
+  font-size: 0.7rem;
+  font-family: var(--font-mono);
+  color: var(--text-tertiary);
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.study-note-time::before {
+  content: '';
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--text-tertiary);
+  opacity: 0.4;
+}
+
+.study-note-footer .btn-task-action {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.study-note-card:hover .btn-task-action {
+  opacity: 0.6;
+}
+
+.study-note-card .btn-task-action:hover {
+  opacity: 1;
+}
+
+/* === Responsive === */
+@media (max-width: 600px) {
+  .study-add-footer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .study-period-select-wrap {
+    flex-wrap: wrap;
+  }
+
+  .study-add-btn {
+    justify-content: center;
+  }
+
+  .study-group-notes {
+    padding-left: 0;
+  }
+
+  .study-note-card {
+    border-left-width: 2px;
   }
 }

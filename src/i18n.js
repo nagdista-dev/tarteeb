@@ -71,10 +71,13 @@ const en = {
   'tasks.completion': 'completion',
 
   /* Journal page */
-  'journal.title': 'Journal',
-  'journal.saved': 'Saved',
-  'journal.save': 'Save',
-  'journal.placeholder': 'Write your reflections for today...',
+  'journal.title': 'Study Notes',
+  'journal.studyNotes': 'Study Notes',
+  'journal.addNote': 'Add Note',
+  'journal.studyPlaceholder': 'Write your study note...',
+  'journal.period': 'Period',
+  'journal.allNotes': 'All Notes',
+  'journal.noNotes': 'No study notes yet. Write your first note above.',
 
   /* History page */
   'history.title': 'History Log',
@@ -306,10 +309,13 @@ const ar = {
   'tasks.completion': 'الإنجاز',
 
   /* Journal page */
-  'journal.title': 'المذكرات',
-  'journal.saved': 'تم الحفظ',
-  'journal.save': 'حفظ',
-  'journal.placeholder': 'اكتب تأملاتك لهذا اليوم...',
+  'journal.title': 'ملاحظات الدراسة',
+  'journal.studyNotes': 'ملاحظات الدراسة',
+  'journal.addNote': 'إضافة ملاحظة',
+  'journal.studyPlaceholder': 'اكتب ملاحظة دراستك...',
+  'journal.period': 'الوقت',
+  'journal.allNotes': 'جميع الملاحظات',
+  'journal.noNotes': 'لا توجد ملاحظات بعد. اكتب ملاحظتك الأولى أعلاه.',
 
   /* History page */
   'history.title': 'سجل الأيام',

@@ -191,10 +191,10 @@ const translateDuration = (minutes) => {
 
 function App() {
   // ---- UI Navigation ----
-  const [currentPage, setCurrentPage] = useState('home'); // home | tasks | journal | history | guide | settings
+  const [currentPage, setCurrentPage] = useState('home'); // home | tasks | journal | history | guide | settings | study | habits
 
   // ---- Theme ----
-  const [theme, setTheme] = useState(() => localStorage.getItem('tarteeb_theme') || 'dark');
+  const [theme, setTheme] = useState(() => localStorage.getItem('tarteeb_theme') || 'light');
 
   // ---- Language ----
   const [lang, setLang] = useState(() => {
@@ -290,6 +290,8 @@ function App() {
   const [manualTimesForm, setManualTimesForm] = useState({ fajr: '', dhuhr: '', asr: '', maghrib: '', isha: '' });
   const [diaryDraft, setDiaryDraft] = useState('');
   const [diarySaved, setDiarySaved] = useState(true);
+  const [studyText, setStudyText] = useState('');
+  const [studyPeriod, setStudyPeriod] = useState('morning');
   const [collapsedPeriods, setCollapsedPeriods] = useState({ night: true, morning: true, afternoon: true, late_afternoon: true });
   const [dialog, setDialog] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -416,6 +418,7 @@ function App() {
           },
           tasks: initialTasks,
           diary: '',
+          studyNotes: [],
           stats: calculateStats(initialTasks)
         };
         localStorage.setItem(storageKey, JSON.stringify(newDay));
@@ -481,6 +484,11 @@ function App() {
     if (currentPage === 'journal' && dayData) {
       setDiaryDraft(dayData.diary || '');
       setDiarySaved(true);
+      setStudyText('');
+      const active = timelineStatus?.activePeriod;
+      if (active && active !== 'none') {
+        setStudyPeriod(active);
+      }
     }
   }, [currentPage, dayData]);
 
@@ -671,6 +679,33 @@ function App() {
       entries: {}
     };
     setHabits(prev => [...prev, habit]);
+  };
+
+  // ---- Study Functions ----
+  const addStudyNote = () => {
+    const text = studyText.trim();
+    if (!text || !dayData) return;
+    const note = {
+      id: createTaskId(),
+      text,
+      period: studyPeriod,
+      createdAt: new Date().toISOString(),
+      time: formatMinutesToTime(getCurrentPlannerMinutes(currentTime, activeDate))
+    };
+    const updatedNotes = [...(dayData.studyNotes || []), note];
+    updateDayData({ ...dayData, studyNotes: updatedNotes });
+    setStudyText('');
+    setStudyPeriod(timelineStatus?.activePeriod || 'morning');
+  };
+
+  const deleteStudyNote = async (noteId) => {
+    if (!dayData) return;
+    const updatedNotes = (dayData.studyNotes || []).filter(n => n.id !== noteId);
+    updateDayData({ ...dayData, studyNotes: updatedNotes });
+  };
+
+  const getNotesForPeriod = (period) => {
+    return (dayData?.studyNotes || []).filter(n => n.period === period);
   };
 
   const deleteHabit = async (id) => {
@@ -1264,20 +1299,92 @@ function App() {
             )}
 
             {currentPage === 'journal' && dayData && (
-              <div className="journal-card">
-                <div className="journal-header">
-                  <div className="journal-header-left">
-                    <BookOpen size={18} className="journal-icon" />
-                    <div>
-                      <h3 className="journal-title" dir="auto">{t('journal.title')}</h3>
-                      <span className="journal-date" dir="auto">{formatHumanDate(dayData.date)}{dayData.hijriDate ? ` · ${dayData.hijriDate}` : ''}</span>
+              <div className="journal-page">
+                <div className="journal-card journal-add-card">
+                  <div className="journal-header">
+                    <div className="journal-header-left">
+                      <BookOpen size={18} className="journal-icon" />
+                      <div>
+                        <h3 className="journal-title" dir="auto">{t('journal.studyNotes')}</h3>
+                        <span className="journal-date" dir="auto">{formatHumanDate(dayData.date)}{dayData.hijriDate ? ` · ${dayData.hijriDate}` : ''}</span>
+                      </div>
                     </div>
                   </div>
-                  <button className="btn btn-primary btn-save-journal" onClick={handleDiarySave} disabled={diarySaved}>
-                    {diarySaved ? t('journal.saved') : t('journal.save')}
-                  </button>
+                  <div className="study-add-area">
+                    <textarea
+                      className="study-input"
+                      placeholder={t('journal.studyPlaceholder')}
+                      value={studyText}
+                      onChange={e => setStudyText(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); addStudyNote(); } }}
+                      rows={3}
+                    />
+                    <div className="study-add-footer">
+                      <div className="study-period-select-wrap">
+                        <span className="study-period-label">{t('journal.period')}</span>
+                        <select
+                          className="form-select study-period-select"
+                          value={studyPeriod}
+                          onChange={e => setStudyPeriod(e.target.value)}
+                        >
+                          {PLANNER_PERIOD_ORDER.map(key => (
+                            <option key={key} value={key}>
+                              {t('period.' + key)} — {t('period.' + key + 'Range')}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <button
+                        className="btn btn-primary study-add-btn"
+                        onClick={addStudyNote}
+                        disabled={!studyText.trim()}
+                      >
+                        <Plus size={16} /> {t('journal.addNote')}
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <textarea className="diary-textarea" value={diaryDraft} onChange={handleDiaryChange} placeholder={t('journal.placeholder')} dir="auto" />
+
+                <div className="journal-section-divider">
+                  <span>{t('journal.allNotes')}</span>
+                </div>
+
+                <div className="journal-study-notes">
+                  {(() => {
+                    const activePeriod = timelineStatus?.activePeriod;
+                    const allNotes = dayData.studyNotes || [];
+                    if (allNotes.length === 0) {
+                      return <div className="study-empty">{t('journal.noNotes')}</div>;
+                    }
+                    return PLANNER_PERIOD_ORDER.map(periodKey => {
+                      const notes = getNotesForPeriod(periodKey);
+                      if (notes.length === 0) return null;
+                      const isActive = activePeriod === periodKey;
+                      return (
+                        <div key={periodKey} className={`study-group ${isActive ? 'active' : ''}`}>
+                          <div className="study-group-header">
+                            <span className="study-group-badge">{t('period.' + periodKey)}</span>
+                            <span className="study-group-range">{t('period.' + periodKey + 'Range')}</span>
+                            <span className="study-group-count">{notes.length}</span>
+                          </div>
+                          <div className="study-group-notes">
+                            {notes.map(note => (
+                              <div key={note.id} className="study-note-card">
+                                <div className="study-note-text">{note.text}</div>
+                                <div className="study-note-footer">
+                                  <span className="study-note-time">{note.time}</span>
+                                  <button type="button" className="btn-task-action delete" onClick={() => deleteStudyNote(note.id)} aria-label={t('task.deleteAria')}>
+                                    <Trash2 size={12} />
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
               </div>
             )}
 
