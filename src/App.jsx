@@ -3,7 +3,8 @@ import {
   Check, Plus, Minus, Edit2, Trash2, Settings, Moon, Sun,
   BookOpen, Clock, Sparkles, MapPin, X, AlertCircle,
   ChevronUp, ChevronDown, RefreshCw, Download, HelpCircle, List, Type, Menu, Target,
-  Smartphone, Lock, Unlock, Upload, Search, Zap
+  Smartphone, Lock, Unlock, Upload, Search, Zap, Play, Square, Activity, Smile,
+  TrendingUp, BarChart3, Hourglass
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import {
@@ -302,6 +303,108 @@ function App() {
   const [habitModal, setHabitModal] = useState({ open: false, mode: 'add', habit: null });
   const [habitForm, setHabitForm] = useState({ name: '' });
 
+  // ---- Focus Timer ----
+  const [timer, setTimer] = useState({ running: false, mode: 'focus', remaining: 25 * 60, total: 25 * 60, cycle: 1, show: false });
+  const timerRef = useRef(null);
+
+  const FOCUS_MINUTES = 25;
+  const BREAK_MINUTES = 5;
+
+  useEffect(() => {
+    if (timer.running && timer.remaining > 0) {
+      timerRef.current = setInterval(() => {
+        setTimer(prev => {
+          if (prev.remaining <= 1) {
+            clearInterval(timerRef.current);
+            if (prev.mode === 'focus') {
+              try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.frequency.value = 880;
+                osc.type = 'sine';
+                gain.gain.setValueAtTime(0.3, ctx.currentTime);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.4);
+                setTimeout(() => {
+                  const osc2 = ctx.createOscillator();
+                  const gain2 = ctx.createGain();
+                  osc2.connect(gain2);
+                  gain2.connect(ctx.destination);
+                  osc2.frequency.value = 660;
+                  osc2.type = 'sine';
+                  gain2.gain.setValueAtTime(0.2, ctx.currentTime);
+                  osc2.start();
+                  osc2.stop(ctx.currentTime + 0.3);
+                }, 300);
+              } catch {}
+              return { ...prev, running: false, mode: 'break', remaining: BREAK_MINUTES * 60, total: BREAK_MINUTES * 60 };
+            } else {
+              return { ...prev, running: false, mode: 'focus', remaining: FOCUS_MINUTES * 60, total: FOCUS_MINUTES * 60, cycle: prev.cycle + 1 };
+            }
+          }
+          return { ...prev, remaining: prev.remaining - 1 };
+        });
+      }, 1000);
+    } else {
+      if (timerRef.current) clearInterval(timerRef.current);
+    }
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [timer.running]);
+
+  const formatTimer = (secs) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  };
+
+  // ---- Prayer Tracker ----
+  const [prayerTracking, setPrayerTracking] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('tarteeb_prayer_tracking') || '{}'); }
+    catch { return {}; }
+  });
+  useEffect(() => {
+    localStorage.setItem('tarteeb_prayer_tracking', JSON.stringify(prayerTracking));
+  }, [prayerTracking]);
+
+  const PRAYER_KEYS = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
+  const PRAYER_STATUSES = ['pending', 'onTime', 'late', 'missed'];
+
+  const getPrayerStatus = (dateStr, prayerKey) => {
+    return prayerTracking[dateStr]?.[prayerKey] || 'pending';
+  };
+  const cyclePrayerStatus = (dateStr, prayerKey) => {
+    setPrayerTracking(prev => {
+      const current = prev[dateStr]?.[prayerKey] || 'pending';
+      const idx = PRAYER_STATUSES.indexOf(current);
+      const next = PRAYER_STATUSES[(idx + 1) % PRAYER_STATUSES.length];
+      return { ...prev, [dateStr]: { ...(prev[dateStr] || {}), [prayerKey]: next } };
+    });
+  };
+
+  // ---- Mood Tracker ----
+  const MOODS = ['happy', 'grateful', 'peaceful', 'energetic', 'tired', 'stressed', 'anxious', 'sad'];
+  const MOOD_EMOJIS = { happy: '😊', grateful: '🤲', peaceful: '🕊️', energetic: '⚡', tired: '😴', stressed: '😰', anxious: '😟', sad: '😢' };
+
+  // ---- Dhikr ----
+  const DAIY_DHIKR = [
+    { ar: 'سُبْحَانَ اللَّهِ وَبِحَمْدِهِ، سُبْحَانَ اللَّهِ الْعَظِيمِ', en: 'Glory and praise be to Allah, Glory be to Allah the Most Great' },
+    { ar: 'لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ', en: 'There is no god but Allah alone with no partner; His is the dominion and His is the praise, and He is over all things competent' },
+    { ar: 'اللَّهُمَّ صَلِّ وَسَلِّمْ عَلَى نَبِيِّنَا مُحَمَّدٍ', en: 'O Allah, send peace and blessings upon our Prophet Muhammad' },
+    { ar: 'أَسْتَغْفِرُ اللَّهَ وَأَتُوبُ إِلَيْهِ', en: 'I seek forgiveness from Allah and repent to Him' },
+    { ar: 'حَسْبِيَ اللَّهُ لَا إِلَهَ إِلَّا هُوَ عَلَيْهِ تَوَكَّلْتُ وَهُوَ رَبُّ الْعَرْشِ الْعَظِيمِ', en: 'Allah is sufficient for me; there is no god but Him. In Him I put my trust, and He is the Lord of the Mighty Throne' },
+    { ar: 'اللَّهُمَّ إِنِّي أَسْأَلُكَ الْعَفْوَ وَالْعَافِيَةَ فِي الدُّنْيَا وَالْآخِرَةِ', en: 'O Allah, I ask You for forgiveness and well-being in this world and the Hereafter' },
+    { ar: 'رَبِّ اشْرَحْ لِي صَدْرِي وَيَسِّرْ لِي أَمْرِي', en: 'My Lord, expand my chest for me and make my matter easy for me' },
+    { ar: 'اللَّهُمَّ أَعِنِّي عَلَى ذِكْرِكَ وَشُكْرِكَ وَحُسْنِ عِبَادَتِكَ', en: 'O Allah, help me to remember You, thank You, and worship You well' },
+  ];
+  const getDhikrOfDay = () => {
+    const today = formatDateLocal(new Date());
+    const dayNum = today.split('-').reduce((a, b) => a + parseInt(b), 0);
+    return DAIY_DHIKR[dayNum % DAIY_DHIKR.length];
+  };
+
   // ---- Task search ----
   const [taskSearch, setTaskSearch] = useState('');
 
@@ -542,6 +645,7 @@ function App() {
           tasks: initialTasks,
           diary: '',
           studyNotes: [],
+          mood: '',
           stats: calculateStats(initialTasks)
         };
         localStorage.setItem(storageKey, JSON.stringify(newDay));
@@ -958,6 +1062,12 @@ function App() {
       lines.push(diary);
       lines.push('');
     }
+    if (day.mood) {
+      const emoji = MOOD_EMOJIS[day.mood] || '';
+      const moodLabel = t('mood.' + day.mood);
+      lines.push(`_${t('mood.title')}: ${emoji} ${moodLabel}_`);
+      lines.push('');
+    }
     const blob = new Blob([lines.join('\n')], { type: 'text/markdown' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -1244,12 +1354,144 @@ function App() {
     );
   };
 
+  // ---- Pulse Dashboard ----
+  const renderPulseDashboard = () => {
+    const days = [];
+    const today = new Date();
+    for (let i = 6; i >= 0; i--) {
+      const d = formatDateLocal(addDays(today, -i));
+      const saved = localStorage.getItem(`tarteeb_day_${d}`);
+      if (saved) {
+        try { days.push({ date: d, data: JSON.parse(saved) }); } catch { days.push({ date: d, data: null }); }
+      } else {
+        days.push({ date: d, data: null });
+      }
+    }
+    const hasData = days.some(d => d.data);
+    const weekDone = days.reduce((s, d) => s + (d.data?.stats?.completedTasks || 0), 0);
+    const weekTotal = days.reduce((s, d) => s + (d.data?.stats?.totalTasks || 0), 0);
+    const weekPct = weekTotal > 0 ? Math.round((weekDone / weekTotal) * 100) : 0;
+    const bestDay = days.reduce((best, d) => {
+      if (!d.data) return best;
+      const pct = d.data.stats?.overallCompleted || 0;
+      return pct > (best.pct || 0) ? { date: d.date, pct } : best;
+    }, { date: '', pct: 0 });
+    const streak = computeStreak();
+
+    return (
+      <div className="pulse-page">
+        <div className="pulse-header">
+          <Activity size={22} className="pulse-header-icon" />
+          <h2 className="pulse-header-title">{t('pulse.title')}</h2>
+        </div>
+        <p className="pulse-subtitle">{t('pulse.subtitle')}</p>
+        {!hasData ? (
+          <div className="empty-state">
+            <TrendingUp size={32} />
+            <span className="empty-state-title">{t('pulse.noData')}</span>
+          </div>
+        ) : (
+          <>
+            <div className="pulse-metrics">
+              <div className="pulse-metric pulse-metric-completion">
+                <span className="pulse-metric-value">{weekPct}%</span>
+                <span className="pulse-metric-label">{t('pulse.completionRate')}</span>
+                <div className="pulse-metric-bar"><div style={{ width: `${weekPct}%` }} /></div>
+              </div>
+              <div className="pulse-metric pulse-metric-tasks">
+                <span className="pulse-metric-value">{weekDone}/{weekTotal}</span>
+                <span className="pulse-metric-label">{t('pulse.tasksDone')}</span>
+              </div>
+              <div className="pulse-metric pulse-metric-best">
+                <span className="pulse-metric-value">
+                  {bestDay.pct > 0 ? `${bestDay.pct}%` : '—'}
+                </span>
+                <span className="pulse-metric-label">{t('pulse.bestDay')}</span>
+                {bestDay.date && <span className="pulse-metric-date">{formatHumanDate(bestDay.date)}</span>}
+              </div>
+              <div className="pulse-metric pulse-metric-streak">
+                <span className="pulse-metric-value">{streak}</span>
+                <span className="pulse-metric-label">{t('streak.days')}</span>
+                <Zap size={16} className="pulse-streak-icon" />
+              </div>
+            </div>
+            <div className="pulse-chart">
+              <div className="pulse-chart-header">
+                <BarChart3 size={16} />
+                <span>{t('pulse.completionRate')}</span>
+              </div>
+              <div className="pulse-bars">
+                {days.map((d, idx) => {
+                  const pct = d.data?.stats?.overallCompleted || 0;
+                  const isToday = idx === 6;
+                  const isBest = d.date === bestDay.date && bestDay.pct > 0;
+                  return (
+                    <div key={d.date} className={`pulse-bar-col ${isToday ? 'today' : ''} ${isBest ? 'best' : ''}`}>
+                      <div className="pulse-bar-wrap">
+                        <div className="pulse-bar" style={{ height: `${(pct / 100) * 100}%` }}>
+                          <span className="pulse-bar-pct">{pct > 0 ? `${pct}%` : ''}</span>
+                        </div>
+                      </div>
+                      <span className="pulse-bar-label">
+                        {new Date(d.date).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US', { weekday: 'short' })}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            {/* Prayer Tracking Summary */}
+            <div className="pulse-chart">
+              <div className="pulse-chart-header">
+                <Clock size={16} />
+                <span>{t('pulse.prayerAccuracy')}</span>
+              </div>
+              <div className="pulse-prayer-summary">
+                {(() => {
+                  const counts = { onTime: 0, late: 0, missed: 0, pending: 0 };
+                  days.forEach(d => {
+                    const track = prayerTracking[d.date];
+                    if (track) {
+                      PRAYER_KEYS.forEach(pk => {
+                        const status = track[pk] || 'pending';
+                        counts[status] = (counts[status] || 0) + 1;
+                      });
+                    } else {
+                      counts.pending += 5;
+                    }
+                  });
+              return (
+                    <div className="pulse-prayer-stats">
+                      <div className="pulse-prayer-stat" style={{ '--stat-color': 'var(--color-emerald)' }}>
+                        <span className="pulse-prayer-stat-value">{counts.onTime}</span>
+                        <span className="pulse-prayer-stat-label">{t('pulse.prayerOnTime')}</span>
+                      </div>
+                      <div className="pulse-prayer-stat" style={{ '--stat-color': 'var(--color-gold)' }}>
+                        <span className="pulse-prayer-stat-value">{counts.late}</span>
+                        <span className="pulse-prayer-stat-label">{t('pulse.prayerLate')}</span>
+                      </div>
+                      <div className="pulse-prayer-stat" style={{ '--stat-color': 'var(--color-danger)' }}>
+                        <span className="pulse-prayer-stat-value">{counts.missed}</span>
+                        <span className="pulse-prayer-stat-label">{t('pulse.prayerMissed')}</span>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    );
+  };
+
   // ---- Sidebar navigation links ----
   const sidebarLinks = [
     { id: 'home', label: t('nav.home'), icon: Sparkles },
     { id: 'tasks', label: t('nav.tasks'), icon: List },
     { id: 'habits', label: t('nav.habits'), icon: Target },
     { id: 'prayers', label: t('nav.prayers'), icon: Clock },
+    { id: 'pulse', label: t('nav.pulse'), icon: Activity },
     { id: 'journal', label: t('nav.journal'), icon: BookOpen },
     { id: 'guide', label: t('nav.guide'), icon: HelpCircle },
     { id: 'settings', label: t('nav.settings'), icon: Settings }
@@ -1342,6 +1584,9 @@ function App() {
                 <Type size={16} />
                 <span className="font-size-sidebar-label">{t('settings.fontSize_' + fontSize)}</span>
               </button>
+              <button className="sidebar-toggle-btn sidebar-timer-btn" onClick={() => setTimer(prev => ({ ...prev, show: !prev.show }))} title={t('timer.title')}>
+                <Hourglass size={16} />
+              </button>
             </div>
             {dayData && (
               <div className="sidebar-export-wrap">
@@ -1356,6 +1601,11 @@ function App() {
                 )}
               </div>
             )}
+            <div className="sidebar-dhikr">
+              <div className="sidebar-dhikr-icon">ﷲ</div>
+              <p className="sidebar-dhikr-text" lang="ar">{getDhikrOfDay().ar}</p>
+              <p className="sidebar-dhikr-translation">{getDhikrOfDay().en}</p>
+            </div>
             <div className="sidebar-credit">
               {t('footer.developedBy')}{' '}
               <a href="https://nagdista.com" target="_blank" rel="noopener noreferrer">Nagdista</a>
@@ -1507,8 +1757,41 @@ function App() {
               </div>
             )}
 
+            {currentPage === 'pulse' && renderPulseDashboard()}
+
             {currentPage === 'journal' && dayData && (
               <div className="journal-page">
+                {/* Mood Tracker */}
+                <div className="journal-card mood-card">
+                  <div className="journal-header">
+                    <div className="journal-header-left">
+                      <Smile size={18} className="journal-icon" />
+                      <div>
+                        <h3 className="journal-title">{t('mood.title')}</h3>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mood-grid">
+                    {MOODS.map(m => {
+                      const current = dayData.mood || '';
+                      const isActive = current === m;
+                      return (
+                        <button
+                          key={m}
+                          className={`mood-btn ${isActive ? 'active' : ''}`}
+                          onClick={() => {
+                            const next = isActive ? '' : m;
+                            updateDayData({ ...dayData, mood: next });
+                          }}
+                        >
+                          <span className="mood-emoji">{MOOD_EMOJIS[m]}</span>
+                          <span className="mood-label">{t('mood.' + m)}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
                 <div className="journal-card journal-add-card">
                   <div className="journal-header">
                     <div className="journal-header-left">
@@ -1773,6 +2056,42 @@ function App() {
                   <Clock size={20} className="prayers-header-icon" />
                   <h2 className="prayers-header-title">{t('prayerTimes.title')}</h2>
                   <span className="kbd-hint"><kbd>P</kbd></span>
+                </div>
+
+                {/* Prayer Tracker */}
+                <div className="prayer-tracker-card">
+                  <div className="prayer-tracker-header">
+                    <span className="prayer-tracker-title">{t('prayerTracker.title')}</span>
+                    <span className="prayer-tracker-hint">{t('prayerTracker.trackYour')}</span>
+                  </div>
+                  <div className="prayer-tracker-grid">
+                    {PRAYER_KEYS.map(pk => {
+                      const status = getPrayerStatus(activeDate, pk);
+                      const statusColors = {
+                        pending: 'var(--text-tertiary)',
+                        onTime: 'var(--color-emerald)',
+                        late: 'var(--color-gold)',
+                        missed: 'var(--color-danger)'
+                      };
+                      return (
+                        <button
+                          key={pk}
+                          className={`prayer-tracker-btn status-${status}`}
+                          onClick={() => cyclePrayerStatus(activeDate, pk)}
+                          title={t('prayerTracker.' + status)}
+                        >
+                          <span className="prayer-tracker-prayer">{t('prayer.' + pk)}</span>
+                          <span className="prayer-tracker-status" style={{ color: statusColors[status] }}>
+                            {status === 'onTime' && <Check size={14} />}
+                            {status === 'missed' && <X size={14} />}
+                            {status === 'late' && <Clock size={14} />}
+                            {status === 'pending' && '—'}
+                          </span>
+                          <span className="prayer-tracker-time">{dayData.prayerTimes[pk] || '--:--'}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 {/* Next Prayer Card */}
@@ -2232,6 +2551,78 @@ function App() {
                 <button type="submit" className="btn btn-primary">{taskModal.mode === 'add' ? t('modal.create') : t('modal.save')}</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Focus Timer Modal */}
+      {timer.show && (
+        <div className="modal-overlay" onClick={() => setTimer(prev => ({ ...prev, show: false, running: false }))}>
+          <div className="modal-content timer-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <span className="modal-title">
+                <Hourglass size={18} /> {t('timer.title')}
+              </span>
+              <button className="btn-task-action" onClick={() => setTimer(prev => ({ ...prev, show: false, running: false }))}>
+                <X size={18} />
+              </button>
+            </div>
+            <div className="timer-body">
+              <div className="timer-circle-wrap">
+                <svg className="timer-circle" viewBox="0 0 120 120">
+                  <circle cx="60" cy="60" r="54" fill="none" stroke="var(--border-color)" strokeWidth="6" />
+                  <circle
+                    cx="60" cy="60" r="54"
+                    fill="none"
+                    stroke={timer.mode === 'focus' ? 'var(--color-emerald)' : 'var(--color-gold)'}
+                    strokeWidth="6"
+                    strokeLinecap="round"
+                    strokeDasharray={`${2 * Math.PI * 54}`}
+                    strokeDashoffset={`${2 * Math.PI * 54 * (1 - timer.remaining / timer.total)}`}
+                    transform="rotate(-90 60 60)"
+                    style={{ transition: 'stroke-dashoffset 0.5s linear' }}
+                  />
+                </svg>
+                <div className="timer-display">
+                  <span className="timer-time">{formatTimer(timer.remaining)}</span>
+                  <span className="timer-mode-label">
+                    {timer.mode === 'focus' ? t('timer.focus') : t('timer.break')}
+                  </span>
+                </div>
+              </div>
+              <div className="timer-info">
+                <span>{t('timer.cycle')} {timer.cycle}</span>
+                {timer.mode === 'focus' ? (
+                  <span>{t('timer.focusTime')}: {FOCUS_MINUTES}m</span>
+                ) : (
+                  <span>{t('timer.breakTime')}: {BREAK_MINUTES}m</span>
+                )}
+              </div>
+              <div className="timer-actions">
+                {!timer.running ? (
+                  <button className="btn btn-primary timer-btn" onClick={() => setTimer(prev => ({ ...prev, running: true }))}>
+                    <Play size={18} /> {t('timer.start')}
+                  </button>
+                ) : (
+                  <button className="btn timer-btn" onClick={() => setTimer(prev => ({ ...prev, running: false }))}>
+                    <Square size={18} /> {t('timer.pause')}
+                  </button>
+                )}
+                <button className="btn timer-btn" onClick={() => {
+                  setTimer(prev => ({ ...prev, running: false, remaining: FOCUS_MINUTES * 60, total: FOCUS_MINUTES * 60, mode: 'focus' }));
+                }}>
+                  <RefreshCw size={16} /> {t('timer.reset')}
+                </button>
+              </div>
+              {timer.mode === 'break' && !timer.running && (
+                <div className="timer-dhikr">
+                  <span className="timer-dhikr-title">{t('timer.dhikrTitle')}</span>
+                  <span className="timer-dhikr-item">{t('timer.adhkar1')}</span>
+                  <span className="timer-dhikr-item">{t('timer.adhkar2')}</span>
+                  <span className="timer-dhikr-item">{t('timer.adhkar3')}</span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
