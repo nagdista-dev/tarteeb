@@ -42,7 +42,7 @@ export function parseTimeToMinutes(timeStr) {
 }
 
 // 12h / 24h time format preference
-let _use12h = false;
+let _use12h = true;
 
 export function setUse12h(val) {
   _use12h = val;

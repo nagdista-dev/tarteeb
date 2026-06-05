@@ -3,6 +3,9 @@ const en = {
   'brand.title': 'Tarteeb',
   'brand.subtitle': 'Prayer-based daily planner',
 
+  /* Footer */
+  'footer.developedBy': 'Developed by',
+
   /* Navigation */
   'nav.home': 'Home',
   'nav.overview': 'Overview',
@@ -74,6 +77,7 @@ const en = {
   /* Journal page */
   'journal.title': 'Study Notes',
   'journal.studyNotes': 'Study Notes',
+  'journal.newNote': 'New Note',
   'journal.addNote': 'Add Note',
   'journal.studyPlaceholder': 'Write your study note...',
   'journal.period': 'Period',
@@ -189,6 +193,7 @@ const en = {
   'duration.hm': '%h %m',
 
   /* Guide page */
+  'guide.steps': 'Steps',
   'guide.title': 'How to Use Tarteeb',
   'guide.subtitle': 'Your prayer-based daily planner — plan your day around the five prayers',
   'guide.whatIs': 'What is Tarteeb?',
@@ -244,6 +249,9 @@ const ar = {
   /* Brand */
   'brand.title': 'ترتيب',
   'brand.subtitle': 'مخطّط يومي يعتمد على أوقات الصلاة',
+
+  /* Footer */
+  'footer.developedBy': 'طُوّر بواسطة',
 
   /* Navigation */
   'nav.home': 'الرئيسية',
@@ -315,6 +323,7 @@ const ar = {
   /* Journal page */
   'journal.title': 'ملاحظات الدراسة',
   'journal.studyNotes': 'ملاحظات الدراسة',
+  'journal.newNote': 'ملاحظة جديدة',
   'journal.addNote': 'إضافة ملاحظة',
   'journal.studyPlaceholder': 'اكتب ملاحظة دراستك...',
   'journal.period': 'الوقت',
@@ -430,6 +439,7 @@ const ar = {
   'duration.hm': '%hس %mد',
 
   /* Guide page */
+  'guide.steps': 'خطوات',
   'guide.title': 'كيفية استخدام ترتيب',
   'guide.subtitle': 'مخططك اليومي المعتمد على أوقات الصلاة — نظّم يومك حول الصلوات الخمس',
   'guide.whatIs': 'ما هو ترتيب؟',

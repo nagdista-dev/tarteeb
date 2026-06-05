@@ -3,7 +3,7 @@ import {
   Check, Plus, Minus, Edit2, Trash2, Calendar, Settings, Moon, Sun,
   BookOpen, Clock, Sparkles, MapPin, X, AlertCircle,
   ChevronUp, ChevronDown, RefreshCw, Download, HelpCircle, List, Type, Menu, Target,
-  Smartphone
+  Smartphone, Lock, Unlock
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import {
@@ -249,6 +249,7 @@ function App() {
   // ---- Time Format ----
   const [use12h, setUse12hState] = useState(() => {
     const saved = localStorage.getItem('tarteeb_use12h');
+    if (saved === null) return true;
     return saved === 'true';
   });
 
@@ -293,7 +294,7 @@ function App() {
   const [diarySaved, setDiarySaved] = useState(true);
   const [studyText, setStudyText] = useState('');
   const [studyPeriod, setStudyPeriod] = useState('morning');
-  const [collapsedPeriods, setCollapsedPeriods] = useState({ night: true, morning: true, afternoon: true, late_afternoon: true });
+  const [collapsedPeriods, setCollapsedPeriods] = useState({ evening: true, night: true, morning: true, afternoon: true, late_afternoon: true });
   const [dialog, setDialog] = useState(null);
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState(null);
@@ -724,7 +725,8 @@ function App() {
       text,
       period: studyPeriod,
       createdAt: new Date().toISOString(),
-      time: formatMinutesToTime(getCurrentPlannerMinutes(currentTime, activeDate))
+      time: formatMinutesToTime(getCurrentPlannerMinutes(currentTime, activeDate)),
+      locked: false
     };
     const updatedNotes = [...(dayData.studyNotes || []), note];
     updateDayData({ ...dayData, studyNotes: updatedNotes });
@@ -734,7 +736,17 @@ function App() {
 
   const deleteStudyNote = async (noteId) => {
     if (!dayData) return;
+    const note = (dayData.studyNotes || []).find(n => n.id === noteId);
+    if (note?.locked) return;
     const updatedNotes = (dayData.studyNotes || []).filter(n => n.id !== noteId);
+    updateDayData({ ...dayData, studyNotes: updatedNotes });
+  };
+
+  const toggleLockNote = (noteId) => {
+    if (!dayData) return;
+    const updatedNotes = (dayData.studyNotes || []).map(n =>
+      n.id === noteId ? { ...n, locked: !n.locked } : n
+    );
     updateDayData({ ...dayData, studyNotes: updatedNotes });
   };
 
@@ -1179,6 +1191,11 @@ function App() {
           <button className="btn btn-menu-mobile" onClick={() => setSidebarOpen(true)} aria-label={t('nav.openSidebar')}>
             <Menu size={18} />
           </button>
+          {installable && (
+            <button className="btn btn-install btn-install-header" onClick={handleInstall} title={t('nav.install')}>
+              <Smartphone size={16} />
+            </button>
+          )}
           {dayData && (
             <button className="btn btn-primary btn-add-task" onClick={() => openTaskModal('add')}>
               <Plus size={16} /> {t('header.addTask')}
@@ -1389,6 +1406,10 @@ function App() {
                     </div>
                   </div>
                   <div className="study-add-area">
+                    <div className="study-input-header">
+                      <BookOpen size={16} className="study-input-icon" />
+                      <span className="study-input-label">{t('journal.newNote')}</span>
+                    </div>
                     <textarea
                       className="study-input"
                       placeholder={t('journal.studyPlaceholder')}
@@ -1397,6 +1418,9 @@ function App() {
                       onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); addStudyNote(); } }}
                       rows={3}
                     />
+                    <div className="study-input-meta">
+                      <span className="study-input-count">{studyText.length}</span>
+                    </div>
                     <div className="study-add-footer">
                       <div className="study-period-select-wrap">
                         <span className="study-period-label">{t('journal.period')}</span>
@@ -1447,13 +1471,20 @@ function App() {
                           </div>
                           <div className="study-group-notes">
                             {notes.map(note => (
-                              <div key={note.id} className="study-note-card">
+                              <div key={note.id} className={`study-note-card${note.locked ? ' locked' : ''}`}>
                                 <div className="study-note-text">{note.text}</div>
                                 <div className="study-note-footer">
                                   <span className="study-note-time">{note.time}</span>
-                                  <button type="button" className="btn-task-action delete" onClick={() => deleteStudyNote(note.id)} aria-label={t('task.deleteAria')}>
-                                    <Trash2 size={12} />
-                                  </button>
+                                  <div className="study-note-actions">
+                                    <button type="button" className={`btn-task-action${note.locked ? ' locked' : ''}`} onClick={() => toggleLockNote(note.id)} aria-label={note.locked ? 'Unlock note' : 'Lock note'}>
+                                      {note.locked ? <Lock size={12} /> : <Unlock size={12} />}
+                                    </button>
+                                    {!note.locked && (
+                                      <button type="button" className="btn-task-action delete" onClick={() => deleteStudyNote(note.id)} aria-label={t('task.deleteAria')}>
+                                        <Trash2 size={12} />
+                                      </button>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                             ))}
@@ -1519,62 +1550,75 @@ function App() {
             {currentPage === 'guide' && (
               <div className="guide-page">
                 <div className="guide-hero">
-                  <HelpCircle size={32} className="guide-hero-icon" />
+                  <div className="guide-hero-icon-wrap">
+                    <HelpCircle size={36} className="guide-hero-icon" />
+                  </div>
                   <h2 className="guide-title">{t('guide.title')}</h2>
                   <p className="guide-subtitle">{t('guide.subtitle')}</p>
+                  <div className="guide-steps-badge">
+                    <span>8 {t('guide.steps')}</span>
+                  </div>
                 </div>
                 <div className="guide-sections">
-                  <div className="guide-card">
-                    <div className="guide-card-number">1</div>
+                  <div className="guide-card" style={{ '--card-accent': 'var(--color-emerald)' }}>
+                    <div className="guide-card-step">01</div>
+                    <div className="guide-card-icon-wrap"><Sparkles size={22} /></div>
                     <div className="guide-card-content">
                       <h3 className="guide-card-title">{t('guide.whatIs')}</h3>
                       <p className="guide-card-desc">{t('guide.whatIsDesc')}</p>
                     </div>
                   </div>
-                  <div className="guide-card">
-                    <div className="guide-card-number">2</div>
+                  <div className="guide-card" style={{ '--card-accent': 'var(--color-teal)' }}>
+                    <div className="guide-card-step">02</div>
+                    <div className="guide-card-icon-wrap"><Clock size={22} /></div>
                     <div className="guide-card-content">
                       <h3 className="guide-card-title">{t('guide.timeline')}</h3>
                       <p className="guide-card-desc">{t('guide.timelineDesc')}</p>
                     </div>
                   </div>
-                  <div className="guide-card">
-                    <div className="guide-card-number">3</div>
+                  <div className="guide-card" style={{ '--card-accent': 'var(--color-gold)' }}>
+                    <div className="guide-card-step">03</div>
+                    <div className="guide-card-icon-wrap"><Plus size={22} /></div>
                     <div className="guide-card-content">
                       <h3 className="guide-card-title">{t('guide.addTask')}</h3>
                       <p className="guide-card-desc">{t('guide.addTaskDesc')}</p>
                     </div>
                   </div>
-                  <div className="guide-card">
-                    <div className="guide-card-number">4</div>
+                  <div className="guide-card" style={{ '--card-accent': 'var(--color-emerald)' }}>
+                    <div className="guide-card-step">04</div>
+                    <div className="guide-card-icon-wrap"><BookOpen size={22} /></div>
                     <div className="guide-card-content">
                       <h3 className="guide-card-title">{t('guide.journal')}</h3>
                       <p className="guide-card-desc">{t('guide.journalDesc')}</p>
                     </div>
                   </div>
-                  <div className="guide-card">
-                    <div className="guide-card-number">5</div>
+                  <div className="guide-card" style={{ '--card-accent': 'var(--color-teal)' }}>
+                    <div className="guide-card-step">05</div>
+                    <div className="guide-card-icon-wrap"><Calendar size={22} /></div>
                     <div className="guide-card-content">
                       <h3 className="guide-card-title">{t('guide.history')}</h3>
                       <p className="guide-card-desc">{t('guide.historyDesc')}</p>
                     </div>
                   </div>
-                  <div className="guide-card">
-                    <div className="guide-card-number">6</div>
+                  <div className="guide-card" style={{ '--card-accent': 'var(--color-gold)' }}>
+                    <div className="guide-card-step">06</div>
+                    <div className="guide-card-icon-wrap"><Settings size={22} /></div>
                     <div className="guide-card-content">
                       <h3 className="guide-card-title">{t('guide.settings')}</h3>
                       <p className="guide-card-desc">{t('guide.settingsDesc')}</p>
                     </div>
                   </div>
-                  <div className="guide-card">
-                    <div className="guide-card-number">7</div>
+                  <div className="guide-card" style={{ '--card-accent': 'var(--color-emerald)' }}>
+                    <div className="guide-card-step">07</div>
+                    <div className="guide-card-icon-wrap"><Download size={22} /></div>
                     <div className="guide-card-content">
                       <h3 className="guide-card-title">{t('guide.export')}</h3>
                       <p className="guide-card-desc">{t('guide.exportDesc')}</p>
                     </div>
                   </div>
-                  <div className="guide-card">
-                    <div className="guide-card-number">8</div>
+                  <div className="guide-card" style={{ '--card-accent': 'var(--color-teal)' }}>
+                    <div className="guide-card-step">08</div>
+                    <div className="guide-card-icon-wrap"><Sun size={22} /></div>
                     <div className="guide-card-content">
                       <h3 className="guide-card-title">{t('guide.theme')}</h3>
                       <p className="guide-card-desc">{t('guide.themeDesc')}</p>
@@ -1860,12 +1904,12 @@ function App() {
                             </div>
                           </div>
                           {settingsForm.type === 'city' ? (
-                            <div className="form-row">
+                            <div className="form-row-stacked">
                               <div className="form-group"><label className="form-label">{t('settings.cityLabel')}</label><input className="form-input" type="text" value={settingsForm.city} onChange={e => setSettingsForm(prev => ({ ...prev, city: e.target.value }))} required/></div>
                               <div className="form-group"><label className="form-label">{t('settings.countryLabel')}</label><input className="form-input" type="text" value={settingsForm.country} onChange={e => setSettingsForm(prev => ({ ...prev, country: e.target.value }))} required/></div>
                             </div>
                           ) : (
-                            <div className="form-row">
+                            <div className="form-row-stacked">
                               <div className="form-group"><label className="form-label">{t('settings.latLabel')}</label><input className="form-input" type="number" step="0.0001" value={settingsForm.latitude} onChange={e => setSettingsForm(prev => ({ ...prev, latitude: e.target.value }))} required/></div>
                               <div className="form-group"><label className="form-label">{t('settings.lngLabel')}</label><input className="form-input" type="number" step="0.0001" value={settingsForm.longitude} onChange={e => setSettingsForm(prev => ({ ...prev, longitude: e.target.value }))} required/></div>
                             </div>
@@ -1902,10 +1946,16 @@ function App() {
                 </div>
               </div>
             )}
+
+            <footer className="app-footer">
+              <span>
+                {t('footer.developedBy')}{' '}
+                <a href="https://nagdista.com" target="_blank" rel="noopener noreferrer">Nagdista</a>
+              </span>
+            </footer>
           </main>
         </div>
 
-      {/* Task Modal */}
       {taskModal.open && (
         <div className="modal-overlay">
           <div className="modal-content">
