@@ -100,6 +100,9 @@ const en = {
   'toast.undo': 'Undo',
   'toast.dismiss': 'Dismiss',
 
+  /* Previous day */
+  'prevDay.title': 'Previous Day',
+
   /* Journal page */
   'journal.title': 'Study Notes',
   'journal.studyNotes': 'Study Notes',
@@ -386,6 +389,9 @@ const ar = {
   'toast.taskUncompleted': 'تم إلغاء إكمال المهمة',
   'toast.undo': 'تراجع',
   'toast.dismiss': 'إغلاق',
+
+  /* Previous day */
+  'prevDay.title': 'اليوم السابق',
 
   /* Journal page */
   'journal.title': 'ملاحظات الدراسة',

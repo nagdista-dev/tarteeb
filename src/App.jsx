@@ -343,6 +343,25 @@ function App() {
     return streak;
   };
 
+  // ---- Previous day data for download ----
+  const prevDate = formatDateLocal(addDays(new Date(), -1));
+  const [prevDayData, setPrevDayData] = useState(null);
+
+  // ---- Auto-cleanup old data & load previous day ----
+  useEffect(() => {
+    const today = formatDateLocal(new Date());
+    const yesterday = formatDateLocal(addDays(new Date(), -1));
+    const keepKeys = new Set([`tarteeb_day_${today}`, `tarteeb_day_${yesterday}`]);
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('tarteeb_day_') && !keepKeys.has(key)) {
+        localStorage.removeItem(key);
+      }
+    }
+    const saved = localStorage.getItem(`tarteeb_day_${yesterday}`);
+    setPrevDayData(saved ? JSON.parse(saved) : null);
+  }, []);
+
 
   const dismissWelcome = () => {
     localStorage.setItem('tarteeb_welcome_dismissed', 'true');
@@ -872,9 +891,10 @@ function App() {
     return lines.join('\n');
   };
 
-  const exportToMarkdown = () => {
-    if (!dayData) return;
-    const { tasks, diary, date, hijriDate, prayerTimes, stats } = dayData;
+  const exportToMarkdown = (data = null) => {
+    const day = data || dayData;
+    if (!day) return;
+    const { tasks, diary, date, hijriDate, prayerTimes, stats } = day;
     const lines = [];
     const d = new Date(date);
     const locale = lang === 'ar' ? 'ar-SA' : 'en-US';
@@ -904,9 +924,23 @@ function App() {
       lines.push(`- ${checkbox} **${translateTaskName(t.name)}** — ${time}${end}`);
       if (t.details) lines.push(`  - ${t.details}`);
     });
-    const studyNotesMd = exportStudyNotesMarkdown();
-    if (studyNotesMd) {
-      lines.push(studyNotesMd);
+    const notes = day.studyNotes || [];
+    if (notes.length > 0) {
+      lines.push('');
+      lines.push(`## ${t('journal.studyNotes')}`);
+      lines.push('');
+      PLANNER_PERIOD_ORDER.forEach(periodKey => {
+        const periodNotes = notes.filter(n => n.period === periodKey).sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+        if (periodNotes.length === 0) return;
+        const periodLabel = `${t('period.' + periodKey)} — ${t('period.' + periodKey + 'Range')}`;
+        lines.push(`### ${periodLabel}`);
+        lines.push('');
+        periodNotes.forEach(n => {
+          const timeLabel = n.time ? `\`${n.time}\` ` : '';
+          lines.push(`- ${timeLabel}${n.text}`);
+        });
+        lines.push('');
+      });
     }
     if (diary) {
       lines.push('');
@@ -914,11 +948,6 @@ function App() {
       lines.push('');
       lines.push(diary);
       lines.push('');
-    }
-    const habitsMd = exportHabitsMarkdown();
-    if (habitsMd) {
-      lines.push('');
-      lines.push(habitsMd);
     }
     const blob = new Blob([lines.join('\n')], { type: 'text/markdown' });
     const url = URL.createObjectURL(blob);
@@ -1325,6 +1354,24 @@ function App() {
 
             {/* Conditional Pages */}
             {currentPage === 'home' && dayData && renderFullDayView()}
+
+            {/* Previous Day Download (home page only) */}
+            {currentPage === 'home' && prevDayData && (
+              <div className="prev-day-card">
+                <div className="prev-day-info">
+                  <Download size={16} />
+                  <span>{t('prevDay.title')}</span>
+                  <span className="prev-day-date">{formatHumanDate(prevDayData.date)}{prevDayData.hijriDate ? ` · ${prevDayData.hijriDate}` : ''}</span>
+                </div>
+                <button
+                  className="btn btn-primary prev-day-btn"
+                  onClick={() => exportToMarkdown(prevDayData)}
+                  title={t('header.exportTitle')}
+                >
+                  <Download size={14} /> {t('header.export')}
+                </button>
+              </div>
+            )}
 
             {currentPage === 'tasks' && dayData && (
               <div className="tasks-page">
