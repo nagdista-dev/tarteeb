@@ -567,19 +567,22 @@ a {
 }
 
 .btn-add-task {
-  font-size: 0.78rem;
-  padding: 7px 14px;
+  font-size: 0;
+  padding: 8px;
   color: #ffffff;
   border: none;
-  border-radius: 10px;
+  border-radius: 8px;
   background: var(--color-emerald);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  justify-content: center;
+  gap: 0;
   font-weight: 600;
   transition: all 0.2s ease;
   box-shadow: 0 1px 3px rgba(17, 94, 59, 0.2);
+  width: 34px;
+  height: 34px;
 }
 
 .btn-add-task:hover {
@@ -1739,16 +1742,14 @@ textarea.form-textarea {
 .full-sidebar {
   flex-shrink: 0;
   width: 244px;
-  max-height: calc(100% - 32px);
-  margin: 16px 0;
+  height: 100%;
   display: flex;
   flex-direction: column;
   background-color: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  border-right: 1px solid var(--border-color);
   overflow: hidden;
   transition: box-shadow 0.25s ease;
+  padding: 16px 0;
 }
 
 .full-sidebar:hover {
@@ -1860,18 +1861,6 @@ textarea.form-textarea {
   left: auto;
   right: -1px;
   border-radius: 3px 0 0 3px;
-}
-
-.sidebar-install-wrap {
-  padding: 8px 12px 4px;
-  border-top: 1px solid var(--border-color);
-}
-
-.sidebar-install-btn {
-  width: 100%;
-  justify-content: center;
-  padding: 10px 14px;
-  font-size: 0.82rem;
 }
 
 .btn-install {
@@ -2074,21 +2063,20 @@ textarea.form-textarea {
 
   .full-sidebar {
     position: fixed;
-    top: 20px;
+    top: 0;
     left: -320px;
     width: 280px;
     max-width: 85vw;
-    height: calc(100vh - 40px);
+    height: 100vh;
     z-index: 100;
     border: none;
-    border-top: 4px solid var(--color-emerald);
-    border-radius: 20px;
+    border-right: 1px solid var(--border-color);
     box-shadow: 0 12px 48px rgba(0, 0, 0, 0.2);
     transition: left 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease, transform 0.3s ease;
     overflow-y: auto;
     opacity: 0;
     transform: translateX(-12px);
-    padding-bottom: 12px;
+    padding: 20px 0 14px;
   }
 
   .full-sidebar.sidebar-open {
@@ -2134,8 +2122,6 @@ textarea.form-textarea {
     to { opacity: 1; }
   }
 
-  .btn-add-task span,
-  .btn-add-task,
   .btn-export span,
   .btn-export {
     font-size: 0;
@@ -2192,10 +2178,6 @@ textarea.form-textarea {
   }
 
   /* Sidebar bottom sections on mobile */
-  .sidebar-install-wrap {
-    padding: 6px 12px 3px;
-  }
-
   .sidebar-export-wrap {
     padding: 6px 12px 10px;
   }
@@ -2979,7 +2961,7 @@ textarea.form-textarea {
   grid-template-columns: auto 1fr auto;
   align-items: start;
   gap: 8px;
-  padding: 8px 10px 8px 8px;
+  padding: 6px 10px 3px 8px;
   background-color: var(--bg-secondary);
   border: 1.5px solid var(--border-color);
   border-left: 4px solid var(--color-teal);
@@ -3501,7 +3483,7 @@ textarea.form-textarea {
     left: 8px;
     right: 8px;
     grid-template-columns: auto 1fr;
-    padding: 5px 8px;
+    padding: 4px 8px 2px;
     min-height: 34px;
   }
 

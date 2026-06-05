@@ -1176,7 +1176,7 @@ function App() {
           )}
           {dayData && (
             <button className="btn btn-primary btn-add-task" onClick={() => openTaskModal('add')}>
-              <Plus size={16} /> {t('header.addTask')}
+              <Plus size={18} />
             </button>
           )}
         </div>
@@ -1236,13 +1236,6 @@ function App() {
                 <span className="font-size-sidebar-label">{t('settings.fontSize_' + fontSize)}</span>
               </button>
             </div>
-            {installable && (
-              <div className="sidebar-install-wrap">
-                <button className="btn btn-install sidebar-install-btn" onClick={handleInstall} title={t('nav.install')}>
-                  <Smartphone size={16} /> {t('nav.install')}
-                </button>
-              </div>
-            )}
             {dayData && (
               <div className="sidebar-export-wrap">
                 <button className="btn btn-export sidebar-export-btn" onClick={exportToMarkdown} title={t('header.exportTitle')}>
