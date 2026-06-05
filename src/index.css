@@ -116,8 +116,10 @@ a {
   max-width: none;
   width: 100%;
   height: 100vh;
+  height: 100dvh;
   margin: 0;
   padding: 20px 24px;
+  padding-bottom: max(20px, env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -126,7 +128,7 @@ a {
 
 @media (max-width: 768px) {
   .app-container {
-    padding: 12px 12px;
+    padding: 12px 12px max(12px, env(safe-area-inset-bottom));
     gap: 12px;
   }
 }
@@ -2037,8 +2039,9 @@ textarea.form-textarea {
   min-width: 0;
   height: 100%;
   overflow-y: auto;
+  overflow-x: hidden;
   scroll-behavior: smooth;
-  padding-right: 4px;
+  padding: 0 4px 0 0;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
@@ -2135,7 +2138,8 @@ textarea.form-textarea {
     min-height: 0;
     height: auto;
     overflow-y: auto;
-    padding: 0 16px;
+    overflow-x: hidden;
+    padding: 0 16px max(16px, env(safe-area-inset-bottom, 16px));
   }
 
   .sidebar-header {
@@ -5443,7 +5447,7 @@ textarea.form-textarea {
 
   /* Footer tighter on mobile */
   .app-footer {
-    padding: 16px 12px 20px;
+    padding: 20px 12px max(24px, env(safe-area-inset-bottom, 24px));
     font-size: 0.68rem;
   }
 
