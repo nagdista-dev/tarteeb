@@ -1749,9 +1749,11 @@ textarea.form-textarea {
   flex-direction: column;
   background-color: var(--bg-secondary);
   border-right: 1px solid var(--border-color);
-  overflow: hidden;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   transition: box-shadow 0.25s ease;
-  padding: 16px 0;
+  padding: 16px 0 0;
 }
 
 .full-sidebar:hover {
@@ -1891,25 +1893,32 @@ textarea.form-textarea {
   flex-shrink: 0;
 }
 
-/* Footer */
-.app-footer {
+/* Sidebar Credit */
+.sidebar-credit {
+  margin-top: auto;
   text-align: center;
-  padding: 20px 16px 24px;
-  font-size: 0.72rem;
+  padding: 16px 12px 18px;
+  font-size: 0.65rem;
   color: var(--text-tertiary);
-  letter-spacing: 0.02em;
+  letter-spacing: 0.03em;
+  animation: creditPulse 3s ease-in-out infinite;
+  border-top: 1px solid var(--border-color);
+  line-height: 1.5;
 }
-
-.app-footer a {
+.sidebar-credit a {
   color: var(--color-emerald);
   font-weight: 700;
   text-decoration: none;
-  transition: color 0.15s ease;
+  transition: color 0.2s;
+}
+.sidebar-credit a:hover {
+  color: #0d4d30;
+  text-decoration: underline;
 }
 
-.app-footer a:hover {
-  text-decoration: underline;
-  color: #0d4d30;
+@keyframes creditPulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
 }
 
 .sidebar-export-wrap {
@@ -2217,6 +2226,10 @@ textarea.form-textarea {
   }
   .sidebar-export-btn-prev {
     font-size: 0.7rem;
+  }
+  .sidebar-credit {
+    padding: 12px 12px max(18px, env(safe-area-inset-bottom, 18px));
+    font-size: 0.6rem;
   }
 
   .sidebar-quick-toggles {
@@ -5476,83 +5489,6 @@ textarea.form-textarea {
     width: 26px;
     height: 26px;
     border-radius: 5px;
-  }
-
-  /* Footer tighter on mobile */
-  .app-footer {
-    padding: 20px 12px max(24px, env(safe-area-inset-bottom, 24px));
-    font-size: 0.68rem;
-  }
-
-  /* Prayer Times mobile */
-  .prayers-page {
-    padding: 4px 0 36px;
-  }
-
-  .prayers-next-card {
-    padding: 20px 18px;
-  }
-
-  .prayers-next-name {
-    font-size: 1.15rem;
-  }
-
-  .prayers-next-time {
-    font-size: 1.5rem;
-  }
-
-  .prayers-row {
-    padding: 12px 12px;
-    gap: 10px;
-  }
-
-  .prayers-row-name {
-    font-size: 0.85rem;
-  }
-
-  .prayers-row-time {
-    font-size: 0.85rem;
-  }
-
-  .prayers-row-status {
-    font-size: 0.6rem;
-    padding: 2px 8px;
-  }
-
-  /* Backup actions mobile */
-  .backup-actions {
-    flex-direction: column;
-  }
-
-  .backup-actions .btn {
-    width: 100%;
-  }
-
-  /* Empty state mobile */
-  .empty-state {
-    padding: 32px 16px;
-  }
-
-  .empty-state-icon {
-    width: 48px;
-    height: 48px;
-  }
-
-  .empty-state-title {
-    font-size: 0.92rem;
-  }
-
-  .empty-state-desc {
-    font-size: 0.8rem;
-  }
-
-  /* Tighter header actions on mobile */
-  .header-actions {
-    gap: 4px;
-  }
-
-  .app-header {
-    padding: 4px 0 8px;
   }
 
   /* Hide keyboard hints on mobile */

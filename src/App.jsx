@@ -1356,6 +1356,10 @@ function App() {
                 )}
               </div>
             )}
+            <div className="sidebar-credit">
+              {t('footer.developedBy')}{' '}
+              <a href="https://nagdista.com" target="_blank" rel="noopener noreferrer">Nagdista</a>
+            </div>
           </aside>
 
           {/* Main Content Area */}
@@ -2057,12 +2061,6 @@ function App() {
               </div>
             )}
 
-            <footer className="app-footer">
-              <span>
-                {t('footer.developedBy')}{' '}
-                <a href="https://nagdista.com" target="_blank" rel="noopener noreferrer">Nagdista</a>
-              </span>
-            </footer>
           </main>
         </div>
 
