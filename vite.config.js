@@ -9,7 +9,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'icons.svg'],
       manifest: {
-        name: 'Tarteeb — Muslim Daily Planner',
+        name: 'Tarteeb',
         short_name: 'Tarteeb',
         description: 'Plan your day around Islamic prayer times with a beautiful vertical timeline, task management, and daily diary.',
         theme_color: '#ffffff',
