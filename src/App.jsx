@@ -717,6 +717,16 @@ function App() {
     if (confirmed) setHabits(prev => prev.filter(h => h.id !== id));
   };
 
+  const moveHabit = (index, direction) => {
+    const target = index + direction;
+    if (target < 0 || target >= habits.length) return;
+    setHabits(prev => {
+      const next = [...prev];
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
+  };
+
   const exportHabitsMarkdown = () => {
     if (!habits.length) return;
     let md = `# ${t('habits.title')}\n\n`;
@@ -1549,7 +1559,7 @@ function App() {
                   <div className="habits-empty">{t('habits.noHabits')}</div>
                 ) : (
                   <div className="habits-list">
-                    {habits.map(habit => {
+                    {habits.map((habit, index) => {
                       const entries = habit.entries || {};
                       const today = formatDateLocal(new Date());
                       const todayEntry = entries[today];
@@ -1579,6 +1589,14 @@ function App() {
                               </div>
                             </div>
                             <div className="habit-actions">
+                              <span className="habit-reorder">
+                                <button type="button" className="btn-task-action" onClick={() => moveHabit(index, -1)} disabled={index === 0} title={t('habits.moveUp')}>
+                                  <ChevronUp size={13} />
+                                </button>
+                                <button type="button" className="btn-task-action" onClick={() => moveHabit(index, 1)} disabled={index === habits.length - 1} title={t('habits.moveDown')}>
+                                  <ChevronDown size={13} />
+                                </button>
+                              </span>
                               <button type="button" className="btn-task-action" onClick={() => { setHabitForm({ name: habit.name }); setHabitModal({ open: true, mode: 'edit', habit }); }} title={t('habits.edit')}>
                                 <Edit2 size={13} />
                               </button>

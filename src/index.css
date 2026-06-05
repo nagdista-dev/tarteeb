@@ -4224,6 +4224,29 @@ textarea.form-textarea {
   display: flex;
   gap: 4px;
   flex-shrink: 0;
+  align-items: center;
+}
+
+.habit-reorder {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-right: 4px;
+}
+
+.habit-reorder .btn-task-action {
+  padding: 2px 4px;
+  opacity: 0.4;
+}
+
+.habit-reorder .btn-task-action:disabled {
+  opacity: 0.15;
+  cursor: default;
+}
+
+.habit-reorder .btn-task-action:not(:disabled):hover {
+  opacity: 0.8;
+  color: var(--text-primary);
 }
 
 .habit-stats-panel {

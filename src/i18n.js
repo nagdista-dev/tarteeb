@@ -235,6 +235,8 @@ const en = {
   'habits.daysTracked': 'Days Tracked',
   'habits.stats': 'Statistics',
   'habits.export': 'Export Habits',
+  'habits.moveUp': 'Move up',
+  'habits.moveDown': 'Move down',
 };
 
 const ar = {
@@ -473,6 +475,8 @@ const ar = {
   'habits.daysTracked': 'الأيام المتتبعة',
   'habits.stats': 'الإحصائيات',
   'habits.export': 'تصدير العادات',
+  'habits.moveUp': 'تحريك لأعلى',
+  'habits.moveDown': 'تحريك لأسفل',
 };
 
 const translations = { en, ar };
