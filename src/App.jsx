@@ -459,11 +459,15 @@ function App() {
   useEffect(() => {
     if (currentPage !== 'home' || !dayData || hasScrolledRef.current) return;
     hasScrolledRef.current = true;
-    const id = requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      const container = document.querySelector('.content-area');
       const el = document.querySelector('.timeline-now-line');
-      if (el) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      if (el && container) {
+        const containerRect = container.getBoundingClientRect();
+        const elRect = el.getBoundingClientRect();
+        container.scrollTop = elRect.top - containerRect.top + container.scrollTop - containerRect.height / 2;
+      }
     });
-    return () => cancelAnimationFrame(id);
   }, [currentPage, dayData]);
 
   // ---- Forms sync ----
