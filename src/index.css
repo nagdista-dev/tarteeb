@@ -2352,7 +2352,7 @@ textarea.form-textarea {
     min-height: 0;
     height: auto;
     overflow-y: auto;
-    padding: 0 10px;
+    padding: 0 16px;
   }
 
   .sidebar-nav {
@@ -3897,7 +3897,7 @@ textarea.form-textarea {
 /* === Guide Responsive === */
 @media (max-width: 600px) {
   .guide-page {
-    padding: 20px 14px 40px;
+    padding: 20px 0 40px;
   }
 
   .guide-hero {
@@ -3938,9 +3938,9 @@ textarea.form-textarea {
   .guide-card {
     flex-direction: column;
     gap: 12px;
-    padding: 18px 16px;
+    padding: 18px 18px;
     border-left-width: 3px;
-    border-radius: 14px;
+    border-radius: 16px;
   }
 
   .guide-card-step {
@@ -4663,6 +4663,10 @@ textarea.form-textarea {
 }
 
 @media (max-width: 600px) {
+  .habits-page {
+    padding: 8px 0 48px;
+  }
+
   .habit-main {
     flex-wrap: wrap;
   }
@@ -5459,14 +5463,14 @@ textarea.form-textarea {
     gap: 10px;
   }
 
-  /* Content area padding */
+  /* Container-level padding: pages handle their own vertical spacing */
   .content-area {
-    padding: 8px 8px;
+    padding: 0 12px;
   }
 
   /* Settings page */
   .settings-page {
-    padding: 8px 10px 48px;
+    padding: 8px 0 48px;
     gap: 12px;
   }
 
@@ -5655,7 +5659,7 @@ textarea.form-textarea {
 
   /* Tasks page mobile */
   .tasks-page {
-    padding: 10px;
+    padding: 10px 0 48px;
   }
 
   .tasks-stats-bar {
@@ -5681,14 +5685,14 @@ textarea.form-textarea {
   }
 
   .tasks-task-check {
-    width: 26px;
-    height: 26px;
-    border-radius: 7px;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
     flex-shrink: 0;
   }
 
   .tasks-block-header {
-    padding: 10px 12px;
+    padding: 12px 14px;
   }
 
   .tasks-task-name {
@@ -5696,10 +5700,10 @@ textarea.form-textarea {
   }
 
   .tasks-task-actions .btn-task-action {
-    width: 36px;
-    height: 36px;
+    width: 38px;
+    height: 38px;
     padding: 0;
-    border-radius: 8px;
+    border-radius: 9px;
   }
 
   /* Footer tighter on mobile */
@@ -5714,7 +5718,7 @@ textarea.form-textarea {
   }
 
   .prayers-next-card {
-    padding: 18px 18px;
+    padding: 20px 18px;
   }
 
   .prayers-next-name {
@@ -5786,6 +5790,15 @@ textarea.form-textarea {
 
   .empty-state-desc {
     font-size: 0.8rem;
+  }
+
+  /* Tighter header actions on mobile */
+  .header-actions {
+    gap: 4px;
+  }
+
+  .app-header {
+    padding: 4px 0 8px;
   }
 
   /* Hide keyboard hints on mobile */
