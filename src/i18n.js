@@ -15,6 +15,7 @@ const en = {
   'nav.openSidebar': 'Open sidebar',
   'nav.closeSidebar': 'Close sidebar',
   'nav.toggleTheme': 'Toggle Light/Dark',
+  'nav.install': 'Install App',
 
   /* Header actions */
   'header.addTask': 'Add Task',
@@ -255,6 +256,7 @@ const ar = {
   'nav.openSidebar': 'فتح الشريط الجانبي',
   'nav.closeSidebar': 'إغلاق الشريط الجانبي',
   'nav.toggleTheme': 'تبديل السمة',
+  'nav.install': 'تثبيت التطبيق',
 
   /* Header actions */
   'header.addTask': 'إضافة مهمة',

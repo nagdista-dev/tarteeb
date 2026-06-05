@@ -2002,6 +2002,32 @@ textarea.form-textarea {
   color: #fff;
 }
 
+.sidebar-install-wrap {
+  padding: 10px 12px 4px;
+  border-top: 1px solid var(--border-color);
+}
+
+.sidebar-install-btn {
+  width: 100%;
+  justify-content: center;
+  padding: 10px 14px;
+}
+
+.btn-install {
+  background-color: var(--color-emerald);
+  color: #ffffff;
+  border-color: var(--color-emerald);
+  box-shadow: 0 1px 2px rgba(17, 94, 59, 0.15);
+}
+
+.btn-install:hover {
+  background-color: #0d4d30;
+  border-color: #0d4d30;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(17, 94, 59, 0.25);
+  transform: translateY(-1px);
+}
+
 .sidebar-export-wrap {
   padding: 10px 12px 14px;
   border-top: 1px solid var(--border-color);

@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import {
   Check, Plus, Minus, Edit2, Trash2, Calendar, Settings, Moon, Sun,
   BookOpen, Clock, Sparkles, MapPin, X, AlertCircle,
-  ChevronUp, ChevronDown, RefreshCw, Download, HelpCircle, List, Type, Menu, Target
+  ChevronUp, ChevronDown, RefreshCw, Download, HelpCircle, List, Type, Menu, Target,
+  Smartphone
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import {
@@ -327,6 +328,35 @@ function App() {
   useEffect(() => {
     localStorage.setItem('tarteeb_habits', JSON.stringify(habits));
   }, [habits]);
+
+  // ---- PWA Install ----
+  const deferredPrompt = useRef(null);
+  const [installable, setInstallable] = useState(false);
+
+  useEffect(() => {
+    const handler = (e) => {
+      e.preventDefault();
+      deferredPrompt.current = e;
+      setInstallable(true);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    window.addEventListener('appinstalled', () => {
+      setInstallable(false);
+      deferredPrompt.current = null;
+    });
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const handleInstall = async () => {
+    const prompt = deferredPrompt.current;
+    if (!prompt) return;
+    prompt.prompt();
+    const result = await prompt.userChoice;
+    if (result.outcome === 'accepted') {
+      setInstallable(false);
+      deferredPrompt.current = null;
+    }
+  };
 
   // ---- Clock ticker (10s) ----
   useEffect(() => {
@@ -1236,6 +1266,13 @@ function App() {
                 <span className="font-size-sidebar-label">{t('settings.fontSize_' + fontSize)}</span>
               </button>
             </div>
+            {installable && (
+              <div className="sidebar-install-wrap">
+                <button className="btn btn-install sidebar-install-btn" onClick={handleInstall} title={t('nav.install')}>
+                  <Smartphone size={16} /> {t('nav.install')}
+                </button>
+              </div>
+            )}
             {dayData && (
               <div className="sidebar-export-wrap">
                 <button className="btn btn-export sidebar-export-btn" onClick={exportToMarkdown} title={t('header.exportTitle')}>
