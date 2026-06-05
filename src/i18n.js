@@ -78,6 +78,27 @@ const en = {
   'tasks.resetAll': 'Reset All',
   'tasks.moveUp': 'Move Up',
   'tasks.moveDown': 'Move Down',
+  'tasks.search': 'Search tasks…',
+  'tasks.searchPlaceholder': 'Type to filter tasks…',
+  'tasks.noTasksMatch': 'No tasks match your search.',
+
+  /* Streak */
+  'streak.title': 'Daily Streak',
+  'streak.today': 'Today',
+  'streak.days': 'days',
+
+  /* Task modal presets */
+  'modal.duration': 'Duration',
+  'modal.min15': '15 min',
+  'modal.min30': '30 min',
+  'modal.hour1': '1 hour',
+  'modal.hours2': '2 hours',
+
+  /* Toast notifications */
+  'toast.taskCompleted': 'Task completed',
+  'toast.taskUncompleted': 'Task uncompleted',
+  'toast.undo': 'Undo',
+  'toast.dismiss': 'Dismiss',
 
   /* Journal page */
   'journal.title': 'Study Notes',
@@ -344,6 +365,27 @@ const ar = {
   'tasks.resetAll': 'إعادة تعيين الكل',
   'tasks.moveUp': 'تحريك لأعلى',
   'tasks.moveDown': 'تحريك لأسفل',
+  'tasks.search': 'بحث في المهام…',
+  'tasks.searchPlaceholder': 'اكتب لتصفية المهام…',
+  'tasks.noTasksMatch': 'لا توجد مهام تطابق بحثك.',
+
+  /* Streak */
+  'streak.title': 'التسلسل اليومي',
+  'streak.today': 'اليوم',
+  'streak.days': 'أيام',
+
+  /* Task modal presets */
+  'modal.duration': 'المدة',
+  'modal.min15': '١٥ دقيقة',
+  'modal.min30': '٣٠ دقيقة',
+  'modal.hour1': 'ساعة',
+  'modal.hours2': 'ساعتان',
+
+  /* Toast notifications */
+  'toast.taskCompleted': 'تم إكمال المهمة',
+  'toast.taskUncompleted': 'تم إلغاء إكمال المهمة',
+  'toast.undo': 'تراجع',
+  'toast.dismiss': 'إغلاق',
 
   /* Journal page */
   'journal.title': 'ملاحظات الدراسة',

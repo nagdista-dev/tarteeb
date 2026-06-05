@@ -3,7 +3,7 @@ import {
   Check, Plus, Minus, Edit2, Trash2, Settings, Moon, Sun,
   BookOpen, Clock, Sparkles, MapPin, X, AlertCircle,
   ChevronUp, ChevronDown, RefreshCw, Download, HelpCircle, List, Type, Menu, Target,
-  Smartphone, Lock, Unlock, Upload
+  Smartphone, Lock, Unlock, Upload, Search, Zap
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import {
@@ -302,6 +302,47 @@ function App() {
   const [habitModal, setHabitModal] = useState({ open: false, mode: 'add', habit: null });
   const [habitForm, setHabitForm] = useState({ name: '' });
 
+  // ---- Task search ----
+  const [taskSearch, setTaskSearch] = useState('');
+
+  // ---- Toast notifications ----
+  const [toast, setToast] = useState(null);
+  const toastTimer = useRef(null);
+  const showToast = (message, action = null, duration = 4000) => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToast({ message, action, key: Date.now() });
+    toastTimer.current = setTimeout(() => {
+      setToast(null);
+      toastTimer.current = null;
+    }, duration);
+  };
+  const dismissToast = () => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToast(null);
+    toastTimer.current = null;
+  };
+
+  // ---- Daily streak computation ----
+  const computeStreak = () => {
+    const today = formatDateLocal(new Date());
+    let streak = 0;
+    let d = new Date();
+    while (true) {
+      const key = `tarteeb_day_${formatDateLocal(d)}`;
+      const saved = localStorage.getItem(key);
+      if (!saved) break;
+      try {
+        const data = JSON.parse(saved);
+        const tasks = data.tasks || [];
+        const completed = tasks.filter(t => t.completed).length;
+        if (completed === 0 && formatDateLocal(d) !== today) break;
+        if (completed > 0) streak++;
+      } catch { break; }
+      d = addDays(d, -1);
+    }
+    return streak;
+  };
+
 
   const dismissWelcome = () => {
     localStorage.setItem('tarteeb_welcome_dismissed', 'true');
@@ -515,6 +556,23 @@ function App() {
     });
   }, [currentPage, dayData]);
 
+  // ---- Auto-scroll to current period on Tasks page ----
+  const tasksPageRef = useRef(null);
+  useEffect(() => {
+    if (currentPage !== 'tasks' || !dayData || !timelineStatus) return;
+    const activePeriod = timelineStatus.activePeriod;
+    if (!activePeriod || activePeriod === 'none') return;
+    requestAnimationFrame(() => {
+      const container = document.querySelector('.content-area');
+      const el = document.querySelector(`.tasks-block[data-period="${activePeriod}"]`);
+      if (el && container) {
+        const containerRect = container.getBoundingClientRect();
+        const elRect = el.getBoundingClientRect();
+        container.scrollTop = elRect.top - containerRect.top + container.scrollTop - containerRect.height / 3;
+      }
+    });
+  }, [currentPage, dayData, timelineStatus]);
+
   // ---- Forms sync ----
   useEffect(() => {
     const cached = getPrayerTimesForDate(activeDate);
@@ -550,6 +608,7 @@ function App() {
   const toggleTaskCompletion = (id) => {
     if (!dayData) return;
     const task = dayData.tasks.find(t => t.id === id);
+    const wasCompleted = task?.completed || false;
     if (task && !task.completed) {
       confetti({
         particleCount: 120,
@@ -560,6 +619,10 @@ function App() {
     }
     const updTasks = dayData.tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t);
     updateDayData({ ...dayData, tasks: updTasks });
+    showToast(
+      !wasCompleted ? t('toast.taskCompleted') : t('toast.taskUncompleted'),
+      { label: t('toast.undo'), action: () => toggleTaskCompletion(id) }
+    );
   };
 
   const getDefaultPeriod = () => {
@@ -1159,12 +1222,18 @@ function App() {
     <div className="app-container">
       {/* Header */}
       <header className="app-header">
-        <div className="brand-section" onClick={() => setCurrentPage('home')} style={{ cursor: 'pointer' }}>
-          <h1 className="brand-title">
-            <Sparkles size={22} className="brand-icon" />
-            <span className="brand-latin">{t('brand.title')}</span>
-          </h1>
-        </div>
+          <div className="brand-section" onClick={() => setCurrentPage('home')} style={{ cursor: 'pointer' }}>
+            <h1 className="brand-title">
+              <Sparkles size={22} className="brand-icon" />
+              <span className="brand-latin">{t('brand.title')}</span>
+            </h1>
+            {computeStreak() > 0 && (
+              <div className="streak-badge" title={t('streak.title')}>
+                <Zap size={14} />
+                <span>{computeStreak()} {t('streak.days')}</span>
+              </div>
+            )}
+          </div>
         <div className="header-actions">
           <button className="btn btn-menu-mobile" onClick={() => setSidebarOpen(true)} aria-label={t('nav.openSidebar')}>
             <Menu size={18} />
@@ -1285,14 +1354,33 @@ function App() {
                 <div className="tasks-progress-wrap">
                   <div className="tasks-progress-bar" style={{ width: `${dayData.stats.overallCompleted}%` }} />
                 </div>
+                <div className="tasks-search-wrap">
+                  <Search size={14} className="tasks-search-icon" />
+                  <input
+                    className="tasks-search-input"
+                    type="text"
+                    placeholder={t('tasks.searchPlaceholder')}
+                    value={taskSearch}
+                    onChange={e => setTaskSearch(e.target.value)}
+                  />
+                  {taskSearch && (
+                    <button className="tasks-search-clear" onClick={() => setTaskSearch('')}>
+                      <X size={14} />
+                    </button>
+                  )}
+                </div>
                   {PLANNER_PERIOD_ORDER.map(periodKey => {
-                  const periodTasks = dayData.tasks.filter(t => t.period === periodKey);
+                  const periodTasks = dayData.tasks.filter(t => t.period === periodKey && (
+                    !taskSearch ||
+                    t.name.toLowerCase().includes(taskSearch.toLowerCase()) ||
+                    (t.details || '').toLowerCase().includes(taskSearch.toLowerCase())
+                  ));
                   if (!periodTasks.length) return null;
                   const done = periodTasks.filter(t => t.completed).length;
                   const pct = Math.round((done / periodTasks.length) * 100);
                   const isCollapsed = !!collapsedPeriods[periodKey];
                   return (
-                    <div key={periodKey} className={`tasks-block ${isCollapsed ? 'collapsed' : ''}`}>
+                    <div key={periodKey} className={`tasks-block ${isCollapsed ? 'collapsed' : ''}`} data-period={periodKey}>
                       <div className="tasks-block-header" style={{ cursor: 'pointer' }}>
                         <div className="tasks-block-header-left" onClick={() => setCollapsedPeriods(prev => ({ ...prev, [periodKey]: !prev[periodKey] }))}>
                           <span className="tasks-block-name">{t('period.' + periodKey)}</span>
@@ -1358,6 +1446,15 @@ function App() {
                     </div>
                   );
                 })}
+                {taskSearch && dayData.tasks.filter(t =>
+                  t.name.toLowerCase().includes(taskSearch.toLowerCase()) ||
+                  (t.details || '').toLowerCase().includes(taskSearch.toLowerCase())
+                ).length === 0 && (
+                  <div className="tasks-empty-search">
+                    <Search size={24} />
+                    <span>{t('tasks.noTasksMatch')}</span>
+                  </div>
+                )}
               </div>
             )}
 
@@ -1924,6 +2021,25 @@ function App() {
           </main>
         </div>
 
+      {/* Toast notifications */}
+      {toast && (
+        <div className="toast-overlay" key={toast.key}>
+          <div className="toast-bar">
+            <span className="toast-message">{toast.message}</span>
+            <div className="toast-actions">
+              {toast.action && (
+                <button className="btn btn-toast" onClick={() => { dismissToast(); toast.action.action(); }}>
+                  {toast.action.label}
+                </button>
+              )}
+              <button className="btn btn-toast btn-toast-dismiss" onClick={dismissToast}>
+                <X size={14} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {taskModal.open && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -2029,6 +2145,39 @@ function App() {
                         </div>
                       );
                     })()}
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">{t('modal.duration')}</label>
+                  <div className="duration-presets">
+                    {[
+                      { label: t('modal.min15'), value: 15 },
+                      { label: t('modal.min30'), value: 30 },
+                      { label: t('modal.hour1'), value: 60 },
+                      { label: t('modal.hours2'), value: 120 }
+                    ].map(preset => {
+                      const startMin = scheduledTimeToPlannerMinutes(taskForm.scheduledTime, taskForm.period, dayData?.prayerTimes);
+                      const effective = Math.min(preset.value, 180);
+                      const endMin = startMin + effective;
+                      const endTime = dayData ? formatMinutesToTime(endMin) : taskForm.endTime;
+                      const isSelected = taskForm.duration >= preset.value - 2 && taskForm.duration <= preset.value + 2;
+                      return (
+                        <button
+                          key={preset.value}
+                          type="button"
+                          className={`duration-preset-btn ${isSelected ? 'active' : ''}`}
+                          onClick={() => {
+                            setTaskForm(prev => ({
+                              ...prev,
+                              duration: effective,
+                              endTime
+                            }));
+                          }}
+                        >
+                          {preset.label}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
                 {taskModal.task?.type !== 'fixed' && (
