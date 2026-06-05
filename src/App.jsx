@@ -741,6 +741,28 @@ function App() {
     return md;
   };
 
+  const exportStudyNotesMarkdown = () => {
+    const notes = dayData?.studyNotes;
+    if (!notes || notes.length === 0) return '';
+    const lines = [];
+    lines.push('');
+    lines.push(`## ${t('journal.studyNotes')}`);
+    lines.push('');
+    PLANNER_PERIOD_ORDER.forEach(periodKey => {
+      const periodNotes = notes.filter(n => n.period === periodKey).sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+      if (periodNotes.length === 0) return;
+      const periodLabel = `${t('period.' + periodKey)} — ${t('period.' + periodKey + 'Range')}`;
+      lines.push(`### ${periodLabel}`);
+      lines.push('');
+      periodNotes.forEach(n => {
+        const timeLabel = n.time ? `\`${n.time}\` ` : '';
+        lines.push(`- ${timeLabel}${n.text}`);
+      });
+      lines.push('');
+    });
+    return lines.join('\n');
+  };
+
   const exportToMarkdown = () => {
     if (!dayData) return;
     const { tasks, diary, date, hijriDate, prayerTimes, stats } = dayData;
@@ -773,11 +795,16 @@ function App() {
       lines.push(`- ${checkbox} **${translateTaskName(t.name)}** — ${time}${end}`);
       if (t.details) lines.push(`  - ${t.details}`);
     });
+    const studyNotesMd = exportStudyNotesMarkdown();
+    if (studyNotesMd) {
+      lines.push(studyNotesMd);
+    }
     if (diary) {
       lines.push('');
       lines.push(`## ${t('export.notes')}`);
       lines.push('');
       lines.push(diary);
+      lines.push('');
     }
     const habitsMd = exportHabitsMarkdown();
     if (habitsMd) {
