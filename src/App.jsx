@@ -288,6 +288,7 @@ function App() {
   const [studyText, setStudyText] = useState('');
   const [studyPeriod, setStudyPeriod] = useState('morning');
   const [collapsedPeriods, setCollapsedPeriods] = useState({ evening: true, night: true, morning: true, afternoon: true, late_afternoon: true });
+  const [expandedTaskId, setExpandedTaskId] = useState(null);
   const [dialog, setDialog] = useState(null);
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState(null);
@@ -652,6 +653,33 @@ function App() {
       const newTasks = dayData.tasks.filter(t => t.id !== id);
       updateDayData({ ...dayData, tasks: newTasks });
     }
+  };
+
+  const moveTask = (id, direction) => {
+    if (!dayData) return;
+    const tasks = [...dayData.tasks];
+    const idx = tasks.findIndex(t => t.id === id);
+    if (idx === -1) return;
+    const task = tasks[idx];
+    const periodTasks = tasks.filter(t => t.period === task.period);
+    const periodIndices = periodTasks.map(t => tasks.indexOf(t));
+    const localIdx = periodIndices.findIndex(i => i === idx);
+    if ((direction === -1 && localIdx === 0) || (direction === 1 && localIdx === periodIndices.length - 1)) return;
+    const swapIdx = periodIndices[localIdx + direction];
+    [tasks[idx], tasks[swapIdx]] = [tasks[swapIdx], tasks[idx]];
+    updateDayData({ ...dayData, tasks });
+  };
+
+  const completeAllInPeriod = (period) => {
+    if (!dayData) return;
+    const newTasks = dayData.tasks.map(t => t.period === period && t.type !== 'fixed' ? { ...t, completed: true } : t);
+    updateDayData({ ...dayData, tasks: newTasks });
+  };
+
+  const resetAllInPeriod = (period) => {
+    if (!dayData) return;
+    const newTasks = dayData.tasks.map(t => t.period === period && t.type !== 'fixed' ? { ...t, completed: false } : t);
+    updateDayData({ ...dayData, tasks: newTasks });
   };
 
   // ---- Habit Functions ----
@@ -1178,31 +1206,6 @@ function App() {
               </div>
             )}
 
-            {dayData && (
-              <div className="sidebar-prayer-strip">
-                {(() => {
-                  const p = dayData.prayerTimes;
-                  const ds = getPeriodStartMinutes('evening', p);
-                  const boxToPeriod = { maghrib: 'evening', isha: 'night', fajr: 'morning', dhuhr: 'afternoon', asr: 'late_afternoon' };
-                  const boxes = [
-                    { key: 'maghrib', prayer: t('prayer.maghrib'), time: formatMinutesToTime(parseTimeToMinutes(p.maghrib)), minutes: ds },
-                    { key: 'isha', prayer: t('prayer.isha'), time: formatMinutesToTime(parseTimeToMinutes(p.isha)), minutes: getPeriodStartMinutes('night', p) },
-                    { key: 'fajr', prayer: t('prayer.fajr'), time: formatMinutesToTime(parseTimeToMinutes(p.fajr)), minutes: getPeriodStartMinutes('morning', p) },
-                    { key: 'dhuhr', prayer: t('prayer.dhuhr'), time: formatMinutesToTime(parseTimeToMinutes(p.dhuhr)), minutes: getPeriodStartMinutes('afternoon', p) },
-                    { key: 'asr', prayer: t('prayer.asr'), time: formatMinutesToTime(parseTimeToMinutes(p.asr)), minutes: getPeriodStartMinutes('late_afternoon', p) },
-                  ];
-                  const cpm = getCurrentPlannerMinutes(currentTime, activeDate);
-                  const activePeriod = timelineStatus?.activePeriod;
-                  return boxes.map(box => (
-                    <div key={box.key} className={`sidebar-prayer-box sidebar-prayer-box-${box.key} ${cpm >= box.minutes ? 'sidebar-prayer-box-past' : ''} ${boxToPeriod[box.key] === activePeriod ? 'sidebar-prayer-box-current' : ''}`}>
-                      <span>{box.prayer}</span>
-                      <strong>{box.time}</strong>
-                    </div>
-                  ));
-                })()}
-              </div>
-            )}
-
             <div className="sidebar-header">
               <span className="sidebar-header-label">{t('nav.navigation')}</span>
             </div>
@@ -1297,12 +1300,22 @@ function App() {
                   const isCollapsed = !!collapsedPeriods[periodKey];
                   return (
                     <div key={periodKey} className={`tasks-block ${isCollapsed ? 'collapsed' : ''}`}>
-                      <div className="tasks-block-header" onClick={() => setCollapsedPeriods(prev => ({ ...prev, [periodKey]: !prev[periodKey] }))} style={{ cursor: 'pointer' }}>
-                        <span className="tasks-block-name">{t('period.' + periodKey)}</span>
-                        <span className="tasks-block-meta">
-                          {done}/{periodTasks.length} · {pct}%
-                          {isCollapsed ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                        </span>
+                      <div className="tasks-block-header" style={{ cursor: 'pointer' }}>
+                        <div className="tasks-block-header-left" onClick={() => setCollapsedPeriods(prev => ({ ...prev, [periodKey]: !prev[periodKey] }))}>
+                          <span className="tasks-block-name">{t('period.' + periodKey)}</span>
+                          <span className="tasks-block-meta">
+                            {done}/{periodTasks.length} · {pct}%
+                            {isCollapsed ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                          </span>
+                        </div>
+                        <div className="tasks-block-header-actions">
+                          <button type="button" className="btn-task-action btn-bulk" onClick={() => completeAllInPeriod(periodKey)} title={t('tasks.completeAll')}>
+                            <Check size={12} />
+                          </button>
+                          <button type="button" className="btn-task-action btn-bulk" onClick={() => resetAllInPeriod(periodKey)} title={t('tasks.resetAll')}>
+                            <RefreshCw size={12} />
+                          </button>
+                        </div>
                       </div>
                       {!isCollapsed && (
                         <div className="tasks-block-list">
@@ -1310,29 +1323,41 @@ function App() {
                             const taskStart = getTaskStartMinutes(task, dayData.prayerTimes);
                             const taskEnd = taskStart + (Number(task.duration) || 15);
                             return (
-                              <div key={task.id} className={`tasks-task-card ${task.completed ? 'completed' : ''}`}>
-                                <button
-                                  type="button"
-                                  className={`tasks-task-check ${task.completed ? 'checked' : ''}`}
-                                  onClick={() => toggleTaskCompletion(task.id)}
-                                >
-                                  {task.completed && <Check size={12} />}
-                                </button>
-                                <div className="tasks-task-body">
-                                  <span className="tasks-task-name">{translateTaskName(task.name)}</span>
-                                  <span className="tasks-task-time">{getTaskDisplayTime(task, dayData.prayerTimes)} – {formatMinutesToTime(taskEnd)} · {translateDuration(Number(task.duration) || 15)}</span>
-                                </div>
-                                {task.type !== 'fixed' && (
-                                  <div className="tasks-task-actions">
-                                    <button type="button" className="btn-task-action" onClick={() => openTaskModal('edit', task)} aria-label={t('task.edit')}>
-                                      <Edit2 size={13} />
-                                    </button>
-                                    <button type="button" className="btn-task-action delete" onClick={() => deleteTask(task.id)} aria-label={t('task.deleteAria')}>
-                                      <Trash2 size={13} />
-                                    </button>
-                                  </div>
+                              <div
+                              key={task.id}
+                              className={`tasks-task-card ${task.completed ? 'completed' : ''} ${expandedTaskId === task.id ? 'expanded' : ''}`}
+                            >
+                              <button
+                                type="button"
+                                className={`tasks-task-check ${task.completed ? 'checked' : ''}`}
+                                onClick={() => toggleTaskCompletion(task.id)}
+                              >
+                                {task.completed && <Check size={12} />}
+                              </button>
+                              <div className="tasks-task-body" onClick={() => setExpandedTaskId(expandedTaskId === task.id ? null : task.id)} style={{ cursor: 'pointer' }}>
+                                <span className="tasks-task-name">{translateTaskName(task.name)}</span>
+                                <span className="tasks-task-time">{getTaskDisplayTime(task, dayData.prayerTimes)} – {formatMinutesToTime(taskEnd)} · {translateDuration(Number(task.duration) || 15)}</span>
+                                {expandedTaskId === task.id && task.details && (
+                                  <span className="tasks-task-details">{task.details}</span>
                                 )}
                               </div>
+                              {task.type !== 'fixed' && (
+                                <div className="tasks-task-actions">
+                                  <button type="button" className="btn-task-action" onClick={() => moveTask(task.id, -1)} title={t('tasks.moveUp')}>
+                                    <ChevronUp size={12} />
+                                  </button>
+                                  <button type="button" className="btn-task-action" onClick={() => moveTask(task.id, 1)} title={t('tasks.moveDown')}>
+                                    <ChevronDown size={12} />
+                                  </button>
+                                  <button type="button" className="btn-task-action" onClick={() => openTaskModal('edit', task)} aria-label={t('task.edit')}>
+                                    <Edit2 size={13} />
+                                  </button>
+                                  <button type="button" className="btn-task-action delete" onClick={() => deleteTask(task.id)} aria-label={t('task.deleteAria')}>
+                                    <Trash2 size={13} />
+                                  </button>
+                                </div>
+                              )}
+                            </div>
                             );
                           })}
                         </div>

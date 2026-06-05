@@ -74,6 +74,10 @@ const en = {
   'tasks.overall': 'Overall Progress',
   'tasks.noTasks': 'No tasks for this period yet.',
   'tasks.completion': 'completion',
+  'tasks.completeAll': 'Complete All',
+  'tasks.resetAll': 'Reset All',
+  'tasks.moveUp': 'Move Up',
+  'tasks.moveDown': 'Move Down',
 
   /* Journal page */
   'journal.title': 'Study Notes',
@@ -336,6 +340,10 @@ const ar = {
   'tasks.overall': 'التقدم العام',
   'tasks.noTasks': 'لا توجد مهام لهذه الفترة بعد.',
   'tasks.completion': 'الإنجاز',
+  'tasks.completeAll': 'إكمال الكل',
+  'tasks.resetAll': 'إعادة تعيين الكل',
+  'tasks.moveUp': 'تحريك لأعلى',
+  'tasks.moveDown': 'تحريك لأسفل',
 
   /* Journal page */
   'journal.title': 'ملاحظات الدراسة',

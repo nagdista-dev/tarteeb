@@ -1922,7 +1922,7 @@ textarea.form-textarea {
 }
 
 .sidebar-export-wrap {
-  padding: 8px 12px 12px;
+  padding: 6px 12px 14px;
   border-top: 1px solid var(--border-color);
 }
 
@@ -1935,8 +1935,8 @@ textarea.form-textarea {
 
 .sidebar-quick-toggles {
   display: flex;
-  gap: 6px;
-  padding: 4px 12px 8px;
+  gap: 8px;
+  padding: 6px 12px 10px;
   border-top: 1px solid var(--border-color);
 }
 
@@ -1999,7 +1999,7 @@ textarea.form-textarea {
   padding: 18px 18px 12px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
   border-bottom: 1px solid var(--border-color);
 }
 
@@ -2039,83 +2039,9 @@ textarea.form-textarea {
   color: var(--text-tertiary);
 }
 
-/* Sidebar Prayer Boxes */
-.sidebar-prayer-strip {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--border-color);
-}
 
-.sidebar-prayer-box {
-  padding: 10px 14px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  background: var(--bg-primary);
-  transition: background 0.2s ease, opacity 0.2s ease;
-}
 
-.sidebar-prayer-box-maghrib {
-  background: var(--color-gold-bg);
-}
 
-.sidebar-prayer-box-isha {
-  background: var(--color-emerald-light);
-}
-
-.sidebar-prayer-box-fajr {
-  background: var(--color-teal-bg);
-}
-
-.sidebar-prayer-box-dhuhr {
-  background: var(--color-emerald-light);
-}
-
-.sidebar-prayer-box-asr {
-  background: var(--color-teal-bg);
-}
-
-.sidebar-prayer-box-past {
-  opacity: 0.8;
-}
-
-.sidebar-prayer-box.sidebar-prayer-box-current {
-  background: var(--color-emerald-light);
-}
-
-.sidebar-prayer-box.sidebar-prayer-box-current span {
-  color: var(--color-emerald);
-}
-
-.sidebar-prayer-box.sidebar-prayer-box-current strong {
-  color: var(--color-emerald);
-}
-
-.sidebar-prayer-box-past {
-  opacity: 0.6;
-}
-
-.sidebar-prayer-box-past span,
-.sidebar-prayer-box-past strong {
-  color: var(--text-tertiary);
-}
-
-.sidebar-prayer-box span {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-}
-
-.sidebar-prayer-box strong {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  font-variant-numeric: tabular-nums;
-}
 
 .content-area {
   flex: 1;
@@ -2228,7 +2154,7 @@ textarea.form-textarea {
 
   .sidebar-header {
     display: block;
-    padding: 4px 20px 8px;
+    padding: 6px 20px 8px;
   }
 
   .sidebar-header-label {
@@ -2242,7 +2168,7 @@ textarea.form-textarea {
 
   .sidebar-nav {
     flex-direction: column;
-    padding: 4px 12px 8px;
+    padding: 6px 12px 10px;
     gap: 3px;
   }
 
@@ -2275,7 +2201,7 @@ textarea.form-textarea {
   }
 
   .sidebar-quick-toggles {
-    padding: 6px 12px 8px;
+    padding: 8px 12px 10px;
     gap: 6px;
   }
 
@@ -3990,6 +3916,42 @@ textarea.form-textarea {
   background: var(--bg-tertiary);
 }
 
+.tasks-block-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.tasks-block-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.btn-bulk {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  color: var(--text-tertiary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.btn-bulk:hover {
+  background: var(--color-emerald-light);
+  color: var(--color-emerald);
+  border-color: var(--color-emerald);
+}
+
 .tasks-block.collapsed .tasks-block-header {
   border-bottom: none;
 }
@@ -4036,6 +3998,10 @@ textarea.form-textarea {
   background: var(--bg-primary);
 }
 
+.tasks-task-card.expanded {
+  background: var(--bg-primary);
+}
+
 .tasks-task-card.completed .tasks-task-name {
   text-decoration: line-through;
   opacity: 0.55;
@@ -4048,6 +4014,19 @@ textarea.form-textarea {
 
 .tasks-task-card.completed .tasks-task-time {
   opacity: 0.5;
+}
+
+.tasks-task-details {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  padding: 6px 10px;
+  background: var(--bg-secondary);
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
 }
 
 .tasks-task-check {
@@ -4121,33 +4100,6 @@ textarea.form-textarea {
 /* ===== RTL Support ===== */
 [dir="rtl"] .sidebar-link {
   text-align: right;
-}
-
-[dir="rtl"] .sidebar-close-btn {
-  right: auto;
-  left: 12px;
-}
-
-[dir="rtl"] .sidebar-nav {
-  padding-right: 0;
-  padding-left: 4px;
-}
-
-@media (max-width: 768px) {
-  [dir="rtl"] .full-sidebar {
-    left: auto;
-    right: -300px;
-    border-radius: 20px;
-  }
-
-  [dir="rtl"] .full-sidebar.sidebar-open {
-    right: 0;
-    left: auto;
-  }
-
-  [dir="rtl"] .sidebar-close-btn {
-    left: 16px;
-  }
 }
 
 [dir="rtl"] .settings-times-grid {
@@ -5275,7 +5227,7 @@ textarea.form-textarea {
 
   .tasks-task-card {
     padding: 10px 12px;
-    gap: 8px;
+    gap: 6px;
   }
 
   .tasks-task-check {
@@ -5293,11 +5245,21 @@ textarea.form-textarea {
     font-size: 0.82rem;
   }
 
+  .tasks-task-actions {
+    gap: 3px;
+  }
+
   .tasks-task-actions .btn-task-action {
-    width: 38px;
-    height: 38px;
+    width: 34px;
+    height: 34px;
     padding: 0;
-    border-radius: 9px;
+    border-radius: 8px;
+  }
+
+  .btn-bulk {
+    width: 26px;
+    height: 26px;
+    border-radius: 5px;
   }
 
   /* Footer tighter on mobile */
