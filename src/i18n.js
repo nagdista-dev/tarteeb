@@ -1,7 +1,7 @@
 const en = {
   /* Brand */
   'brand.title': 'Tarteeb',
-  'brand.subtitle': 'Prayer-based daily planner',
+  'brand.subtitle': "Muslim's Daily Planner",
 
   /* Footer */
   'footer.developedBy': 'Developed by',
@@ -26,6 +26,8 @@ const en = {
   'header.export': 'Export',
   'header.exportTitle': 'Export to Markdown',
   'header.loading': 'Updating prayer times...',
+  'header.exportCurrent': 'Current Day',
+  'header.exportPrevious': 'Previous Day',
 
   /* Sidebar planner */
   'sidebar.complete': '% complete',
@@ -292,7 +294,7 @@ const en = {
 const ar = {
   /* Brand */
   'brand.title': 'ترتيب',
-  'brand.subtitle': 'مخطّط يومي يعتمد على أوقات الصلاة',
+  'brand.subtitle': 'منظم يوم المسلم',
 
   /* Footer */
   'footer.developedBy': 'طُوّر بواسطة',
@@ -316,6 +318,8 @@ const ar = {
   'header.export': 'تصدير',
   'header.exportTitle': 'تصدير إلى ماركداون',
   'header.loading': 'جاري تحديث أوقات الصلاة...',
+  'header.exportCurrent': 'اليوم الحالي',
+  'header.exportPrevious': 'اليوم السابق',
 
   /* Sidebar planner */
   'sidebar.complete': '% مكتمل',

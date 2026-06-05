@@ -345,9 +345,12 @@ function App() {
 
   // ---- Previous day data for download ----
   const prevDate = formatDateLocal(addDays(new Date(), -1));
-  const [prevDayData, setPrevDayData] = useState(null);
+  const [prevDayData, setPrevDayData] = useState(() => {
+    const saved = localStorage.getItem(`tarteeb_day_${prevDate}`);
+    return saved ? JSON.parse(saved) : null;
+  });
 
-  // ---- Auto-cleanup old data & load previous day ----
+  // ---- Auto-cleanup old data (older than previous day) ----
   useEffect(() => {
     const today = formatDateLocal(new Date());
     const yesterday = formatDateLocal(addDays(new Date(), -1));
@@ -359,7 +362,13 @@ function App() {
       }
     }
     const saved = localStorage.getItem(`tarteeb_day_${yesterday}`);
-    setPrevDayData(saved ? JSON.parse(saved) : null);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      setPrevDayData(prev => {
+        if (JSON.stringify(prev) === JSON.stringify(parsed)) return prev;
+        return parsed;
+      });
+    }
   }, []);
 
 
@@ -1336,9 +1345,15 @@ function App() {
             </div>
             {dayData && (
               <div className="sidebar-export-wrap">
+                <span className="sidebar-export-label">{t('header.export')}</span>
                 <button className="btn btn-export sidebar-export-btn" onClick={exportToMarkdown} title={t('header.exportTitle')}>
-                  <Download size={16} /> {t('header.export')}
+                  <Download size={14} /> {t('header.exportCurrent')}
                 </button>
+                {prevDayData && (
+                  <button className="btn btn-export sidebar-export-btn sidebar-export-btn-prev" onClick={() => exportToMarkdown(prevDayData)} title={t('header.exportTitle')}>
+                    <Download size={14} /> {t('header.exportPrevious')}
+                  </button>
+                )}
               </div>
             )}
           </aside>
@@ -1355,23 +1370,6 @@ function App() {
             {/* Conditional Pages */}
             {currentPage === 'home' && dayData && renderFullDayView()}
 
-            {/* Previous Day Download (home page only) */}
-            {currentPage === 'home' && prevDayData && (
-              <div className="prev-day-card">
-                <div className="prev-day-info">
-                  <Download size={16} />
-                  <span>{t('prevDay.title')}</span>
-                  <span className="prev-day-date">{formatHumanDate(prevDayData.date)}{prevDayData.hijriDate ? ` · ${prevDayData.hijriDate}` : ''}</span>
-                </div>
-                <button
-                  className="btn btn-primary prev-day-btn"
-                  onClick={() => exportToMarkdown(prevDayData)}
-                  title={t('header.exportTitle')}
-                >
-                  <Download size={14} /> {t('header.export')}
-                </button>
-              </div>
-            )}
 
             {currentPage === 'tasks' && dayData && (
               <div className="tasks-page">
