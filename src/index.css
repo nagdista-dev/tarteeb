@@ -2989,19 +2989,6 @@ textarea.form-textarea {
   opacity: 0.35;
 }
 
-.timeline-prayer-label {
-  position: absolute;
-  left: 44px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 0.62rem;
-  font-weight: 700;
-  color: var(--color-emerald);
-  white-space: nowrap;
-  letter-spacing: 0.02em;
-  pointer-events: none;
-}
-
 .timeline-now-line {
   position: absolute;
   left: 0;
@@ -3035,15 +3022,17 @@ textarea.form-textarea {
   display: flex;
   align-items: center;
   background: color-mix(in srgb, var(--color-teal) 6%, var(--bg-secondary));
-  border-radius: 6px;
+  border-radius: 4px;
   cursor: pointer;
-  transition: opacity 0.15s, background 0.15s;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  transition: opacity 0.15s, background 0.15s, box-shadow 0.15s;
   overflow: hidden;
   animation: taskRise 0.28s ease both;
 }
 
 .timeline-task-card:hover {
   background: color-mix(in srgb, var(--color-teal) 12%, var(--bg-secondary));
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
   z-index: 8;
 }
 
@@ -3552,16 +3541,6 @@ textarea.form-textarea {
   [dir="rtl"] .timeline-prayer-marker::after {
     left: auto;
     right: 10px;
-  }
-
-  .timeline-prayer-label {
-    left: 30px;
-    font-size: 0.55rem;
-  }
-
-  [dir="rtl"] .timeline-prayer-label {
-    left: auto;
-    right: 30px;
   }
 
   .timeline-now-line::before {
@@ -4376,11 +4355,6 @@ textarea.form-textarea {
 [dir="rtl"] .timeline-prayer-marker::after {
   left: auto;
   right: 12px;
-}
-
-[dir="rtl"] .timeline-prayer-label {
-  left: auto;
-  right: 44px;
 }
 
 [dir="rtl"] .timeline-now-line::before {
