@@ -1260,8 +1260,8 @@ function App() {
     const prayers = dayData.prayerTimes;
     const dayStart = getPeriodStartMinutes('evening', prayers);
     const dayEnd = getPeriodEndMinutes('late_afternoon', prayers);
-    const padTop = 0;
-    const padBottom = 0;
+    const padTop = 15;
+    const padBottom = 15;
     const visualStart = dayStart - padTop;
     const visualEnd = dayEnd + padBottom;
     const visualDuration = visualEnd - visualStart;
