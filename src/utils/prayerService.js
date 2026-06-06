@@ -29,13 +29,14 @@ export const DEFAULT_PRAYER_TIMES = {
   isha: "20:30"
 };
 
-// Convert "HH:MM" to minutes from midnight
 export function parseTimeToMinutes(timeStr) {
   if (!timeStr) return 0;
   const normalized = timeStr.trim();
-  const isPM = /pm/i.test(normalized);
-  const isAM = /am/i.test(normalized);
-  const cleaned = normalized.replace(/\s*[ap]m\s*/i, '');
+  // Match standard am/pm and Arabic ص/م
+  const isPM = /pm|م/i.test(normalized);
+  const isAM = /am|ص/i.test(normalized);
+  // Remove the am/pm indicators
+  const cleaned = normalized.replace(/\s*(?:[ap]m|ص|م)\s*/i, '');
   const [h, m] = cleaned.split(':').map(Number);
   let hours = h || 0;
   if (isPM && hours < 12) hours += 12;

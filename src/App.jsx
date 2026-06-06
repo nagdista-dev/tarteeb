@@ -4,7 +4,7 @@ import {
   BookOpen, Clock, Sparkles, MapPin, X, AlertCircle,
   ChevronUp, ChevronDown, RefreshCw, Download, HelpCircle, List, Type, Menu, Target,
   Smartphone, Lock, Unlock, Upload, Search, Zap, Activity,
-  TrendingUp, BarChart3, Flame, CalendarDays
+  TrendingUp, BarChart3, Flame, CalendarDays, PenLine
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import {
@@ -53,18 +53,20 @@ const FIXED_TASK_SCHEDULE = {
   'Maghrib Prayer': { period: 'evening', offset: 0 },
   'Isha Prayer': { period: 'night', offset: 0 },
   'Fajr Prayer': { period: 'morning', offset: 0 },
-  'Morning Adhkar': { period: 'morning', offset: 15 },
+  'Morning Adhkar': { period: 'morning', offset: 20 },
   'Dhuhr Prayer': { period: 'afternoon', offset: 0 },
   'Asr Prayer': { period: 'late_afternoon', offset: 0 },
   'Evening Adhkar': { period: 'late_afternoon', offset: 0 }
 };
 
 const getFixedTaskSchedule = (task, prayers) => {
+  const isAdhkar = task.name.includes('Adhkar');
+  const duration = isAdhkar ? 10 : 15;
   if (task.name === 'Evening Adhkar') {
     const start = getPeriodEndMinutes('late_afternoon', prayers) - 60;
     return {
       period: 'late_afternoon',
-      duration: 15,
+      duration,
       scheduledTime: formatMinutesToTime(start)
     };
   }
@@ -73,7 +75,7 @@ const getFixedTaskSchedule = (task, prayers) => {
   const start = getPeriodStartMinutes(schedule.period, prayers) + schedule.offset;
   return {
     period: schedule.period,
-    duration: 15,
+    duration,
     scheduledTime: formatMinutesToTime(start)
   };
 };
@@ -84,17 +86,20 @@ const normalizeFixedTask = (task, prayers) => {
 };
 
 const normalizeTasksForPrayerBlocks = (tasks, prayers) => {
-  const usedStartsByBlock = {};
+  const usedRangesByBlock = {};
 
   return sortTasksForPlannerDay(tasks.map(task => normalizeFixedTask(task, prayers)), prayers).map(task => {
     const blockStart = getPeriodStartMinutes(task.period, prayers);
     const blockEnd = getPeriodEndMinutes(task.period, prayers);
     const blockDuration = Math.max(1, blockEnd - blockStart);
-    const usedStarts = usedStartsByBlock[task.period] || new Set();
+    const usedRanges = usedRangesByBlock[task.period] || [];
+    const hasOverlap = (s, e) => usedRanges.some(r => Math.max(s, r.start) < Math.min(e, r.end));
+
     if (task.type === 'fixed') {
       const start = getTaskStartMinutes(task, prayers);
-      usedStarts.add(start);
-      usedStartsByBlock[task.period] = usedStarts;
+      const duration = Number(task.duration) || 15;
+      usedRanges.push({ start, end: start + duration + TASK_GAP });
+      usedRangesByBlock[task.period] = usedRanges;
       return task;
     }
 
@@ -105,19 +110,19 @@ const normalizeTasksForPrayerBlocks = (tasks, prayers) => {
       start = Math.min(Math.max(blockStart, start), blockEnd - duration);
     }
 
-    while (usedStarts.has(start) && start + duration + TASK_GAP <= blockEnd) {
+    while (hasOverlap(start, start + duration + TASK_GAP) && start + duration + TASK_GAP <= blockEnd) {
       start += TASK_GAP;
     }
 
-    if (usedStarts.has(start)) {
+    if (hasOverlap(start, start + duration + TASK_GAP)) {
       start = blockStart;
-      while (usedStarts.has(start) && start + duration + TASK_GAP <= blockEnd) {
+      while (hasOverlap(start, start + duration + TASK_GAP) && start + duration + TASK_GAP <= blockEnd) {
         start += TASK_GAP;
       }
     }
 
-    usedStarts.add(start);
-    usedStartsByBlock[task.period] = usedStarts;
+    usedRanges.push({ start, end: start + duration + TASK_GAP });
+    usedRangesByBlock[task.period] = usedRanges;
 
     return {
       ...task,
@@ -132,7 +137,7 @@ const getFirstAvailableTimeForPeriod = (period, tasks, prayers, duration = 15, e
   const blockEnd = getPeriodEndMinutes(period, prayers);
   const occupied = getOccupiedSlots(period, tasks, prayers, excludeTaskId);
 
-  for (let start = Math.max(blockStart, minTime ?? blockStart); start + duration <= blockEnd; start += TASK_GAP) {
+  for (let start = Math.max(blockStart, minTime ?? blockStart); start + duration <= blockEnd; start += 1) {
     const overlaps = occupied.some(slot => start < slot.end && start + duration > slot.start);
     if (!overlaps) return formatMinutesToTime(start);
   }
@@ -157,7 +162,7 @@ const getAvailableStartSlots = (period, tasks, prayers, excludeTaskId = null, mi
   const occupied = getOccupiedSlots(period, tasks, prayers, excludeTaskId);
   const slots = [];
 
-  for (let start = blockStart; start < blockEnd; start += TASK_GAP) {
+  for (let start = blockStart; start < blockEnd; start += 1) {
     if (minTime !== null && start < minTime) continue;
     const overlaps = occupied.some(slot => start >= slot.start && start < slot.end);
     if (!overlaps) slots.push(start);
@@ -171,7 +176,7 @@ const getAvailableEndSlots = (period, tasks, prayers, startMinutes, excludeTaskI
   const occupied = getOccupiedSlots(period, tasks, prayers, excludeTaskId);
   const slots = [];
 
-  for (let end = startMinutes + TASK_GAP; end <= blockEnd; end += TASK_GAP) {
+  for (let end = startMinutes + 1; end <= blockEnd; end += 1) {
     const crossesOther = occupied.some(slot => startMinutes < slot.end && end > slot.start);
     if (!crossesOther) slots.push(end);
   }
@@ -672,23 +677,35 @@ function App() {
   };
 
   const toggleTaskCompletion = (id) => {
-    if (!dayData) return;
-    const task = dayData.tasks.find(t => t.id === id);
-    const wasCompleted = task?.completed || false;
-    if (task && !task.completed) {
-      confetti({
-        particleCount: 120,
-        spread: 80,
-        origin: { x: 0.5, y: 0.5 },
-        colors: ['#059669', '#0d9488', '#d97706', '#f59e0b', '#10b981']
-      });
-    }
-    const updTasks = dayData.tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t);
-    updateDayData({ ...dayData, tasks: updTasks });
-    showToast(
-      !wasCompleted ? t('toast.taskCompleted') : t('toast.taskUncompleted'),
-      { label: t('toast.undo'), action: () => toggleTaskCompletion(id) }
-    );
+    setDayData(prev => {
+      if (!prev) return prev;
+      const task = prev.tasks.find(t => t.id === id);
+      if (!task) return prev;
+      
+      const wasCompleted = task.completed;
+      if (!wasCompleted) {
+        confetti({
+          particleCount: 120,
+          spread: 80,
+          origin: { x: 0.5, y: 0.5 },
+          colors: ['#059669', '#0d9488', '#d97706', '#f59e0b', '#10b981']
+        });
+      }
+
+      const updTasks = prev.tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t);
+      const updated = { ...prev, tasks: updTasks };
+      updated.stats = calculateStats(updated.tasks);
+      localStorage.setItem(`tarteeb_day_${updated.date}`, JSON.stringify(updated));
+
+      // Show toast directly inside since it uses the new state reliably 
+      // without needing to capture 'dayData' from scope
+      showToast(
+        !wasCompleted ? t('toast.taskCompleted') : t('toast.taskUncompleted'),
+        { label: t('toast.undo'), action: () => toggleTaskCompletion(id) }
+      );
+      
+      return updated;
+    });
   };
 
   const getDefaultPeriod = () => {
@@ -1350,14 +1367,25 @@ function App() {
                 <div key={tick.key} className="timeline-hour-line" style={{ top: `${toPercent(tick.minutes)}%` }} />
               ))}
 
-              {markers.map(marker => (
-                <div
-                  key={marker.key}
-                  className="timeline-prayer-marker"
-                  style={{ top: `${toPercent(marker.minutes)}%` }}
-                  aria-label={`${t('prayer.' + marker.prayer.toLowerCase())} ${t('prayer.boundary')}`}
-                />
-              ))}
+              {markers.map(marker => {
+                let initial = '';
+                if (lang === 'ar') {
+                  const arInitials = { Fajr: 'ف', Dhuhr: 'ظ', Asr: 'ع', Maghrib: 'م', Isha: 'ع' };
+                  initial = arInitials[marker.prayer] || marker.prayer.charAt(0);
+                } else {
+                  initial = marker.prayer === 'Dhuhr' ? 'Z' : marker.prayer.charAt(0);
+                }
+                return (
+                  <div
+                    key={marker.key}
+                    className="timeline-prayer-marker"
+                    style={{ top: `${toPercent(marker.minutes)}%` }}
+                    aria-label={`${t('prayer.' + marker.prayer.toLowerCase())} ${t('prayer.boundary')}`}
+                  >
+                    {initial}
+                  </div>
+                );
+              })}
 
               {sortedTasks.map((task) => {
                 const taskStart = getTaskStartMinutes(task, prayers);
@@ -1380,6 +1408,7 @@ function App() {
                     <div className="timeline-task-body">
                       <span className="timeline-task-time">
                         {getTaskDisplayTime(task, prayers)}–{formatMinutesToTime(taskEnd)}
+                        <span className="timeline-task-duration-badge">{duration}m</span>
                       </span>
                       <span
                         className="timeline-task-name"
@@ -1653,9 +1682,12 @@ function App() {
             </h1>
           </div>
         <div className="header-actions">
-            <button className="btn btn-install btn-install-header" onClick={handleInstall} title={t('nav.install')}>
+          {installable && (
+            <button className="btn btn-install-header" onClick={handleInstall} title={t('nav.install')}>
               <Smartphone size={16} />
+              <span>{t('nav.install')}</span>
             </button>
+          )}
           <button className="btn btn-menu-mobile" onClick={() => setSidebarOpen(true)} aria-label={t('nav.openSidebar')}>
             <Menu size={18} />
           </button>
@@ -1896,38 +1928,36 @@ function App() {
 
             {currentPage === 'journal' && dayData && (
               <div className="journal-page">
-                <div className="journal-card journal-add-card">
-                  <div className="journal-header">
-                    <div className="journal-header-left">
-                      <BookOpen size={18} className="journal-icon" />
-                      <div>
-                        <h3 className="journal-title" dir="auto">{t('journal.studyNotes')}</h3>
-                        <span className="journal-date" dir="auto">{formatHumanDate(dayData.date)}{dayData.hijriDate ? ` · ${dayData.hijriDate}` : ''}</span>
-                      </div>
+                <div className="note-composer-card">
+                  <div className="note-composer-top">
+                    <div className="note-composer-icon-wrap">
+                      <PenLine size={16} />
+                    </div>
+                    <div className="note-composer-meta">
+                      <span className="note-composer-heading" dir="auto">{t('journal.studyNotes')}</span>
+                      <span className="note-composer-date" dir="auto">{formatHumanDate(dayData.date)}{dayData.hijriDate ? ` · ${dayData.hijriDate}` : ''}</span>
                     </div>
                   </div>
-                  <div className="study-add-area">
-                    <div className="study-input-header">
-                      <BookOpen size={16} className="study-input-icon" />
-                      <span className="study-input-label">{t('journal.newNote')}</span>
-                    </div>
+
+                  <div className="note-composer-body">
                     <textarea
-                      className="study-input"
+                      className="note-composer-input"
                       placeholder={t('journal.studyPlaceholder')}
                       value={studyText}
                       onChange={e => setStudyText(e.target.value)}
                       onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); addStudyNote(); } }}
-                      rows={3}
+                      rows={4}
                       style={{ resize: 'none' }}
+                      dir="auto"
                     />
-                    <div className="study-input-meta">
-                      <span className="study-input-count">{studyText.length}</span>
-                    </div>
-                    <div className="study-add-footer">
-                      <div className="study-period-select-wrap">
-                        <span className="study-period-label">{t('journal.period')}</span>
+                  </div>
+
+                  <div className="note-composer-footer">
+                    <div className="note-composer-footer-left">
+                      <div className="note-composer-period-wrap">
+                        <Clock size={13} className="note-composer-clock-icon" />
                         <select
-                          className="form-select study-period-select"
+                          className="note-composer-period-select"
                           value={studyPeriod}
                           onChange={e => setStudyPeriod(e.target.value)}
                         >
@@ -1938,14 +1968,18 @@ function App() {
                           ))}
                         </select>
                       </div>
-                      <button
-                        className="btn btn-primary study-add-btn"
-                        onClick={addStudyNote}
-                        disabled={!studyText.trim()}
-                      >
-                        <Plus size={16} /> {t('journal.addNote')}
-                      </button>
+                      {studyText.length > 0 && (
+                        <span className="note-composer-char-count">{studyText.length}</span>
+                      )}
                     </div>
+                    <button
+                      className="note-composer-submit"
+                      onClick={addStudyNote}
+                      disabled={!studyText.trim()}
+                    >
+                      <Plus size={15} />
+                      <span>{t('journal.addNote')}</span>
+                    </button>
                   </div>
                 </div>
 
@@ -2468,182 +2502,203 @@ function App() {
         </div>
       )}
 
-      {taskModal.open && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <div className="modal-header">
-              <span className="modal-title">{taskModal.mode === 'add' ? t('modal.addTitle') : t('modal.editTitle')}</span>
-              <button className="btn-task-action" onClick={() => setTaskModal(prev => ({ ...prev, open: false }))}><X size={18} /></button>
-            </div>
-            <form onSubmit={handleTaskSubmit}>
-              <div className="modal-body">
-                <div className="form-group">
-                  <label className="form-label">{t('modal.taskName')}</label>
-                  <input className="form-input" type="text" value={taskForm.name} onChange={e => setTaskForm(prev => ({ ...prev, name: e.target.value }))} required />
-                </div>
+      {taskModal.open && (() => {
+        const prayers = dayData?.prayerTimes;
 
-                <div className="form-group">
-                  <label className="form-label">{t('modal.timeOfDay')}</label>
-                  <select className="form-select" value={taskForm.period} onChange={e => {
-                    const period = e.target.value;
-                    const excludeId = taskModal.task?.id;
-                    const prayers = dayData?.prayerTimes;
-                    if (!prayers) return;
-                    const nowMin = taskModal.mode === 'add' ? getCurrentPlannerMinutes(currentTime, activeDate) : null;
-                    const slots = dayData ? getAvailableStartSlots(period, dayData.tasks, prayers, excludeId, nowMin) : [];
-                    const firstStart = slots.length > 0 ? formatMinutesToTime(slots[0]) : '00:00';
-                    const firstStartMin = scheduledTimeToPlannerMinutes(firstStart, period, prayers);
-                    const endSlotsArr = dayData ? getAvailableEndSlots(period, dayData.tasks, prayers, firstStartMin, excludeId) : [];
-                    const curEndParsed = parseTimeToMinutes(taskForm.endTime);
-                    const curEndNorm = curEndParsed < (firstStartMin % 1440) ? curEndParsed + 1440 : curEndParsed;
-                    const endTime = endSlotsArr.includes(curEndNorm)
-                      ? taskForm.endTime
-                      : endSlotsArr.length > 0 ? formatMinutesToTime(endSlotsArr[0]) : formatMinutesToTime(firstStartMin + 15);
-                    setTaskForm(prev => ({ ...prev, period, scheduledTime: firstStart, endTime }));
-                  }}>
-                    {PLANNER_PERIOD_ORDER.map(key => (
-                      <option key={key} value={key}>{t('period.' + key)} — {t('period.' + key + 'Range')}</option>
-                    ))}
-                  </select>
-                </div>
+        // Helper: get available start slots normalized to 0..1439
+        const getStartSlots = () => {
+          if (!prayers) return [];
+          const nowMin = taskModal.mode === 'add' ? getCurrentPlannerMinutes(currentTime, activeDate) : null;
+          return getAvailableStartSlots(taskForm.period, dayData.tasks, prayers, taskModal.task?.id, nowMin)
+            .map(m => m % 1440);
+        };
 
-                <div className="form-row">
+        // Helper: get available end slots (>= start + TASK_GAP) normalized to 0..1439
+        const getEndSlots = (startTimeStr) => {
+          if (!prayers) return [];
+          const startAbsolute = scheduledTimeToPlannerMinutes(startTimeStr, taskForm.period, prayers);
+          return getAvailableEndSlots(taskForm.period, dayData.tasks, prayers, startAbsolute, taskModal.task?.id)
+            .map(m => m % 1440);
+        };
+
+        const startSlots = getStartSlots();
+        const endSlots = getEndSlots(taskForm.scheduledTime);
+
+        // Unique sorted hours from slots
+        const startHours = [...new Set(startSlots.map(m => Math.floor(m / 60)))].sort((a, b) => a - b);
+        const endHours = [...new Set(endSlots.map(m => Math.floor(m / 60)))].sort((a, b) => a - b);
+
+        // Current start h/m
+        const curStartMin = parseTimeToMinutes(taskForm.scheduledTime);
+        const curStartH = Math.floor(curStartMin / 60) % 24;
+        const curStartM = curStartMin % 60;
+        const selStartH = startHours.includes(curStartH) ? curStartH : (startHours[0] ?? 0);
+        const startMinsForHour = startSlots.filter(m => Math.floor(m / 60) === selStartH).map(m => m % 60).sort((a, b) => a - b);
+        const selStartM = startMinsForHour.includes(curStartM) ? curStartM : (startMinsForHour[0] ?? 0);
+
+        // Current end h/m
+        const curEndMin = parseTimeToMinutes(taskForm.endTime);
+        const curEndH = Math.floor(curEndMin / 60) % 24;
+        const curEndM = curEndMin % 60;
+        const selEndH = endHours.includes(curEndH) ? curEndH : (endHours[0] ?? 0);
+        const endMinsForHour = endSlots.filter(m => Math.floor(m / 60) === selEndH).map(m => m % 60).sort((a, b) => a - b);
+        const selEndM = endMinsForHour.includes(curEndM) ? curEndM : (endMinsForHour[0] ?? 0);
+
+        // Live duration
+        const startAbsolute = prayers ? scheduledTimeToPlannerMinutes(taskForm.scheduledTime, taskForm.period, prayers) : 0;
+        const endAbsolute = prayers ? scheduledTimeToPlannerMinutes(taskForm.endTime, taskForm.period, prayers) : 0;
+        const liveDuration = endAbsolute - startAbsolute;
+
+        const use12 = getUse12h();
+        const fmtH = (h) => use12 ? String(h % 12 || 12) : String(h).padStart(2, '0');
+        const ampm = (h) => h < 12 ? t('time.am') : t('time.pm');
+
+        const handlePeriodChange = (period) => {
+          if (!prayers) return;
+          const nowMin = taskModal.mode === 'add' ? getCurrentPlannerMinutes(currentTime, activeDate) : null;
+          const newStartSlots = getAvailableStartSlots(period, dayData.tasks, prayers, taskModal.task?.id, nowMin).map(m => m % 1440);
+          const firstStart = newStartSlots.length > 0 ? newStartSlots[0] : getPeriodStartMinutes(period, prayers) % 1440;
+          const startStr = String(Math.floor(firstStart / 60)).padStart(2, '0') + ':' + String(firstStart % 60).padStart(2, '0');
+          const newEndSlots = getAvailableEndSlots(period, dayData.tasks, prayers,
+            scheduledTimeToPlannerMinutes(startStr, period, prayers), taskModal.task?.id).map(m => m % 1440);
+          const firstEnd = newEndSlots.length > 0 ? newEndSlots[0] : firstStart + 15;
+          const endStr = String(Math.floor((firstEnd % 1440) / 60)).padStart(2, '0') + ':' + String(firstEnd % 60).padStart(2, '0');
+          setTaskForm(prev => ({ ...prev, period, scheduledTime: startStr, endTime: endStr }));
+        };
+
+        const handleStartHourChange = (h) => {
+          const newStartSlots = getStartSlots();
+          const minsForH = newStartSlots.filter(m => Math.floor(m / 60) === h).map(m => m % 60).sort((a, b) => a - b);
+          const m = minsForH.includes(selStartM) ? selStartM : (minsForH[0] ?? 0);
+          const startStr = String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+          const newEndSlots = getEndSlots(startStr);
+          const firstEnd = newEndSlots.length > 0 ? newEndSlots[0] : ((h * 60 + m + 15) % 1440);
+          const endStr = String(Math.floor(firstEnd / 60)).padStart(2, '0') + ':' + String(firstEnd % 60).padStart(2, '0');
+          setTaskForm(prev => ({ ...prev, scheduledTime: startStr, endTime: endStr }));
+        };
+
+        const handleStartMinChange = (m) => {
+          const startStr = String(selStartH).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+          const newEndSlots = getEndSlots(startStr);
+          const firstEnd = newEndSlots.length > 0 ? newEndSlots[0] : ((selStartH * 60 + m + 15) % 1440);
+          const endStr = String(Math.floor(firstEnd / 60)).padStart(2, '0') + ':' + String(firstEnd % 60).padStart(2, '0');
+          setTaskForm(prev => ({ ...prev, scheduledTime: startStr, endTime: endStr }));
+        };
+
+        const handleEndHourChange = (h) => {
+          const minsForH = endSlots.filter(m => Math.floor(m / 60) === h).map(m => m % 60).sort((a, b) => a - b);
+          const m = minsForH.includes(selEndM) ? selEndM : (minsForH[0] ?? 0);
+          setTaskForm(prev => ({ ...prev, endTime: String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0') }));
+        };
+
+        const handleEndMinChange = (m) => {
+          setTaskForm(prev => ({ ...prev, endTime: String(selEndH).padStart(2, '0') + ':' + String(m).padStart(2, '0') }));
+        };
+
+        return (
+          <div className="modal-overlay">
+            <div className="modal-content task-modal-content">
+              <div className="modal-header">
+                <span className="modal-title">{taskModal.mode === 'add' ? t('modal.addTitle') : t('modal.editTitle')}</span>
+                <button className="btn-task-action" onClick={() => setTaskModal(prev => ({ ...prev, open: false }))}><X size={18} /></button>
+              </div>
+              <form onSubmit={handleTaskSubmit}>
+                <div className="modal-body">
+
+                  {/* Task name */}
                   <div className="form-group">
-                    <label className="form-label">{t('modal.startTime')}</label>
-                    {(() => {
-                      const prayers = dayData?.prayerTimes;
-                      if (!prayers) return <div className="form-input disabled">--:--</div>;
-                      const startSlots = getAvailableStartSlots(taskForm.period, dayData.tasks, prayers, taskModal.task?.id, taskModal.mode === 'add' ? getCurrentPlannerMinutes(currentTime, activeDate) : null);
-                      if (startSlots.length === 0) return <div className="form-input disabled">--:--</div>;
-                      const allMinutes = startSlots.map(m => m % 1440);
-                      const allHours = [...new Set(allMinutes.map(m => Math.floor(m / 60)))].sort((a, b) => a - b);
-                      const curParsed = parseTimeToMinutes(taskForm.scheduledTime);
-                      const curHour = Math.floor(curParsed / 60);
-                      const curMin = Math.floor(curParsed % 60);
-                      const validHour = allHours.includes(curHour) ? curHour : allHours[0];
-                      const validMin = Math.min(59, Math.max(0, curMin));
-                      const use12 = getUse12h();
-                      return (
-                        <div className="time-select-row">
-                          <select className="form-select time-select-hour"
-                            value={validHour}
-                            onChange={e => {
-                              const h = Number(e.target.value);
-                              const newStart = formatMinutesToTime(h * 60 + validMin);
-                              const newStartMin = scheduledTimeToPlannerMinutes(newStart, taskForm.period, prayers);
-                              const endSlotsArr = getAvailableEndSlots(taskForm.period, dayData.tasks, prayers, newStartMin, taskModal.task?.id);
-                              const curEndParsed = parseTimeToMinutes(taskForm.endTime);
-                              const curEndNorm = curEndParsed < (newStartMin % 1440) ? curEndParsed + 1440 : curEndParsed;
-                              const newEndTime = endSlotsArr.includes(curEndNorm)
-                                ? taskForm.endTime
-                                : endSlotsArr.length > 0 ? formatMinutesToTime(endSlotsArr[0]) : formatMinutesToTime(newStartMin + 15);
-                              setTaskForm(prev => ({ ...prev, scheduledTime: newStart, endTime: newEndTime }));
-                            }}
-                          >
-                            {allHours.map(h => (
-                              <option key={h} value={h}>{use12 ? (h % 12 || 12) : String(h).padStart(2, '0')}</option>
-                            ))}
-                          </select>
-                          <span className="time-colon">:</span>
-                          <select className="form-select time-select-minute"
-                            value={validMin}
-                            onChange={e => {
-                              const m = Number(e.target.value);
-                              const newStart = formatMinutesToTime(validHour * 60 + m);
-                              const newStartMin = scheduledTimeToPlannerMinutes(newStart, taskForm.period, prayers);
-                              const endSlotsArr = getAvailableEndSlots(taskForm.period, dayData.tasks, prayers, newStartMin, taskModal.task?.id);
-                              const curEndParsed = parseTimeToMinutes(taskForm.endTime);
-                              const curEndNorm = curEndParsed < (newStartMin % 1440) ? curEndParsed + 1440 : curEndParsed;
-                              const newEndTime = endSlotsArr.includes(curEndNorm)
-                                ? taskForm.endTime
-                                : endSlotsArr.length > 0 ? formatMinutesToTime(endSlotsArr[0]) : formatMinutesToTime(newStartMin + 15);
-                              setTaskForm(prev => ({ ...prev, scheduledTime: newStart, endTime: newEndTime }));
-                            }}
-                          >
-                            {Array.from({length: 60}, (_, i) => i).map(m => (
-                              <option key={m} value={m}>{String(m).padStart(2, '0')}</option>
-                            ))}
-                          </select>
-                          {use12 && <span className="time-ampm">{validHour < 12 ? t('time.am') : t('time.pm')}</span>}
-                        </div>
-                      );
-                    })()}
+                    <label className="form-label">{t('modal.taskName')}</label>
+                    <input className="form-input" type="text" dir="auto" value={taskForm.name}
+                      onChange={e => setTaskForm(prev => ({ ...prev, name: e.target.value }))} required autoFocus />
                   </div>
 
+                  {/* Period */}
                   <div className="form-group">
-                    <label className="form-label">{t('modal.endTime')}</label>
-                    {(() => {
-                      const prayers = dayData?.prayerTimes;
-                      if (!prayers) return <div className="form-input disabled">--:--</div>;
-                      const endMin = scheduledTimeToPlannerMinutes(taskForm.scheduledTime, taskForm.period, prayers);
-                      const endSlots = getAvailableEndSlots(taskForm.period, dayData.tasks, prayers, endMin, taskModal.task?.id);
-                      if (endSlots.length === 0) return <div className="form-input disabled">--:--</div>;
-                      const allMinutes = endSlots.map(m => m % 1440);
-                      const allHours = [...new Set(allMinutes.map(m => Math.floor(m / 60)))].sort((a, b) => a - b);
-                      const curParsed = parseTimeToMinutes(taskForm.endTime);
-                      const curHour = Math.floor(curParsed / 60);
-                      const curMin = Math.floor(curParsed % 60);
-                      const validHour = allHours.includes(curHour) ? curHour : allHours[0];
-                      const validMinsForHour = allMinutes.filter(m => Math.floor(m / 60) === validHour).map(m => m % 60).sort((a, b) => a - b);
-                      const validMin = validMinsForHour.includes(curMin) ? curMin : validMinsForHour[0];
-                      const use12 = getUse12h();
-                      return (
-                        <div className="time-select-row">
-                          <select className="form-select time-select-hour"
-                            value={validHour}
-                            onChange={e => {
-                              const h = Number(e.target.value);
-                              const minsForHour = allMinutes.filter(m => Math.floor(m / 60) === h).map(m => m % 60);
-                              const m = minsForHour.includes(validMin) ? validMin : minsForHour[0];
-                              setTaskForm(prev => ({ ...prev, endTime: formatMinutesToTime(h * 60 + m) }));
-                            }}
-                          >
-                            {allHours.map(h => (
-                              <option key={h} value={h}>{use12 ? (h % 12 || 12) : String(h).padStart(2, '0')}</option>
-                            ))}
-                          </select>
-                          <span className="time-colon">:</span>
-                          <select className="form-select time-select-minute"
-                            value={validMin}
-                            onChange={e => {
-                              const m = Number(e.target.value);
-                              setTaskForm(prev => ({ ...prev, endTime: formatMinutesToTime(validHour * 60 + m) }));
-                            }}
-                          >
-                            {validMinsForHour.map(m => (
-                              <option key={m} value={m}>{String(m).padStart(2, '0')}</option>
-                            ))}
-                          </select>
-                          {use12 && <span className="time-ampm">{validHour < 12 ? t('time.am') : t('time.pm')}</span>}
-                        </div>
-                      );
-                    })()}
+                    <label className="form-label">{t('modal.timeOfDay')}</label>
+                    <select className="form-select" value={taskForm.period} onChange={e => handlePeriodChange(e.target.value)}>
+                      {PLANNER_PERIOD_ORDER.map(key => (
+                        <option key={key} value={key}>{t('period.' + key)} — {t('period.' + key + 'Range')}</option>
+                      ))}
+                    </select>
                   </div>
-                </div>
 
-                {(() => {
-                  const prayers = dayData?.prayerTimes;
-                  if (!prayers) return null;
-                  const startMin = scheduledTimeToPlannerMinutes(taskForm.scheduledTime, taskForm.period, prayers);
-                  const endMin = scheduledTimeToPlannerMinutes(taskForm.endTime, taskForm.period, prayers);
-                  const duration = endMin - startMin;
-                  if (duration <= 0) return null;
-                  return (
+                  {/* Start + End time pickers */}
+                  <div className="form-row">
+                    {/* Start time */}
                     <div className="form-group">
-                      <label className="form-label">{t('modal.duration')}</label>
-                      <div className="duration-display">{translateDuration(duration)}</div>
+                      <label className="form-label">{t('modal.startTime')}</label>
+                      {startSlots.length === 0 ? (
+                        <div className="form-input tm-disabled">{t('modal.noSlots') || 'No slots'}</div>
+                      ) : (
+                        <div className="tm-picker">
+                          <select className="tm-select" value={selStartH} onChange={e => handleStartHourChange(Number(e.target.value))}>
+                            {startHours.map(h => (
+                              <option key={h} value={h}>{fmtH(h)}</option>
+                            ))}
+                          </select>
+                          <span className="tm-colon">:</span>
+                          <select className="tm-select" value={selStartM} onChange={e => handleStartMinChange(Number(e.target.value))}>
+                            {startMinsForHour.map(m => (
+                              <option key={m} value={m}>{String(m).padStart(2, '0')}</option>
+                            ))}
+                          </select>
+                          {use12 && <span className="tm-ampm">{ampm(selStartH)}</span>}
+                        </div>
+                      )}
                     </div>
-                  );
-                })()}
-              </div>
-              <div className="modal-footer">
-                <button type="button" className="btn" onClick={() => setTaskModal(prev => ({ ...prev, open: false }))}>{t('modal.cancel')}</button>
-                <button type="submit" className="btn btn-primary">{taskModal.mode === 'add' ? t('modal.create') : t('modal.save')}</button>
-              </div>
-            </form>
+
+                    {/* End time */}
+                    <div className="form-group">
+                      <label className="form-label">{t('modal.endTime')}</label>
+                      {endSlots.length === 0 ? (
+                        <div className="form-input tm-disabled">{t('modal.noSlots') || 'No slots'}</div>
+                      ) : (
+                        <div className="tm-picker">
+                          <select className="tm-select" value={selEndH} onChange={e => handleEndHourChange(Number(e.target.value))}>
+                            {endHours.map(h => (
+                              <option key={h} value={h}>{fmtH(h)}</option>
+                            ))}
+                          </select>
+                          <span className="tm-colon">:</span>
+                          <select className="tm-select" value={selEndM} onChange={e => handleEndMinChange(Number(e.target.value))}>
+                            {endMinsForHour.map(m => (
+                              <option key={m} value={m}>{String(m).padStart(2, '0')}</option>
+                            ))}
+                          </select>
+                          {use12 && <span className="tm-ampm">{ampm(selEndH)}</span>}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Live duration badge */}
+                  {liveDuration > 0 && (
+                    <div className="tm-duration-row">
+                      <span className="tm-duration-badge">
+                        {translateDuration(liveDuration)}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Recurring toggle */}
+                  <div className="form-group tm-recurring-row">
+                    <label className="tm-recurring-label">
+                      <input type="checkbox" checked={taskForm.isRecurring}
+                        onChange={e => setTaskForm(prev => ({ ...prev, isRecurring: e.target.checked }))} />
+                      <span>{t('modal.recurring') || 'Recurring task'}</span>
+                    </label>
+                  </div>
+
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn" onClick={() => setTaskModal(prev => ({ ...prev, open: false }))}>{t('modal.cancel')}</button>
+                  <button type="submit" className="btn btn-primary">{taskModal.mode === 'add' ? t('modal.create') : t('modal.save')}</button>
+                </div>
+              </form>
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Habit Modal */}
       {habitModal.open && (

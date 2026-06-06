@@ -366,19 +366,25 @@ a {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
   height: 36px;
-  padding: 0;
-  border-radius: 50%;
-  border-color: transparent;
-  background: transparent;
+  padding: 0 16px;
+  gap: 8px;
+  border-radius: 100px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-tertiary);
   color: var(--text-primary);
-  transition: all 0.2s ease;
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
+
 .btn-install-header:hover {
-  background: color-mix(in srgb, var(--color-emerald) 10%, var(--bg-secondary));
-  color: var(--color-emerald);
-  border-color: transparent;
+  background: var(--color-emerald);
+  color: #ffffff;
+  border-color: var(--color-emerald);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-emerald) 40%, transparent);
+  transform: translateY(-1px);
 }
 
 .btn-icon {
@@ -1150,6 +1156,117 @@ a {
   align-items: center;
   gap: 4px;
 }
+
+/* === Task Modal Time Picker (tm-*) === */
+.tm-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  background: var(--bg-primary);
+  border: 1.5px solid var(--border-color);
+  border-radius: 10px;
+  overflow: hidden;
+  transition: border-color 0.2s ease;
+  width: 100%;
+}
+
+.tm-picker:focus-within {
+  border-color: var(--color-emerald);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-emerald) 15%, transparent);
+}
+
+.tm-select {
+  flex: 1;
+  min-width: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: inherit;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  padding: 10px 6px;
+  text-align: center;
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+}
+
+.tm-select:first-child {
+  padding-left: 12px;
+}
+
+.tm-colon {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--text-tertiary);
+  user-select: none;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.tm-ampm {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-emerald);
+  padding: 0 10px 0 4px;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+
+.tm-disabled {
+  background: var(--bg-tertiary);
+  color: var(--text-tertiary);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 0.85rem;
+  border: 1.5px dashed var(--border-color);
+}
+
+.tm-duration-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 0 2px;
+}
+
+.tm-duration-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: color-mix(in srgb, var(--color-emerald) 10%, var(--bg-secondary));
+  color: var(--color-emerald);
+  border: 1px solid color-mix(in srgb, var(--color-emerald) 25%, transparent);
+  border-radius: 100px;
+  padding: 5px 18px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.tm-recurring-row {
+  margin-top: 4px;
+}
+
+.tm-recurring-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.tm-recurring-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-emerald);
+  cursor: pointer;
+}
+
+
 
 /* Error Modal */
 .error-modal {
@@ -2962,32 +3079,24 @@ textarea.form-textarea {
 
 .timeline-prayer-marker {
   position: absolute;
-  left: -5px;
-  width: 10px;
-  height: 10px;
+  left: -12px;
+  width: 24px;
+  height: 24px;
   border-radius: var(--radius-full);
   background-color: var(--color-emerald);
   border: 2px solid var(--bg-secondary);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transform: translateY(-50%);
-  z-index: 4;
+  z-index: 10;
+  box-shadow: 0 2px 6px rgba(17, 94, 59, 0.3), 0 0 0 2px var(--bg-primary);
 }
 
-.timeline-prayer-marker::after {
-  content: '';
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  width: 28px;
-  height: 2px;
-  background: linear-gradient(
-    90deg,
-    var(--color-emerald),
-    color-mix(in srgb, var(--color-emerald) 30%, transparent)
-  );
-  border-radius: 1px;
-  transform: translateY(-50%);
-  opacity: 0.35;
-}
+
 
 .timeline-now-line {
   position: absolute;
@@ -3098,6 +3207,24 @@ textarea.form-textarea {
   font-variant-numeric: tabular-nums;
   flex-shrink: 0;
   letter-spacing: 0.01em;
+}
+
+.timeline-task-duration-badge {
+  display: inline-block;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  font-size: 0.55rem;
+  padding: 1px 5px;
+  border-radius: 100px;
+  margin-left: 6px;
+  font-weight: 700;
+  border: 1px solid var(--border-color);
+  line-height: 1.2;
+}
+
+[dir="rtl"] .timeline-task-duration-badge {
+  margin-left: 0;
+  margin-right: 6px;
 }
 
 .timeline-task-name {
@@ -3528,19 +3655,10 @@ textarea.form-textarea {
   }
 
   .timeline-prayer-marker {
-    width: 8px;
-    height: 8px;
-    left: -4px;
-  }
-
-  .timeline-prayer-marker::after {
-    left: 10px;
-    width: 16px;
-  }
-
-  [dir="rtl"] .timeline-prayer-marker::after {
-    left: auto;
-    right: 10px;
+    width: 20px;
+    height: 20px;
+    left: -10px;
+    font-size: 0.6rem;
   }
 
   .timeline-now-line::before {
@@ -4349,12 +4467,7 @@ textarea.form-textarea {
 
 [dir="rtl"] .timeline-prayer-marker {
   left: auto;
-  right: -5px;
-}
-
-[dir="rtl"] .timeline-prayer-marker::after {
-  left: auto;
-  right: 12px;
+  right: -12px;
 }
 
 [dir="rtl"] .timeline-now-line::before {
@@ -4652,132 +4765,193 @@ textarea.form-textarea {
   box-shadow: 0 0 0 3px rgba(17, 94, 59, 0.06), var(--shadow-md);
 }
 
-.study-add-area {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-.study-input-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 14px 20px 0;
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--text-tertiary);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.study-input-icon {
-  color: var(--color-emerald);
-  opacity: 0.6;
-}
-
-.study-input-label {
-  flex: 1;
-}
-
-.study-add-area .study-input {
-  width: 100%;
-  border: none;
-  border-radius: 0;
+/* === Note Composer (redesigned add-note section) === */
+.note-composer-card {
   background: var(--bg-secondary);
-  padding: 14px 20px;
-  font-size: 0.95rem;
-  resize: vertical;
-  outline: none;
-  line-height: 1.7;
-  color: var(--text-primary);
-  font-family: inherit;
-  min-height: 72px;
-  transition: background-color 0.2s ease;
+  border: 1px solid var(--border-color);
+  border-radius: 18px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06), 0 1px 4px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
 }
 
-.study-add-area .study-input:focus {
-  background: var(--bg-primary);
+.note-composer-card:focus-within {
+  border-color: var(--color-emerald);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-emerald) 12%, transparent),
+              0 8px 32px rgba(0, 0, 0, 0.10);
 }
 
-.study-add-area .study-input::placeholder {
-  color: var(--text-tertiary);
-  opacity: 0.7;
-}
-
-.study-input-meta {
-  display: flex;
-  justify-content: flex-end;
-  padding: 2px 20px 6px;
-  font-size: 0.65rem;
-  font-weight: 600;
-  color: var(--text-tertiary);
-  opacity: 0.5;
-  pointer-events: none;
-}
-
-.study-input-meta .study-input-count::before {
-  content: '';
-}
-
-.study-add-footer {
+/* Top bar: icon + title + date */
+.note-composer-top {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 18px 12px;
-  border-top: 1px solid var(--border-color);
-  background: var(--bg-primary);
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--border-color);
+  background: color-mix(in srgb, var(--color-emerald) 4%, var(--bg-secondary));
 }
 
-.study-period-select-wrap {
+.note-composer-icon-wrap {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--color-emerald) 15%, var(--bg-primary));
+  border: 1px solid color-mix(in srgb, var(--color-emerald) 25%, transparent);
   display: flex;
   align-items: center;
-  gap: 8px;
-  flex: 1;
+  justify-content: center;
+  color: var(--color-emerald);
+  flex-shrink: 0;
+}
+
+.note-composer-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
   min-width: 0;
 }
 
-.study-period-label {
-  font-size: 0.7rem;
+.note-composer-heading {
+  font-size: 0.9rem;
   font-weight: 700;
-  color: var(--text-tertiary);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  white-space: nowrap;
+  color: var(--text-primary);
+  line-height: 1.2;
 }
 
-.study-period-select {
+.note-composer-date {
+  font-size: 0.73rem;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+/* Textarea area */
+.note-composer-body {
+  padding: 16px 20px 8px;
+  background: var(--bg-secondary);
+}
+
+.note-composer-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: inherit;
+  font-size: 0.97rem;
+  line-height: 1.75;
+  color: var(--text-primary);
+  caret-color: var(--color-emerald);
+  min-height: 88px;
+}
+
+.note-composer-input::placeholder {
+  color: var(--text-tertiary);
+  opacity: 0.65;
+  font-style: italic;
+}
+
+/* Footer toolbar */
+.note-composer-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px 14px;
+  border-top: 1px solid var(--border-color);
+  background: color-mix(in srgb, var(--bg-primary) 60%, var(--bg-secondary));
+}
+
+.note-composer-footer-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   flex: 1;
   min-width: 0;
-  padding: 7px 10px;
+}
+
+.note-composer-period-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
-  border: 1.5px solid var(--border-color);
-  background: var(--bg-secondary);
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--text-primary);
+  padding: 5px 10px 5px 8px;
+  flex: 1;
+  min-width: 0;
+  max-width: 280px;
+}
+
+.note-composer-clock-icon {
+  color: var(--color-emerald);
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
+.note-composer-period-select {
+  background: transparent;
+  border: none;
   outline: none;
-  cursor: pointer;
-  transition: border-color 0.2s ease;
   font-family: inherit;
+  font-size: 0.79rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  flex: 1;
+  min-width: 0;
   appearance: auto;
 }
 
-.study-period-select:focus {
-  border-color: var(--color-emerald);
+.note-composer-char-count {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  opacity: 0.6;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 100px;
+  padding: 2px 8px;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
 }
 
-.study-add-btn {
-  flex-shrink: 0;
-  height: 38px;
-  padding: 0 18px;
-  border-radius: 10px;
-  font-size: 0.82rem;
-  font-weight: 700;
-  white-space: nowrap;
+.note-composer-submit {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  height: 36px;
+  padding: 0 18px;
+  border-radius: 100px;
+  border: none;
+  background: var(--color-emerald);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.83rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--color-emerald) 35%, transparent);
+  font-family: inherit;
+  white-space: nowrap;
 }
+
+.note-composer-submit:hover:not(:disabled) {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--color-emerald) 45%, transparent);
+}
+
+.note-composer-submit:active:not(:disabled) {
+  transform: translateY(0);
+  filter: brightness(0.95);
+}
+
+.note-composer-submit:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Keep old classes working for remaining uses */
 
 /* === Divider === */
 .journal-section-divider {
