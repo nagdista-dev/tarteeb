@@ -976,27 +976,27 @@ function App() {
     lines.push('');
 
     // Daily Overview
-    lines.push('## 🌅 Daily Overview');
+    lines.push('## 🌅 ' + t('export.dailyOverview'));
     lines.push('');
-    lines.push('> [!abstract]+ Day at a Glance');
-    lines.push(`> - **Tasks**: ${completed}/${total} (${overallPct}%)`);
-    lines.push(`> - **Fixed Tasks**: ${fixedPct}% | **Personal**: ${personalPct}%`);
-    lines.push(`> - **Prayers on Time**: ${onTime}/5`);
-    lines.push(`> - **Current Streak**: ${streak} days`);
+    lines.push('> [!abstract]+ ' + t('export.dayAtGlance'));
+    lines.push(`> - **${t('export.tasks')}**: ${completed}/${total} (${overallPct}%)`);
+    lines.push(`> - **${t('export.fixedTasks')}**: ${fixedPct}% | **${t('export.personalTasks')}**: ${personalPct}%`);
+    lines.push(`> - **${t('export.prayersOnTime')}**: ${onTime}/5`);
+    lines.push(`> - **${t('export.streak')}**: ${streak} ${lang === 'ar' ? 'أيام' : 'days'}`);
     if (mood) {
       const emoji = MOOD_EMOJIS[mood] || '';
       const moodLabel = t('mood.' + mood);
-      lines.push(`> - **Mood**: ${emoji} ${moodLabel}`);
+      lines.push(`> - **${t('mood.title')}**: ${emoji} ${moodLabel}`);
     }
     lines.push('');
 
     // Prayer Times
     lines.push('---');
     lines.push('');
-    lines.push('## 🕌 Prayer Times');
+    lines.push('## 🕌 ' + t('export.prayerTimes'));
     lines.push('');
-    lines.push('| Prayer | Time | Status |');
-    lines.push('|--------|:----:|--------|');
+    lines.push('| ' + t('export.prayer') + ' | ' + t('export.time') + ' | ' + t('export.status') + ' |');
+    lines.push('|' + (lang === 'ar' ? ':----|:----:|:----:' : '--------|:----:|--------') + '|');
     prayerOrder.forEach(pk => {
       const time = prayerTimes?.[pk] || '—';
       const status = todayTrack[pk] || 'pending';
@@ -1010,11 +1010,11 @@ function App() {
     // Tasks
     lines.push('---');
     lines.push('');
-    lines.push('## ✅ Tasks');
+    lines.push('## ✅ ' + t('export.tasks'));
     lines.push('');
 
     if (completedTasks.length > 0) {
-      lines.push('> [!check]- Completed Tasks');
+      lines.push('> [!check]- ' + t('export.completedTasks'));
       lines.push('>');
       completedTasks.forEach(t => {
         const time = getTaskDisplayTime(t, prayerTimes);
@@ -1028,7 +1028,7 @@ function App() {
     }
 
     if (pendingTasks.length > 0) {
-      lines.push('> [!todo]- Remaining Tasks');
+      lines.push('> [!todo]- ' + t('export.remainingTasks'));
       lines.push('>');
       pendingTasks.forEach(t => {
         const time = getTaskDisplayTime(t, prayerTimes);
@@ -1051,10 +1051,10 @@ function App() {
       }).filter(Boolean);
 
       if (periodStats.length > 0) {
-        lines.push('> [!summary]- Task Breakdown by Period');
+        lines.push('> [!summary]- ' + t('export.taskBreakdown'));
         lines.push('>');
-        lines.push('> | Period | Done/Total | Progress |');
-        lines.push('> |--------|:----------:|:--------:|');
+        lines.push('> | ' + t('export.period') + ' | ' + t('export.doneTotal') + ' | ' + t('export.progress') + ' |');
+        lines.push('> |' + (lang === 'ar' ? ':----|:----------:|:--------:' : '--------|:----------:|:--------:') + '|');
         periodStats.forEach(ps => {
           const bar = '█'.repeat(Math.round(ps.pct / 10)) + '░'.repeat(10 - Math.round(ps.pct / 10));
           lines.push(`> | ${ps.name} | ${ps.done}/${ps.total} | ${bar} ${ps.pct}% |`);
@@ -1067,17 +1067,17 @@ function App() {
     if (notes.length > 0) {
       lines.push('---');
       lines.push('');
-      lines.push('## 📝 Study Notes');
+      lines.push('## 📝 ' + t('journal.studyNotes'));
       lines.push('');
       PLANNER_PERIOD_ORDER.forEach(pk => {
         const pn = notes.filter(n => n.period === pk).sort((a, b) => (a.time || '').localeCompare(b.time || ''));
         if (pn.length === 0) return;
         const meta = PERIODS_META[pk];
-        lines.push(`### ${t('period.' + pk)} — ${meta?.range || ''}`);
+        lines.push('### ' + t('period.' + pk) + ' — ' + (meta?.range || ''));
         lines.push('');
         pn.forEach(n => {
-          const tl = n.time ? `\`${n.time}\` ` : '';
-          lines.push(`- ${tl}${n.text}`);
+          const tl = n.time ? '`' + n.time + '` ' : '';
+          lines.push('- ' + tl + n.text);
         });
         lines.push('');
       });
@@ -1087,17 +1087,17 @@ function App() {
     if (todayHabits.length > 0) {
       lines.push('---');
       lines.push('');
-      lines.push('## 🏆 Habits');
+      lines.push('## 🏆 ' + t('habits.title'));
       lines.push('');
-      lines.push('> [!example]+ Today\'s Habits');
+      lines.push('> [!example]+ ' + t('export.todaysHabits'));
       lines.push('>');
       todayHabits.forEach(h => {
         const done = h.entries?.[date]?.completed;
-        lines.push(`> - ${done ? '✅' : '❌'} **${h.name}**`);
+        lines.push('> - ' + (done ? '✅' : '❌') + ' **' + h.name + '**');
       });
       if (completedHabits > 0) {
         lines.push('>');
-        lines.push(`> _${completedHabits}/${todayHabits.length} habits completed_`);
+        lines.push('> _' + completedHabits + '/' + todayHabits.length + ' ' + t('export.habitsDone') + '_');
       }
       lines.push('');
     }
@@ -1106,9 +1106,9 @@ function App() {
     if (diary) {
       lines.push('---');
       lines.push('');
-      lines.push('## 📓 Journal');
+      lines.push('## 📓 ' + (lang === 'ar' ? 'المذكرات' : 'Journal'));
       lines.push('');
-      lines.push('> [!quote] Daily Reflection');
+      lines.push('> [!quote] ' + t('export.dailyReflection'));
       lines.push('>');
       diary.split('\n').forEach(l => lines.push('> ' + l));
       lines.push('');
@@ -1117,23 +1117,23 @@ function App() {
     // Summary
     lines.push('---');
     lines.push('');
-    lines.push('## 📊 Summary');
+    lines.push('## 📊 ' + t('export.summary'));
     lines.push('');
-    lines.push('| Metric | Value |');
-    lines.push('|--------|:-----:|');
-    lines.push(`| Tasks Completed | ${completed}/${total} (${overallPct}%) |`);
-    lines.push(`| Fixed Tasks | ${fixedPct}% |`);
-    lines.push(`| Personal Tasks | ${personalPct}% |`);
-    lines.push(`| Prayers on Time | ${onTime}/5 |`);
-    if (todayHabits.length > 0) lines.push(`| Habits Done | ${completedHabits}/${todayHabits.length} |`);
-    if (notes.length > 0) lines.push(`| Study Notes | ${notes.length} |`);
-    lines.push(`| Streak | ${streak} days |`);
+    lines.push('| ' + t('export.metric') + ' | ' + t('export.value') + ' |');
+    lines.push('|' + (lang === 'ar' ? ':----|:-----:' : '--------|:-----:') + '|');
+    lines.push('| ' + t('export.tasksCompleted') + ' | ' + completed + '/' + total + ' (' + overallPct + '%) |');
+    lines.push('| ' + t('export.fixedTasks') + ' | ' + fixedPct + '% |');
+    lines.push('| ' + t('export.personalTasks') + ' | ' + personalPct + '% |');
+    lines.push('| ' + t('export.prayersOnTime') + ' | ' + onTime + '/5 |');
+    if (todayHabits.length > 0) lines.push('| ' + t('export.habitsDone') + ' | ' + completedHabits + '/' + todayHabits.length + ' |');
+    if (notes.length > 0) lines.push('| ' + t('journal.studyNotes') + ' | ' + notes.length + ' |');
+    lines.push('| ' + t('export.streak') + ' | ' + streak + ' ' + (lang === 'ar' ? 'أيام' : 'days') + ' |');
     if (mood) {
-      lines.push(`| Mood | ${MOOD_EMOJIS[mood] || ''} ${t('mood.' + mood)} |`);
+      lines.push('| ' + t('mood.title') + ' | ' + (MOOD_EMOJIS[mood] || '') + ' ' + t('mood.' + mood) + ' |');
     }
     lines.push('');
     lines.push('---');
-    lines.push(`_Exported from Tarteeb Muslim Daily Planner_`);
+    lines.push('_' + t('export.exportedFrom') + '_');
     lines.push('');
 
     const blob = new Blob([lines.join('\n')], { type: 'text/markdown' });
