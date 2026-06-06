@@ -2504,12 +2504,18 @@ function App() {
                   <select className="form-select" value={taskForm.period} onChange={e => {
                     const period = e.target.value;
                     const excludeId = taskModal.task?.id;
+                    const prayers = dayData?.prayerTimes;
+                    if (!prayers) return;
                     const nowMin = taskModal.mode === 'add' ? getCurrentPlannerMinutes(currentTime, activeDate) : null;
-                    const slots = dayData ? getAvailableStartSlots(period, dayData.tasks, dayData.prayerTimes, excludeId, nowMin) : [];
+                    const slots = dayData ? getAvailableStartSlots(period, dayData.tasks, prayers, excludeId, nowMin) : [];
                     const firstStart = slots.length > 0 ? formatMinutesToTime(slots[0]) : '00:00';
-                    const firstStartMin = scheduledTimeToPlannerMinutes(firstStart, period, dayData.prayerTimes);
-                    const endSlots = dayData ? getAvailableEndSlots(period, dayData.tasks, dayData.prayerTimes, firstStartMin, excludeId) : [];
-                    const endTime = endSlots.length > 0 ? formatMinutesToTime(endSlots[0]) : formatMinutesToTime(firstStartMin + 15);
+                    const firstStartMin = scheduledTimeToPlannerMinutes(firstStart, period, prayers);
+                    const endSlotsArr = dayData ? getAvailableEndSlots(period, dayData.tasks, prayers, firstStartMin, excludeId) : [];
+                    const curEndParsed = parseTimeToMinutes(taskForm.endTime);
+                    const curEndNorm = curEndParsed < (firstStartMin % 1440) ? curEndParsed + 1440 : curEndParsed;
+                    const endTime = endSlotsArr.includes(curEndNorm)
+                      ? taskForm.endTime
+                      : endSlotsArr.length > 0 ? formatMinutesToTime(endSlotsArr[0]) : formatMinutesToTime(firstStartMin + 15);
                     setTaskForm(prev => ({ ...prev, period, scheduledTime: firstStart, endTime }));
                   }}>
                     {PLANNER_PERIOD_ORDER.map(key => (
@@ -2544,10 +2550,14 @@ function App() {
                               const minsForHour = allMinutes.filter(m => Math.floor(m / 60) === h).map(m => m % 60);
                               const m = minsForHour.includes(validMin) ? validMin : minsForHour[0];
                               const newStart = formatMinutesToTime(h * 60 + m);
-                              const startMin = scheduledTimeToPlannerMinutes(newStart, taskForm.period, prayers);
-                              const endSlots = getAvailableEndSlots(taskForm.period, dayData.tasks, prayers, startMin, taskModal.task?.id);
-                              const endTime = endSlots.length > 0 ? formatMinutesToTime(endSlots[0]) : formatMinutesToTime(startMin + 15);
-                              setTaskForm(prev => ({ ...prev, scheduledTime: newStart, endTime }));
+                              const newStartMin = scheduledTimeToPlannerMinutes(newStart, taskForm.period, prayers);
+                              const endSlotsArr = getAvailableEndSlots(taskForm.period, dayData.tasks, prayers, newStartMin, taskModal.task?.id);
+                              const curEndParsed = parseTimeToMinutes(taskForm.endTime);
+                              const curEndNorm = curEndParsed < (newStartMin % 1440) ? curEndParsed + 1440 : curEndParsed;
+                              const newEndTime = endSlotsArr.includes(curEndNorm)
+                                ? taskForm.endTime
+                                : endSlotsArr.length > 0 ? formatMinutesToTime(endSlotsArr[0]) : formatMinutesToTime(newStartMin + 15);
+                              setTaskForm(prev => ({ ...prev, scheduledTime: newStart, endTime: newEndTime }));
                             }}
                           >
                             {allHours.map(h => (
@@ -2560,10 +2570,14 @@ function App() {
                             onChange={e => {
                               const m = Number(e.target.value);
                               const newStart = formatMinutesToTime(validHour * 60 + m);
-                              const startMin = scheduledTimeToPlannerMinutes(newStart, taskForm.period, prayers);
-                              const endSlots = getAvailableEndSlots(taskForm.period, dayData.tasks, prayers, startMin, taskModal.task?.id);
-                              const endTime = endSlots.length > 0 ? formatMinutesToTime(endSlots[0]) : formatMinutesToTime(startMin + 15);
-                              setTaskForm(prev => ({ ...prev, scheduledTime: newStart, endTime }));
+                              const newStartMin = scheduledTimeToPlannerMinutes(newStart, taskForm.period, prayers);
+                              const endSlotsArr = getAvailableEndSlots(taskForm.period, dayData.tasks, prayers, newStartMin, taskModal.task?.id);
+                              const curEndParsed = parseTimeToMinutes(taskForm.endTime);
+                              const curEndNorm = curEndParsed < (newStartMin % 1440) ? curEndParsed + 1440 : curEndParsed;
+                              const newEndTime = endSlotsArr.includes(curEndNorm)
+                                ? taskForm.endTime
+                                : endSlotsArr.length > 0 ? formatMinutesToTime(endSlotsArr[0]) : formatMinutesToTime(newStartMin + 15);
+                              setTaskForm(prev => ({ ...prev, scheduledTime: newStart, endTime: newEndTime }));
                             }}
                           >
                             {validMinsForHour.map(m => (
