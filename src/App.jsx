@@ -1356,7 +1356,9 @@ function App() {
                   className="timeline-prayer-marker"
                   style={{ top: `${toPercent(marker.minutes)}%` }}
                   aria-label={`${t('prayer.' + marker.prayer.toLowerCase())} ${t('prayer.boundary')}`}
-                />
+                >
+                  <span className="timeline-prayer-label">{t('prayer.' + marker.prayer.toLowerCase())}</span>
+                </div>
               ))}
 
               {sortedTasks.map((task) => {

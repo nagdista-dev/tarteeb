@@ -2989,6 +2989,19 @@ textarea.form-textarea {
   opacity: 0.35;
 }
 
+.timeline-prayer-label {
+  position: absolute;
+  left: 44px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--color-emerald);
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+}
+
 .timeline-now-line {
   position: absolute;
   left: 0;
@@ -3533,6 +3546,16 @@ textarea.form-textarea {
   [dir="rtl"] .timeline-prayer-marker::after {
     left: auto;
     right: 10px;
+  }
+
+  .timeline-prayer-label {
+    left: 30px;
+    font-size: 0.55rem;
+  }
+
+  [dir="rtl"] .timeline-prayer-label {
+    left: auto;
+    right: 30px;
   }
 
   .timeline-now-line::before {
@@ -4338,6 +4361,11 @@ textarea.form-textarea {
 [dir="rtl"] .timeline-prayer-marker::after {
   left: auto;
   right: 12px;
+}
+
+[dir="rtl"] .timeline-prayer-label {
+  left: auto;
+  right: 44px;
 }
 
 [dir="rtl"] .timeline-now-line::before {
