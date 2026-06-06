@@ -3029,103 +3029,110 @@ textarea.form-textarea {
 
 .timeline-task-card {
   position: absolute;
-  left: 12px;
+  left: 8px;
   right: 10px;
   z-index: 6;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 0 10px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-left: 3px solid var(--color-teal);
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  background: color-mix(in srgb, var(--color-teal) 6%, var(--bg-secondary));
+  border-radius: 6px;
   cursor: pointer;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition: opacity 0.15s, background 0.15s;
   overflow: hidden;
   animation: taskRise 0.28s ease both;
 }
 
 .timeline-task-card:hover {
-  border-color: var(--text-secondary);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  background: color-mix(in srgb, var(--color-teal) 12%, var(--bg-secondary));
   z-index: 8;
 }
 
 .timeline-task-card.task-fixed {
-  border-left-color: var(--color-emerald);
+  background: color-mix(in srgb, var(--color-emerald) 6%, var(--bg-secondary));
   cursor: default;
 }
 
-.timeline-task-card.task-recurring {
-  border-left-color: var(--color-gold);
+.timeline-task-card.task-fixed:hover {
+  background: color-mix(in srgb, var(--color-emerald) 12%, var(--bg-secondary));
 }
 
-.timeline-task-card.task-personal {
-  border-left-color: var(--color-teal);
+.timeline-task-card.task-recurring {
+  background: color-mix(in srgb, var(--color-gold) 6%, var(--bg-secondary));
+}
+
+.timeline-task-card.task-recurring:hover {
+  background: color-mix(in srgb, var(--color-gold) 12%, var(--bg-secondary));
 }
 
 .timeline-task-card.completed {
-  opacity: 0.45;
+  opacity: 0.3;
 }
 
 .timeline-task-card.completed:hover {
-  opacity: 0.6;
+  opacity: 0.5;
 }
 
-.timeline-task-card .task-checkbox {
+.timeline-task-bar {
   flex-shrink: 0;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  border: 2px solid var(--border-color);
-  background: var(--bg-primary);
+  width: 3px;
+  align-self: stretch;
+  background: var(--color-teal);
+  border-radius: 2px 0 0 2px;
+}
+
+.task-fixed .timeline-task-bar {
+  background: var(--color-emerald);
+}
+
+.task-recurring .timeline-task-bar {
+  background: var(--color-gold);
+}
+
+.timeline-task-card.completed .timeline-task-bar {
+  opacity: 0.4;
+}
+
+.timeline-task-body {
+  flex: 1;
   display: flex;
   align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.15s;
-  padding: 0;
-  margin: 0;
-  color: #fff;
-}
-
-.timeline-task-card .task-checkbox:hover {
-  border-color: var(--color-emerald);
-}
-
-.timeline-task-card .task-checkbox.checked {
-  background: var(--color-emerald);
-  border-color: var(--color-emerald);
-}
-
-.timeline-task-card.task-personal .task-checkbox.checked {
-  background: var(--color-teal);
-  border-color: var(--color-teal);
-}
-
-.timeline-task-card.task-recurring .task-checkbox.checked {
-  background: var(--color-gold);
-  border-color: var(--color-gold);
-}
-
-.timeline-task-info {
-  display: flex;
-  flex-direction: column;
+  justify-content: space-between;
+  padding: 1px 8px;
   min-width: 0;
-  gap: 0;
-  padding: 4px 0;
+  gap: 6px;
+}
+
+.timeline-task-time {
+  font-size: 0.58rem;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+  letter-spacing: 0.01em;
 }
 
 .timeline-task-name {
+  font-size: 0.72rem;
   font-weight: 600;
   color: var(--text-primary);
-  font-size: 0.78rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  line-height: 1.3;
+  text-align: end;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.task-fixed .timeline-task-name {
+  cursor: default;
+}
+
+.timeline-task-name:hover {
+  color: var(--color-emerald);
+}
+
+.task-fixed .timeline-task-name:hover {
+  color: var(--text-primary);
 }
 
 .timeline-task-card.completed .timeline-task-name {
@@ -3133,25 +3140,8 @@ textarea.form-textarea {
   opacity: 0.55;
 }
 
-.timeline-task-meta {
-  font-size: 0.6rem;
-  font-weight: 600;
-  color: var(--text-tertiary);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  line-height: 1.3;
-}
-
-.timeline-task-card.completed .timeline-task-meta {
+.timeline-task-card.completed .timeline-task-time {
   opacity: 0.5;
-}
-
-.timeline-task-card.prayer-bg-night {
-}
-
-.timeline-task-card.prayer-bg-day {
 }
 
 .fixed-task-note {
@@ -3581,23 +3571,20 @@ textarea.form-textarea {
   }
 
   .timeline-task-card {
-    left: 8px;
+    left: 6px;
     right: 8px;
-    padding: 0 8px;
-    gap: 6px;
   }
 
-  .timeline-task-card .task-checkbox {
-    width: 16px;
-    height: 16px;
+  .timeline-task-body {
+    padding: 1px 6px;
+  }
+
+  .timeline-task-time {
+    font-size: 0.52rem;
   }
 
   .timeline-task-name {
-    font-size: 0.72rem;
-  }
-
-  .timeline-task-meta {
-    font-size: 0.55rem;
+    font-size: 0.65rem;
   }
 
   .day-planner-body {
@@ -4403,21 +4390,19 @@ textarea.form-textarea {
 
 [dir="rtl"] .timeline-task-card {
   left: 10px;
-  right: 12px;
-  border-left: none;
-  border-right: 3px solid var(--color-teal);
+  right: 8px;
 }
 
-[dir="rtl"] .timeline-task-card.task-fixed {
-  border-right-color: var(--color-emerald);
+[dir="rtl"] .timeline-task-bar {
+  border-radius: 0 2px 2px 0;
 }
 
-[dir="rtl"] .timeline-task-card.task-recurring {
-  border-right-color: var(--color-gold);
+[dir="rtl"] .timeline-task-body {
+  flex-direction: row-reverse;
 }
 
-[dir="rtl"] .timeline-task-card.task-personal {
-  border-right-color: var(--color-teal);
+[dir="rtl"] .timeline-task-name {
+  text-align: start;
 }
 
 [dir="rtl"] .block-task-card {

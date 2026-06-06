@@ -1370,31 +1370,24 @@ function App() {
 
                 const isAdhkar = task.name.includes('Adhkar');
                 const taskEnd = taskStart + duration;
-                const prayerBg = (
-                  task.name === 'Maghrib Prayer' || task.name === 'Isha Prayer'
-                ) ? 'prayer-bg-night' : (
-                  task.name === 'Fajr Prayer' || task.name === 'Dhuhr Prayer' || task.name === 'Asr Prayer'
-                ) ? 'prayer-bg-day' : '';
                 return (
                   <div
                     key={task.id}
-                    className={`timeline-task-card task-${task.type}${isAdhkar ? ' task-adhkar' : ''} ${prayerBg} ${task.completed ? 'completed' : ''}`}
+                    className={`timeline-task-card task-${task.type}${isAdhkar ? ' task-adhkar' : ''} ${task.completed ? 'completed' : ''}`}
                     style={{ top: `${top}%`, height: `${heightPct}%` }}
-                    onClick={() => { if (task.type !== 'fixed') openTaskModal('edit', task); }}
+                    onClick={() => toggleTaskCompletion(task.id)}
+                    onContextMenu={e => { e.preventDefault(); if (task.type !== 'fixed') openTaskModal('edit', task); }}
                   >
-                    <button
-                      type="button"
-                      className={`task-checkbox ${task.completed ? 'checked' : ''}`}
-                      onClick={e => { e.stopPropagation(); toggleTaskCompletion(task.id); }}
-                      aria-label={task.completed ? t('task.markIncomplete') : t('task.markComplete')}
-                    >
-                      {task.completed && <Check size={10} />}
-                    </button>
-                    <div className="timeline-task-info">
-                      <span className="timeline-task-name">{translateTaskName(task.name)}</span>
-                      <span className="timeline-task-meta">
-                        {getTaskDisplayTime(task, prayers)} – {formatMinutesToTime(taskEnd)}
-                        {task.type !== 'fixed' && <> · {translateDuration(duration)}</>}
+                    <div className="timeline-task-bar" />
+                    <div className="timeline-task-body">
+                      <span className="timeline-task-time">
+                        {getTaskDisplayTime(task, prayers)}–{formatMinutesToTime(taskEnd)}
+                      </span>
+                      <span
+                        className="timeline-task-name"
+                        onClick={e => { e.stopPropagation(); if (task.type !== 'fixed') openTaskModal('edit', task); }}
+                      >
+                        {translateTaskName(task.name)}
                       </span>
                     </div>
                   </div>
