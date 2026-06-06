@@ -2022,7 +2022,7 @@ function App() {
                   <h2 className="guide-title">{t('guide.title')}</h2>
                   <p className="guide-subtitle">{t('guide.subtitle')}</p>
                   <div className="guide-steps-badge">
-                    <span>7 {t('guide.steps')}</span>
+                    <span>8 {t('guide.steps')}</span>
                   </div>
                 </div>
                 <div className="guide-sections">
@@ -2060,6 +2060,14 @@ function App() {
                   </div>
                   <div className="guide-card" style={{ '--card-accent': 'var(--color-gold)' }}>
                     <div className="guide-card-step">05</div>
+                    <div className="guide-card-icon-wrap"><Activity size={22} /></div>
+                    <div className="guide-card-content">
+                      <h3 className="guide-card-title">{t('guide.history')}</h3>
+                      <p className="guide-card-desc">{t('guide.historyDesc')}</p>
+                    </div>
+                  </div>
+                  <div className="guide-card" style={{ '--card-accent': 'var(--color-gold)' }}>
+                    <div className="guide-card-step">06</div>
                     <div className="guide-card-icon-wrap"><Settings size={22} /></div>
                     <div className="guide-card-content">
                       <h3 className="guide-card-title">{t('guide.settings')}</h3>
@@ -2067,7 +2075,7 @@ function App() {
                     </div>
                   </div>
                   <div className="guide-card" style={{ '--card-accent': 'var(--color-emerald)' }}>
-                    <div className="guide-card-step">06</div>
+                    <div className="guide-card-step">07</div>
                     <div className="guide-card-icon-wrap"><Download size={22} /></div>
                     <div className="guide-card-content">
                       <h3 className="guide-card-title">{t('guide.export')}</h3>
@@ -2075,7 +2083,7 @@ function App() {
                     </div>
                   </div>
                   <div className="guide-card" style={{ '--card-accent': 'var(--color-teal)' }}>
-                    <div className="guide-card-step">07</div>
+                    <div className="guide-card-step">08</div>
                     <div className="guide-card-icon-wrap"><Sun size={22} /></div>
                     <div className="guide-card-content">
                       <h3 className="guide-card-title">{t('guide.theme')}</h3>

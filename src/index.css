@@ -205,12 +205,15 @@ a {
   height: 36px;
   padding: 0;
   border-radius: 50%;
-  color: var(--text-secondary);
+  border-color: transparent;
+  background: transparent;
+  color: var(--text-primary);
   transition: all 0.2s ease;
 }
 .btn-menu-mobile:hover {
-  background: color-mix(in srgb, var(--color-emerald) 12%, transparent);
+  background: color-mix(in srgb, var(--color-emerald) 10%, var(--bg-secondary));
   color: var(--color-emerald);
+  border-color: transparent;
 }
 
 .btn-install-header {
@@ -221,12 +224,15 @@ a {
   height: 36px;
   padding: 0;
   border-radius: 50%;
-  color: var(--text-secondary);
+  border-color: transparent;
+  background: transparent;
+  color: var(--text-primary);
   transition: all 0.2s ease;
 }
 .btn-install-header:hover {
-  background: color-mix(in srgb, var(--color-emerald) 12%, transparent);
+  background: color-mix(in srgb, var(--color-emerald) 10%, var(--bg-secondary));
   color: var(--color-emerald);
+  border-color: transparent;
 }
 
 /* Floating Action Button */
