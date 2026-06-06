@@ -2538,8 +2538,7 @@ function App() {
                       const curHour = Math.floor(curParsed / 60);
                       const curMin = Math.floor(curParsed % 60);
                       const validHour = allHours.includes(curHour) ? curHour : allHours[0];
-                      const validMinsForHour = allMinutes.filter(m => Math.floor(m / 60) === validHour).map(m => m % 60).sort((a, b) => a - b);
-                      const validMin = validMinsForHour.includes(curMin) ? curMin : validMinsForHour[0];
+                      const validMin = Math.min(59, Math.max(0, curMin));
                       const use12 = getUse12h();
                       return (
                         <div className="time-select-row">
@@ -2547,9 +2546,7 @@ function App() {
                             value={validHour}
                             onChange={e => {
                               const h = Number(e.target.value);
-                              const minsForHour = allMinutes.filter(m => Math.floor(m / 60) === h).map(m => m % 60);
-                              const m = minsForHour.includes(validMin) ? validMin : minsForHour[0];
-                              const newStart = formatMinutesToTime(h * 60 + m);
+                              const newStart = formatMinutesToTime(h * 60 + validMin);
                               const newStartMin = scheduledTimeToPlannerMinutes(newStart, taskForm.period, prayers);
                               const endSlotsArr = getAvailableEndSlots(taskForm.period, dayData.tasks, prayers, newStartMin, taskModal.task?.id);
                               const curEndParsed = parseTimeToMinutes(taskForm.endTime);
@@ -2580,7 +2577,7 @@ function App() {
                               setTaskForm(prev => ({ ...prev, scheduledTime: newStart, endTime: newEndTime }));
                             }}
                           >
-                            {validMinsForHour.map(m => (
+                            {Array.from({length: 60}, (_, i) => i).map(m => (
                               <option key={m} value={m}>{String(m).padStart(2, '0')}</option>
                             ))}
                           </select>
