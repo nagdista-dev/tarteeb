@@ -1380,33 +1380,23 @@ function App() {
                     key={task.id}
                     className={`timeline-task-card task-${task.type}${isAdhkar ? ' task-adhkar' : ''} ${prayerBg} ${task.completed ? 'completed' : ''}`}
                     style={{ top: `${top}%`, height: `${heightPct}%` }}
+                    onClick={() => { if (task.type !== 'fixed') openTaskModal('edit', task); }}
                   >
                     <button
                       type="button"
-                      className={`task-checkbox block-task-check ${task.completed ? 'checked' : ''}`}
-                      onClick={() => toggleTaskCompletion(task.id)}
+                      className={`task-checkbox ${task.completed ? 'checked' : ''}`}
+                      onClick={e => { e.stopPropagation(); toggleTaskCompletion(task.id); }}
                       aria-label={task.completed ? t('task.markIncomplete') : t('task.markComplete')}
                     >
-                      {task.completed && <Check size={12} />}
+                      {task.completed && <Check size={10} />}
                     </button>
-                      <div className="block-task-main">
-                        <div className="block-task-topline">
-                          <span className="block-task-time">{getTaskDisplayTime(task, prayers)}</span>
-                          <span className="block-task-endtime">– {formatMinutesToTime(taskEnd)}</span>
-                          <span className="block-task-name">{translateTaskName(task.name)}</span>
-                          <span className="block-task-duration">{translateDuration(duration)}</span>
-                        </div>
-                      </div>
-                    {task.type !== 'fixed' && (
-                      <div className="block-task-actions">
-                        <button type="button" className="btn-task-action" onClick={() => openTaskModal('edit', task)} aria-label={t('task.edit')}>
-                          <Edit2 size={12} />
-                        </button>
-                        <button type="button" className="btn-task-action delete" onClick={() => deleteTask(task.id)} aria-label={t('task.deleteAria')}>
-                          <Trash2 size={12} />
-                        </button>
-                      </div>
-                    )}
+                    <div className="timeline-task-info">
+                      <span className="timeline-task-name">{translateTaskName(task.name)}</span>
+                      <span className="timeline-task-meta">
+                        {getTaskDisplayTime(task, prayers)} – {formatMinutesToTime(taskEnd)}
+                        {task.type !== 'fixed' && <> · {translateDuration(duration)}</>}
+                      </span>
+                    </div>
                   </div>
                 );
               })}
