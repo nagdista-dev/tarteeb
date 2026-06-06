@@ -197,44 +197,6 @@ a {
   gap: 6px;
 }
 
-.btn-menu-mobile {
-  display: none;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  border-radius: 50%;
-  border-color: transparent;
-  background: transparent;
-  color: var(--text-primary);
-  transition: all 0.2s ease;
-}
-.btn-menu-mobile:hover {
-  background: color-mix(in srgb, var(--color-emerald) 10%, var(--bg-secondary));
-  color: var(--color-emerald);
-  border-color: transparent;
-}
-
-.btn-install-header {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  border-radius: 50%;
-  border-color: transparent;
-  background: transparent;
-  color: var(--text-primary);
-  transition: all 0.2s ease;
-}
-.btn-install-header:hover {
-  background: color-mix(in srgb, var(--color-emerald) 10%, var(--bg-secondary));
-  color: var(--color-emerald);
-  border-color: transparent;
-}
-
 /* Floating Action Button */
 .fab-add-task {
   position: fixed;
@@ -379,6 +341,44 @@ a {
   color: #ffffff;
   box-shadow: 0 2px 6px rgba(17, 94, 59, 0.25);
   transform: translateY(-1px);
+}
+
+.btn-menu-mobile {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 50%;
+  border-color: transparent;
+  background: transparent;
+  color: var(--text-primary);
+  transition: all 0.2s ease;
+}
+.btn-menu-mobile:hover {
+  background: color-mix(in srgb, var(--color-emerald) 10%, var(--bg-secondary));
+  color: var(--color-emerald);
+  border-color: transparent;
+}
+
+.btn-install-header {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 50%;
+  border-color: transparent;
+  background: transparent;
+  color: var(--text-primary);
+  transition: all 0.2s ease;
+}
+.btn-install-header:hover {
+  background: color-mix(in srgb, var(--color-emerald) 10%, var(--bg-secondary));
+  color: var(--color-emerald);
+  border-color: transparent;
 }
 
 .btn-icon {
