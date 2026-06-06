@@ -1619,7 +1619,7 @@ function App() {
           )}
         </div>
 
-        {/* Study Notes */}
+        {/* Notes */}
         {hasNotes && (
           <div className="pulse-card">
             <div className="pulse-card-header">
@@ -1667,11 +1667,9 @@ function App() {
             </h1>
           </div>
         <div className="header-actions">
-          {installable && (
             <button className="btn btn-install btn-install-header" onClick={handleInstall} title={t('nav.install')}>
               <Smartphone size={16} />
             </button>
-          )}
           <button className="btn btn-menu-mobile" onClick={() => setSidebarOpen(true)} aria-label={t('nav.openSidebar')}>
             <Menu size={18} />
           </button>

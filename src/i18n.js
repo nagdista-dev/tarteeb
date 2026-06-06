@@ -9,7 +9,7 @@ const en = {
   /* Navigation */
   'nav.home': 'Home',
   'nav.overview': 'Overview',
-  'nav.journal': 'Journal',
+  'nav.journal': 'Notes',
   'nav.tasks': 'Tasks',
   'nav.history': 'History',
   'nav.settings': 'Settings',
@@ -107,14 +107,14 @@ const en = {
   'prevDay.title': 'Previous Day',
 
   /* Journal page */
-  'journal.title': 'Study Notes',
-  'journal.studyNotes': 'Study Notes',
+  'journal.title': 'Notes',
+  'journal.studyNotes': 'Notes',
   'journal.newNote': 'New Note',
   'journal.addNote': 'Add Note',
-  'journal.studyPlaceholder': 'Write your study note...',
+  'journal.studyPlaceholder': 'Write your note...',
   'journal.period': 'Period',
   'journal.allNotes': 'All Notes',
-  'journal.noNotes': 'No study notes yet. Write your first note above.',
+  'journal.noNotes': 'No notes yet. Write your first note above.',
 
   /* History page */
   'history.title': 'History Log',
@@ -283,8 +283,8 @@ const en = {
   'pulse.personalTasks': 'Personal',
   'pulse.habitsToday': "Today's Habits",
   'pulse.noHabits': 'No habits yet. Add some!',
-  'pulse.noNotes': 'No study notes today.',
-  'pulse.studyNotes': 'Study Notes',
+  'pulse.noNotes': 'No notes today.',
+  'pulse.studyNotes': 'Notes',
   'pulse.taskBreakdown': 'Task Breakdown',
   'pulse.overall': 'Overall',
 
@@ -345,7 +345,7 @@ const ar = {
   /* Navigation */
   'nav.home': 'الرئيسية',
   'nav.tasks': 'المهام',
-  'nav.journal': 'مذكرات',
+  'nav.journal': 'ملاحظات',
   'nav.history': 'السجل',
   'nav.settings': 'الإعدادات',
   'nav.guide': 'كيفية الاستخدام',
@@ -442,11 +442,11 @@ const ar = {
   'prevDay.title': 'اليوم السابق',
 
   /* Journal page */
-  'journal.title': 'ملاحظات الدراسة',
-  'journal.studyNotes': 'ملاحظات الدراسة',
+  'journal.title': 'ملاحظات',
+  'journal.studyNotes': 'ملاحظات',
   'journal.newNote': 'ملاحظة جديدة',
   'journal.addNote': 'إضافة ملاحظة',
-  'journal.studyPlaceholder': 'اكتب ملاحظة دراستك...',
+  'journal.studyPlaceholder': 'اكتب ملاحظتك...',
   'journal.period': 'الوقت',
   'journal.allNotes': 'جميع الملاحظات',
   'journal.noNotes': 'لا توجد ملاحظات بعد. اكتب ملاحظتك الأولى أعلاه.',
@@ -619,7 +619,7 @@ const ar = {
   'pulse.habitsToday': 'عادات اليوم',
   'pulse.noHabits': 'لا توجد عادات بعد. أضف بعضها!',
   'pulse.noNotes': 'لا توجد ملاحظات اليوم.',
-  'pulse.studyNotes': 'ملاحظات الدراسة',
+  'pulse.studyNotes': 'ملاحظات',
   'pulse.taskBreakdown': 'تقسيم المهام',
   'pulse.overall': 'الإجمالي',
 

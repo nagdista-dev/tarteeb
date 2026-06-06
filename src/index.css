@@ -197,7 +197,7 @@ a {
 }
 
 .btn-menu-mobile {
-  display: none;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 36px;
@@ -1799,7 +1799,7 @@ textarea.form-textarea {
   display: flex;
   flex: 1;
   gap: 24px;
-  align-items: flex-start;
+  align-items: stretch;
   width: 100%;
   min-height: 0;
   overflow: hidden;
@@ -1810,6 +1810,12 @@ textarea.form-textarea {
   flex: 1;
   min-width: 0;
   padding: 0 4px 0 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.content-area::-webkit-scrollbar {
+  display: none;
 }
 
 /* ===== Sidebar – Professional Redesign ===== */
@@ -4305,10 +4311,6 @@ textarea.form-textarea {
 
 /* ===== Mobile Sidebar ===== */
 @media (max-width: 768px) {
-  .btn-menu-mobile {
-    display: inline-flex;
-  }
-
   .sidebar-close-btn {
     display: inline-flex;
     align-items: center;
@@ -5456,6 +5458,9 @@ textarea.form-textarea {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  max-width: 720px;
+  margin: 0 auto;
+  width: 100%;
   padding-bottom: 40px;
 }
 
