@@ -4172,6 +4172,23 @@ textarea.form-textarea {
   color: #ffffff;
 }
 
+.duration-display {
+  padding: 11px 14px;
+  border-radius: 10px;
+  background: var(--bg-primary);
+  border: 1.5px solid var(--border-color);
+  color: var(--color-emerald);
+  font-size: 0.92rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.form-input.disabled {
+  color: var(--text-tertiary);
+  opacity: 0.6;
+  cursor: default;
+}
+
 /* ===== Toast Notifications ===== */
 .toast-overlay {
   position: fixed;

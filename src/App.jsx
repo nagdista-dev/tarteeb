@@ -2494,140 +2494,153 @@ function App() {
             </div>
             <form onSubmit={handleTaskSubmit}>
               <div className="modal-body">
-                <div className="form-group"><label className="form-label">{t('modal.taskName')}</label><input className="form-input" type="text" value={taskForm.name} onChange={e => setTaskForm(prev => ({ ...prev, name: e.target.value }))} required/></div>
-                <div className="form-group"><label className="form-label">{t('modal.details')}</label><textarea className="form-input" placeholder={t('modal.detailsPlaceholder')} value={taskForm.details} onChange={e => setTaskForm(prev => ({ ...prev, details: e.target.value }))}></textarea></div>
+                <div className="form-group">
+                  <label className="form-label">{t('modal.taskName')}</label>
+                  <input className="form-input" type="text" value={taskForm.name} onChange={e => setTaskForm(prev => ({ ...prev, name: e.target.value }))} required />
+                </div>
+
                 <div className="form-group">
                   <label className="form-label">{t('modal.timeOfDay')}</label>
-                  <select
-                    className="form-select"
-                    value={taskForm.period}
-                    onChange={e => {
-                      const period = e.target.value;
-                      const excludeId = taskModal.task?.id;
-                      const nowMin = taskModal.mode === 'add' ? getCurrentPlannerMinutes(currentTime, activeDate) : null;
-                      const slots = dayData ? getAvailableStartSlots(period, dayData.tasks, dayData.prayerTimes, excludeId, nowMin) : [];
-                      const firstStart = slots.length > 0 ? formatMinutesToTime(slots[0]) : '00:00';
-                      const firstStartMin = scheduledTimeToPlannerMinutes(firstStart, period, dayData.prayerTimes);
-                      const endSlots = dayData ? getAvailableEndSlots(period, dayData.tasks, dayData.prayerTimes, firstStartMin, excludeId) : [];
-                      const endTime = endSlots.length > 0 ? formatMinutesToTime(endSlots[0]) : formatMinutesToTime(firstStartMin + 15);
-                      setTaskForm(prev => ({
-                        ...prev,
-                        period,
-                        scheduledTime: firstStart,
-                        endTime
-                      }));
-                    }}
-                  >
+                  <select className="form-select" value={taskForm.period} onChange={e => {
+                    const period = e.target.value;
+                    const excludeId = taskModal.task?.id;
+                    const nowMin = taskModal.mode === 'add' ? getCurrentPlannerMinutes(currentTime, activeDate) : null;
+                    const slots = dayData ? getAvailableStartSlots(period, dayData.tasks, dayData.prayerTimes, excludeId, nowMin) : [];
+                    const firstStart = slots.length > 0 ? formatMinutesToTime(slots[0]) : '00:00';
+                    const firstStartMin = scheduledTimeToPlannerMinutes(firstStart, period, dayData.prayerTimes);
+                    const endSlots = dayData ? getAvailableEndSlots(period, dayData.tasks, dayData.prayerTimes, firstStartMin, excludeId) : [];
+                    const endTime = endSlots.length > 0 ? formatMinutesToTime(endSlots[0]) : formatMinutesToTime(firstStartMin + 15);
+                    setTaskForm(prev => ({ ...prev, period, scheduledTime: firstStart, endTime }));
+                  }}>
                     {PLANNER_PERIOD_ORDER.map(key => (
-                      <option key={key} value={key}>
-                        {t('period.' + key)} — {t('period.' + key + 'Range')}
-                      </option>
+                      <option key={key} value={key}>{t('period.' + key)} — {t('period.' + key + 'Range')}</option>
                     ))}
                   </select>
                 </div>
+
                 <div className="form-row">
                   <div className="form-group">
                     <label className="form-label">{t('modal.startTime')}</label>
-                    <select
-                      className="form-select"
-                      value={taskForm.scheduledTime}
-                      onChange={e => {
-                        const startTime = e.target.value;
-                        const startMin = scheduledTimeToPlannerMinutes(startTime, taskForm.period, dayData.prayerTimes);
-                        const endSlots = getAvailableEndSlots(taskForm.period, dayData.tasks, dayData.prayerTimes, startMin, taskModal.task?.id);
-                        const endTime = endSlots.length > 0 ? formatMinutesToTime(endSlots[0]) : formatMinutesToTime(startMin + 15);
-                        setTaskForm(prev => ({ ...prev, scheduledTime: startTime, endTime }));
-                      }}
-                    >
-                      {(dayData ? getAvailableStartSlots(taskForm.period, dayData.tasks, dayData.prayerTimes, taskModal.task?.id, taskModal.mode === 'add' ? getCurrentPlannerMinutes(currentTime, activeDate) : null) : []).map(min => (
-                        <option key={min} value={formatMinutesToTime(min)}>{formatMinutesToTime(min)}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">{t('modal.endTime')}</label>
                     {(() => {
-                      const prayerTimes = dayData?.prayerTimes;
-                      if (!prayerTimes) return <select className="form-select" disabled><option>--:--</option></select>;
-                      const endMin = scheduledTimeToPlannerMinutes(taskForm.scheduledTime, taskForm.period, prayerTimes);
-                      const slots = getAvailableEndSlots(taskForm.period, dayData.tasks, prayerTimes, endMin, taskModal.task?.id);
-                      const allMinutes = slots.map(m => m % 1440);
+                      const prayers = dayData?.prayerTimes;
+                      if (!prayers) return <div className="form-input disabled">--:--</div>;
+                      const startSlots = getAvailableStartSlots(taskForm.period, dayData.tasks, prayers, taskModal.task?.id, taskModal.mode === 'add' ? getCurrentPlannerMinutes(currentTime, activeDate) : null);
+                      if (startSlots.length === 0) return <div className="form-input disabled">--:--</div>;
+                      const allMinutes = startSlots.map(m => m % 1440);
                       const allHours = [...new Set(allMinutes.map(m => Math.floor(m / 60)))].sort((a, b) => a - b);
-                      const curParsed = parseTimeToMinutes(taskForm.endTime);
+                      const curParsed = parseTimeToMinutes(taskForm.scheduledTime);
                       const curHour = Math.floor(curParsed / 60);
                       const curMin = Math.floor(curParsed % 60);
-                      const hour = allHours.includes(curHour) ? curHour : (allHours[0] ?? 0);
+                      const validHour = allHours.includes(curHour) ? curHour : allHours[0];
+                      const validMinsForHour = allMinutes.filter(m => Math.floor(m / 60) === validHour).map(m => m % 60).sort((a, b) => a - b);
+                      const validMin = validMinsForHour.includes(curMin) ? curMin : validMinsForHour[0];
                       const use12 = getUse12h();
-                      const allMinOpts = Array.from({length: 60}, (_, i) => i);
                       return (
                         <div className="time-select-row">
                           <select className="form-select time-select-hour"
-                            value={hour}
+                            value={validHour}
                             onChange={e => {
                               const h = Number(e.target.value);
-                              setTaskForm(prev => ({ ...prev, endTime: formatMinutesToTime(h * 60 + curMin) }));
+                              const minsForHour = allMinutes.filter(m => Math.floor(m / 60) === h).map(m => m % 60);
+                              const m = minsForHour.includes(validMin) ? validMin : minsForHour[0];
+                              const newStart = formatMinutesToTime(h * 60 + m);
+                              const startMin = scheduledTimeToPlannerMinutes(newStart, taskForm.period, prayers);
+                              const endSlots = getAvailableEndSlots(taskForm.period, dayData.tasks, prayers, startMin, taskModal.task?.id);
+                              const endTime = endSlots.length > 0 ? formatMinutesToTime(endSlots[0]) : formatMinutesToTime(startMin + 15);
+                              setTaskForm(prev => ({ ...prev, scheduledTime: newStart, endTime }));
                             }}
                           >
                             {allHours.map(h => (
-                              <option key={h} value={h}>
-                                {use12 ? (h % 12 || 12) : String(h).padStart(2, '0')}
-                              </option>
+                              <option key={h} value={h}>{use12 ? (h % 12 || 12) : String(h).padStart(2, '0')}</option>
                             ))}
                           </select>
                           <span className="time-colon">:</span>
                           <select className="form-select time-select-minute"
-                            value={Math.min(59, Math.max(0, curMin))}
+                            value={validMin}
                             onChange={e => {
                               const m = Number(e.target.value);
-                              setTaskForm(prev => ({ ...prev, endTime: formatMinutesToTime(hour * 60 + m) }));
+                              const newStart = formatMinutesToTime(validHour * 60 + m);
+                              const startMin = scheduledTimeToPlannerMinutes(newStart, taskForm.period, prayers);
+                              const endSlots = getAvailableEndSlots(taskForm.period, dayData.tasks, prayers, startMin, taskModal.task?.id);
+                              const endTime = endSlots.length > 0 ? formatMinutesToTime(endSlots[0]) : formatMinutesToTime(startMin + 15);
+                              setTaskForm(prev => ({ ...prev, scheduledTime: newStart, endTime }));
                             }}
                           >
-                            {allMinOpts.map(m => (
+                            {validMinsForHour.map(m => (
                               <option key={m} value={m}>{String(m).padStart(2, '0')}</option>
                             ))}
                           </select>
-                          {use12 && <span className="time-ampm">{hour < 12 ? t('time.am') : t('time.pm')}</span>}
+                          {use12 && <span className="time-ampm">{validHour < 12 ? t('time.am') : t('time.pm')}</span>}
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">{t('modal.endTime')}</label>
+                    {(() => {
+                      const prayers = dayData?.prayerTimes;
+                      if (!prayers) return <div className="form-input disabled">--:--</div>;
+                      const endMin = scheduledTimeToPlannerMinutes(taskForm.scheduledTime, taskForm.period, prayers);
+                      const endSlots = getAvailableEndSlots(taskForm.period, dayData.tasks, prayers, endMin, taskModal.task?.id);
+                      if (endSlots.length === 0) return <div className="form-input disabled">--:--</div>;
+                      const allMinutes = endSlots.map(m => m % 1440);
+                      const allHours = [...new Set(allMinutes.map(m => Math.floor(m / 60)))].sort((a, b) => a - b);
+                      const curParsed = parseTimeToMinutes(taskForm.endTime);
+                      const curHour = Math.floor(curParsed / 60);
+                      const curMin = Math.floor(curParsed % 60);
+                      const validHour = allHours.includes(curHour) ? curHour : allHours[0];
+                      const validMinsForHour = allMinutes.filter(m => Math.floor(m / 60) === validHour).map(m => m % 60).sort((a, b) => a - b);
+                      const validMin = validMinsForHour.includes(curMin) ? curMin : validMinsForHour[0];
+                      const use12 = getUse12h();
+                      return (
+                        <div className="time-select-row">
+                          <select className="form-select time-select-hour"
+                            value={validHour}
+                            onChange={e => {
+                              const h = Number(e.target.value);
+                              const minsForHour = allMinutes.filter(m => Math.floor(m / 60) === h).map(m => m % 60);
+                              const m = minsForHour.includes(validMin) ? validMin : minsForHour[0];
+                              setTaskForm(prev => ({ ...prev, endTime: formatMinutesToTime(h * 60 + m) }));
+                            }}
+                          >
+                            {allHours.map(h => (
+                              <option key={h} value={h}>{use12 ? (h % 12 || 12) : String(h).padStart(2, '0')}</option>
+                            ))}
+                          </select>
+                          <span className="time-colon">:</span>
+                          <select className="form-select time-select-minute"
+                            value={validMin}
+                            onChange={e => {
+                              const m = Number(e.target.value);
+                              setTaskForm(prev => ({ ...prev, endTime: formatMinutesToTime(validHour * 60 + m) }));
+                            }}
+                          >
+                            {validMinsForHour.map(m => (
+                              <option key={m} value={m}>{String(m).padStart(2, '0')}</option>
+                            ))}
+                          </select>
+                          {use12 && <span className="time-ampm">{validHour < 12 ? t('time.am') : t('time.pm')}</span>}
                         </div>
                       );
                     })()}
                   </div>
                 </div>
-                <div className="form-group">
-                  <label className="form-label">{t('modal.duration')}</label>
-                  <div className="duration-presets">
-                    {[
-                      { label: t('modal.min15'), value: 15 },
-                      { label: t('modal.min30'), value: 30 },
-                      { label: t('modal.hour1'), value: 60 },
-                      { label: t('modal.hours2'), value: 120 }
-                    ].map(preset => {
-                      const startMin = scheduledTimeToPlannerMinutes(taskForm.scheduledTime, taskForm.period, dayData?.prayerTimes);
-                      const effective = Math.min(preset.value, 180);
-                      const endMin = startMin + effective;
-                      const endTime = dayData ? formatMinutesToTime(endMin) : taskForm.endTime;
-                      const isSelected = taskForm.duration >= preset.value - 2 && taskForm.duration <= preset.value + 2;
-                      return (
-                        <button
-                          key={preset.value}
-                          type="button"
-                          className={`duration-preset-btn ${isSelected ? 'active' : ''}`}
-                          onClick={() => {
-                            setTaskForm(prev => ({
-                              ...prev,
-                              duration: effective,
-                              endTime
-                            }));
-                          }}
-                        >
-                          {preset.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-                {taskModal.task?.type !== 'fixed' && (
-                  <label className="checkbox-label"><input type="checkbox" checked={taskForm.isRecurring} onChange={e => setTaskForm(prev => ({ ...prev, isRecurring: e.target.checked }))}/> {t('modal.recurring')}</label>
-                )}
+
+                {(() => {
+                  const prayers = dayData?.prayerTimes;
+                  if (!prayers) return null;
+                  const startMin = scheduledTimeToPlannerMinutes(taskForm.scheduledTime, taskForm.period, prayers);
+                  const endMin = scheduledTimeToPlannerMinutes(taskForm.endTime, taskForm.period, prayers);
+                  const duration = endMin - startMin;
+                  if (duration <= 0) return null;
+                  return (
+                    <div className="form-group">
+                      <label className="form-label">{t('modal.duration')}</label>
+                      <div className="duration-display">{translateDuration(duration)}</div>
+                    </div>
+                  );
+                })()}
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn" onClick={() => setTaskModal(prev => ({ ...prev, open: false }))}>{t('modal.cancel')}</button>
