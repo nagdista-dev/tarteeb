@@ -5,6 +5,10 @@ const en = {
 
   /* Footer */
   'footer.developedBy': 'Developed by',
+  'footer.viewErrors': 'View errors',
+  'footer.errorLog': 'Error Log',
+  'footer.noErrors': 'No errors recorded',
+  'footer.clearErrors': 'Clear All',
 
   /* Navigation */
   'nav.home': 'Home',
@@ -196,6 +200,10 @@ const en = {
   'prayerNotif.text': 'The call to prayer has arrived. May Allah accept your devotion.',
   'prayerNotif.ok': 'OK',
 
+  /* Time */
+  'time.am': 'AM',
+  'time.pm': 'PM',
+
   /* Confirm / alert messages */
   'confirm.deleteTask': 'Delete this task?',
   'confirm.deleteHistory': 'Delete this day from history?',
@@ -362,6 +370,10 @@ const ar = {
 
   /* Footer */
   'footer.developedBy': 'طُوّر بواسطة',
+  'footer.viewErrors': 'عرض الأخطاء',
+  'footer.errorLog': 'سجل الأخطاء',
+  'footer.noErrors': 'لا توجد أخطاء مسجلة',
+  'footer.clearErrors': 'مسح الكل',
 
   /* Navigation */
   'nav.home': 'الرئيسية',
@@ -551,6 +563,10 @@ const ar = {
   'prayerNotif.title': 'حان وقت الصلاة',
   'prayerNotif.text': 'لقد حان الأذان. تقبل الله طاعتكم.',
   'prayerNotif.ok': 'حسناً',
+
+  /* Time */
+  'time.am': 'ص',
+  'time.pm': 'م',
 
   /* Confirm / alert messages */
   'confirm.deleteTask': 'حذف هذه المهمة؟',

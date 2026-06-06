@@ -291,6 +291,14 @@ function App() {
   const [collapsedPeriods, setCollapsedPeriods] = useState({ evening: true, night: true, morning: true, afternoon: true, late_afternoon: true });
   const [expandedTaskId, setExpandedTaskId] = useState(null);
   const [dialog, setDialog] = useState(null);
+  const [errorLog, setErrorLog] = useState([]);
+  const [errorModalOpen, setErrorModalOpen] = useState(false);
+
+  const addError = (message, source) => {
+    const entry = { id: Date.now(), message, source, time: new Date().toLocaleTimeString() };
+    setErrorLog(prev => [entry, ...prev]);
+    console.error(source ? `[${source}] ${message}` : message);
+  };
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState(null);
   const [showWelcome, setShowWelcome] = useState(() => !localStorage.getItem('tarteeb_welcome_dismissed'));
@@ -501,7 +509,7 @@ function App() {
       try {
         await ensurePrayerTimesCached(activeDate, locationConfig);
       } catch (e) {
-        console.error('Prayer time fetch error:', e);
+        addError(e.message || 'Prayer time fetch failed', 'prayerTimes');
       }
 
       if (!active) return;
@@ -1181,7 +1189,7 @@ function App() {
       }
       showAlert(t('alert.settingsSaved'));
     } catch (err) {
-      console.error(err);
+      addError(err.message || 'Settings save failed', 'settings');
       setApiError(t('alert.apiError'));
     } finally {
       setLoading(false);
@@ -1252,8 +1260,8 @@ function App() {
     const prayers = dayData.prayerTimes;
     const dayStart = getPeriodStartMinutes('evening', prayers);
     const dayEnd = getPeriodEndMinutes('late_afternoon', prayers);
-    const padTop = 45;
-    const padBottom = 45;
+    const padTop = 0;
+    const padBottom = 0;
     const visualStart = dayStart - padTop;
     const visualEnd = dayEnd + padBottom;
     const visualDuration = visualEnd - visualStart;
@@ -1280,7 +1288,7 @@ function App() {
       const hour = Math.floor(normalized / 60);
       const minute = normalized % 60;
       if (getUse12h()) {
-        const period = hour < 12 ? 'AM' : 'PM';
+        const period = hour < 12 ? t('time.am') : t('time.pm');
         const h12 = hour % 12 || 12;
         const time = exact || minute !== 0 ? `${h12}:${String(minute).padStart(2, '0')}` : `${h12}`;
         return `${time} ${period}`;
@@ -1319,11 +1327,6 @@ function App() {
                   {tick.label}
                 </span>
               ))}
-              {nowInRange && (
-                <span className="timeline-now-time" style={{ top: `${nowTop}%` }}>
-                  {formatMinutesToTime(nowMinutes)}
-                </span>
-              )}
             </div>
 
             <div className="timeline-board">
@@ -1774,6 +1777,11 @@ function App() {
           {/* Footer */}
           <div className="sidebar-footer">
             {t('footer.developedBy')} <a href="https://nagdista.com" target="_blank" rel="noopener noreferrer">Nagdista</a>
+            {errorLog.length > 0 && (
+              <button className="sidebar-error-btn" onClick={() => setErrorModalOpen(true)} title={t('footer.viewErrors')}>
+                <AlertCircle size={11} /> {errorLog.length}
+              </button>
+            )}
           </div>
         </aside>
 
@@ -2259,7 +2267,7 @@ function App() {
                         <span className="time-format-label">{t('settings.format24h')}</span>
                       </button>
                       <button className={`time-format-btn ${use12h ? 'active' : ''}`} onClick={() => setUse12hState(true)}>
-                        <span className="time-format-sample">11:59 PM</span>
+                        <span className="time-format-sample">11:59 {t('time.pm')}</span>
                         <span className="time-format-label">{t('settings.format12h')}</span>
                       </button>
                     </div>
@@ -2578,7 +2586,7 @@ function App() {
                               <option key={m} value={m}>{String(m).padStart(2, '0')}</option>
                             ))}
                           </select>
-                          {use12 && <span className="time-ampm">{hour < 12 ? 'AM' : 'PM'}</span>}
+                          {use12 && <span className="time-ampm">{hour < 12 ? t('time.am') : t('time.pm')}</span>}
                         </div>
                       );
                     })()}
@@ -2710,6 +2718,35 @@ function App() {
               <button className="btn btn-primary" onClick={() => closeDialog(dialog.type === 'confirm')}>
                 {dialog.type === 'confirm' ? t('dialog.confirm') : t('dialog.ok')}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Error Log Modal */}
+      {errorModalOpen && (
+        <div className="modal-overlay" onClick={() => setErrorModalOpen(false)}>
+          <div className="modal-content error-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <span className="modal-title">{t('footer.errorLog')}</span>
+              <button className="btn btn-icon" onClick={() => setErrorModalOpen(false)}><X size={18} /></button>
+            </div>
+            <div className="modal-body error-modal-body">
+              {errorLog.length === 0 ? (
+                <p className="empty-state-title">{t('footer.noErrors')}</p>
+              ) : (
+                errorLog.map(err => (
+                  <div key={err.id} className="error-log-entry">
+                    <span className="error-log-time">{err.time}</span>
+                    <span className="error-log-source">{err.source}</span>
+                    <span className="error-log-msg">{err.message}</span>
+                  </div>
+                ))
+              )}
+            </div>
+            <div className="modal-footer">
+              <button className="btn" onClick={() => { setErrorLog([]); setErrorModalOpen(false); }}>{t('footer.clearErrors')}</button>
+              <button className="btn btn-primary" onClick={() => setErrorModalOpen(false)}>{t('dialog.ok')}</button>
             </div>
           </div>
         </div>

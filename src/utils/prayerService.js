@@ -3,6 +3,8 @@
  * Handles prayer time calculations, Aladhan API fetching, local cache, and logical planner day logic.
  */
 
+import { t } from '../i18n';
+
 // Helper: Format Date object to local YYYY-MM-DD
 export function formatDateLocal(date) {
   const y = date.getFullYear();
@@ -59,7 +61,7 @@ export function formatMinutesToTime(totalMinutes) {
   if (!_use12h) {
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
   }
-  const period = h < 12 ? 'AM' : 'PM';
+  const period = h < 12 ? t('time.am') : t('time.pm');
   const h12 = h % 12 || 12;
   return `${h12}:${String(m).padStart(2, '0')} ${period}`;
 }
