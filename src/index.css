@@ -198,14 +198,14 @@ a {
 }
 
 .btn-menu-mobile {
-  display: inline-flex;
+  display: none;
   align-items: center;
   justify-content: center;
   width: 36px;
   height: 36px;
   padding: 0;
   border-radius: 50%;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
   transition: all 0.2s ease;
 }
 .btn-menu-mobile:hover {
@@ -214,13 +214,14 @@ a {
 }
 
 .btn-install-header {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 36px;
   height: 36px;
   padding: 0;
   border-radius: 50%;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
   transition: all 0.2s ease;
 }
 .btn-install-header:hover {
@@ -4322,6 +4323,10 @@ textarea.form-textarea {
 
 /* ===== Mobile Sidebar ===== */
 @media (max-width: 768px) {
+  .btn-menu-mobile {
+    display: inline-flex;
+  }
+
   .sidebar-close-btn {
     display: inline-flex;
     align-items: center;
