@@ -1684,7 +1684,14 @@ function App() {
         <div className="header-actions">
           {installable && (
             <button className="btn btn-install-header" onClick={handleInstall} title={t('nav.install')}>
-              <Smartphone size={16} />
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                {/* Phone outline */}
+                <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+                <line x1="12" y1="18" x2="12.01" y2="18" />
+                {/* Download arrow */}
+                <line x1="12" y1="7" x2="12" y2="13" />
+                <polyline points="9 10 12 13 15 10" />
+              </svg>
               <span>{t('nav.install')}</span>
             </button>
           )}
