@@ -3,8 +3,8 @@ import {
   Check, Plus, Minus, Edit2, Trash2, Settings, Moon, Sun,
   BookOpen, Clock, Sparkles, MapPin, X, AlertCircle,
   ChevronUp, ChevronDown, RefreshCw, Download, HelpCircle, List, Type, Menu, Target,
-  Smartphone, Lock, Unlock, Upload, Search, Zap, Play, Square, Activity, Smile,
-  TrendingUp, BarChart3, Hourglass
+  Smartphone, Lock, Unlock, Upload, Search, Zap, Activity,
+  TrendingUp, BarChart3, Flame, CalendarDays
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import {
@@ -303,63 +303,6 @@ function App() {
   const [habitModal, setHabitModal] = useState({ open: false, mode: 'add', habit: null });
   const [habitForm, setHabitForm] = useState({ name: '' });
 
-  // ---- Focus Timer ----
-  const [timer, setTimer] = useState({ running: false, mode: 'focus', remaining: 25 * 60, total: 25 * 60, cycle: 1, show: false });
-  const timerRef = useRef(null);
-
-  const FOCUS_MINUTES = 25;
-  const BREAK_MINUTES = 5;
-
-  useEffect(() => {
-    if (timer.running && timer.remaining > 0) {
-      timerRef.current = setInterval(() => {
-        setTimer(prev => {
-          if (prev.remaining <= 1) {
-            clearInterval(timerRef.current);
-            if (prev.mode === 'focus') {
-              try {
-                const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                osc.frequency.value = 880;
-                osc.type = 'sine';
-                gain.gain.setValueAtTime(0.3, ctx.currentTime);
-                osc.start();
-                osc.stop(ctx.currentTime + 0.4);
-                setTimeout(() => {
-                  const osc2 = ctx.createOscillator();
-                  const gain2 = ctx.createGain();
-                  osc2.connect(gain2);
-                  gain2.connect(ctx.destination);
-                  osc2.frequency.value = 660;
-                  osc2.type = 'sine';
-                  gain2.gain.setValueAtTime(0.2, ctx.currentTime);
-                  osc2.start();
-                  osc2.stop(ctx.currentTime + 0.3);
-                }, 300);
-              } catch {}
-              return { ...prev, running: false, mode: 'break', remaining: BREAK_MINUTES * 60, total: BREAK_MINUTES * 60 };
-            } else {
-              return { ...prev, running: false, mode: 'focus', remaining: FOCUS_MINUTES * 60, total: FOCUS_MINUTES * 60, cycle: prev.cycle + 1 };
-            }
-          }
-          return { ...prev, remaining: prev.remaining - 1 };
-        });
-      }, 1000);
-    } else {
-      if (timerRef.current) clearInterval(timerRef.current);
-    }
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [timer.running]);
-
-  const formatTimer = (secs) => {
-    const m = Math.floor(secs / 60);
-    const s = secs % 60;
-    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-  };
-
   // ---- Prayer Tracker ----
   const [prayerTracking, setPrayerTracking] = useState(() => {
     try { return JSON.parse(localStorage.getItem('tarteeb_prayer_tracking') || '{}'); }
@@ -387,23 +330,6 @@ function App() {
   // ---- Mood Tracker ----
   const MOODS = ['happy', 'grateful', 'peaceful', 'energetic', 'tired', 'stressed', 'anxious', 'sad'];
   const MOOD_EMOJIS = { happy: '😊', grateful: '🤲', peaceful: '🕊️', energetic: '⚡', tired: '😴', stressed: '😰', anxious: '😟', sad: '😢' };
-
-  // ---- Dhikr ----
-  const DAIY_DHIKR = [
-    { ar: 'سُبْحَانَ اللَّهِ وَبِحَمْدِهِ، سُبْحَانَ اللَّهِ الْعَظِيمِ', en: 'Glory and praise be to Allah, Glory be to Allah the Most Great' },
-    { ar: 'لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ', en: 'There is no god but Allah alone with no partner; His is the dominion and His is the praise, and He is over all things competent' },
-    { ar: 'اللَّهُمَّ صَلِّ وَسَلِّمْ عَلَى نَبِيِّنَا مُحَمَّدٍ', en: 'O Allah, send peace and blessings upon our Prophet Muhammad' },
-    { ar: 'أَسْتَغْفِرُ اللَّهَ وَأَتُوبُ إِلَيْهِ', en: 'I seek forgiveness from Allah and repent to Him' },
-    { ar: 'حَسْبِيَ اللَّهُ لَا إِلَهَ إِلَّا هُوَ عَلَيْهِ تَوَكَّلْتُ وَهُوَ رَبُّ الْعَرْشِ الْعَظِيمِ', en: 'Allah is sufficient for me; there is no god but Him. In Him I put my trust, and He is the Lord of the Mighty Throne' },
-    { ar: 'اللَّهُمَّ إِنِّي أَسْأَلُكَ الْعَفْوَ وَالْعَافِيَةَ فِي الدُّنْيَا وَالْآخِرَةِ', en: 'O Allah, I ask You for forgiveness and well-being in this world and the Hereafter' },
-    { ar: 'رَبِّ اشْرَحْ لِي صَدْرِي وَيَسِّرْ لِي أَمْرِي', en: 'My Lord, expand my chest for me and make my matter easy for me' },
-    { ar: 'اللَّهُمَّ أَعِنِّي عَلَى ذِكْرِكَ وَشُكْرِكَ وَحُسْنِ عِبَادَتِكَ', en: 'O Allah, help me to remember You, thank You, and worship You well' },
-  ];
-  const getDhikrOfDay = () => {
-    const today = formatDateLocal(new Date());
-    const dayNum = today.split('-').reduce((a, b) => a + parseInt(b), 0);
-    return DAIY_DHIKR[dayNum % DAIY_DHIKR.length];
-  };
 
   // ---- Task search ----
   const [taskSearch, setTaskSearch] = useState('');
@@ -1007,67 +933,209 @@ function App() {
   const exportToMarkdown = (data = null) => {
     const day = data || dayData;
     if (!day) return;
-    const { tasks, diary, date, hijriDate, prayerTimes, stats } = day;
+    const { tasks, diary, date, hijriDate, prayerTimes, studyNotes, mood } = day;
     const lines = [];
     const d = new Date(date);
     const locale = lang === 'ar' ? 'ar-SA' : 'en-US';
     const title = d.toLocaleDateString(locale, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
-    lines.push(`# ${title}`);
+    // Gather stats
+    const allTasks = tasks || [];
+    const total = allTasks.length;
+    const completed = allTasks.filter(t => t.completed).length;
+    const overallPct = total > 0 ? Math.round((completed / total) * 100) : 0;
+    const fixed = allTasks.filter(t => t.type === 'fixed');
+    const fixedDone = fixed.filter(t => t.completed).length;
+    const fixedPct = fixed.length > 0 ? Math.round((fixedDone / fixed.length) * 100) : 100;
+    const personal = allTasks.filter(t => t.type !== 'fixed');
+    const personalDone = personal.filter(t => t.completed).length;
+    const personalPct = personal.length > 0 ? Math.round((personalDone / personal.length) * 100) : 100;
+
+    const todayTrack = prayerTracking[date] || {};
+    const prayerCounts = { onTime: 0, late: 0, missed: 0, pending: 0 };
+    PRAYER_KEYS.forEach(pk => { const s = todayTrack[pk] || 'pending'; prayerCounts[s]++; });
+    const onTime = prayerCounts.onTime;
+
+    const todayHabits = habits.filter(h => h.entries?.[date] !== undefined);
+    const completedHabits = todayHabits.filter(h => h.entries?.[date]?.completed).length;
+    const notes = studyNotes || [];
+    const streak = computeStreak();
+
+    const completedTasks = allTasks.filter(t => t.completed);
+    const pendingTasks = allTasks.filter(t => !t.completed);
+
+    const statusEmoji = { onTime: '✅', late: '⏳', missed: '❌', pending: '—' };
+    const prayerOrder = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
+
+    // ---- Build ----
+    lines.push(`# 📅 ${title}`);
     lines.push('');
     if (hijriDate) lines.push(`> ${hijriDate}`);
     lines.push('');
-    lines.push(`## ${t('export.prayerTimes')}`);
+    lines.push('---');
     lines.push('');
-    lines.push(`| ${t('export.prayer')} | ${t('export.time')} |`);
-    lines.push(`|--------|------|`);
-    ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'].forEach(p => {
-      const key = p.toLowerCase();
-      if (prayerTimes[key]) lines.push(`| ${translateTaskName(p + ' Prayer') || p} | ${prayerTimes[key]} |`);
+
+    // Daily Overview
+    lines.push('## 🌅 Daily Overview');
+    lines.push('');
+    lines.push('> [!abstract]+ Day at a Glance');
+    lines.push(`> - **Tasks**: ${completed}/${total} (${overallPct}%)`);
+    lines.push(`> - **Fixed Tasks**: ${fixedPct}% | **Personal**: ${personalPct}%`);
+    lines.push(`> - **Prayers on Time**: ${onTime}/5`);
+    lines.push(`> - **Current Streak**: ${streak} days`);
+    if (mood) {
+      const emoji = MOOD_EMOJIS[mood] || '';
+      const moodLabel = t('mood.' + mood);
+      lines.push(`> - **Mood**: ${emoji} ${moodLabel}`);
+    }
+    lines.push('');
+
+    // Prayer Times
+    lines.push('---');
+    lines.push('');
+    lines.push('## 🕌 Prayer Times');
+    lines.push('');
+    lines.push('| Prayer | Time | Status |');
+    lines.push('|--------|:----:|--------|');
+    prayerOrder.forEach(pk => {
+      const time = prayerTimes?.[pk] || '—';
+      const status = todayTrack[pk] || 'pending';
+      const emoji = statusEmoji[status] || '—';
+      const label = t(status === 'pending' ? 'prayerTracker.pending' : 'pulse.prayer' + status.charAt(0).toUpperCase() + status.slice(1));
+      const prayerLabel = t('prayer.' + pk);
+      lines.push(`| ${prayerLabel} | ${time} | ${emoji} ${label} |`);
     });
     lines.push('');
-    lines.push(`## ${t('export.tasks')} — ${stats.completedTasks}/${stats.totalTasks} ${t('export.completed')}`);
+
+    // Tasks
+    lines.push('---');
     lines.push('');
-    tasks.forEach(t => {
-      const checkbox = t.completed ? '[x]' : '[ ]';
-      const time = getTaskDisplayTime(t, prayerTimes);
-      const end = t.type === 'personal' || t.type === 'user'
-        ? ` – ${formatMinutesToTime(getTaskStartMinutes(t, prayerTimes) + (Number(t.duration) || 15))}`
-        : '';
-      lines.push(`- ${checkbox} **${translateTaskName(t.name)}** — ${time}${end}`);
-      if (t.details) lines.push(`  - ${t.details}`);
-    });
-    const notes = day.studyNotes || [];
-    if (notes.length > 0) {
+    lines.push('## ✅ Tasks');
+    lines.push('');
+
+    if (completedTasks.length > 0) {
+      lines.push('> [!check]- Completed Tasks');
+      lines.push('>');
+      completedTasks.forEach(t => {
+        const time = getTaskDisplayTime(t, prayerTimes);
+        const end = t.type === 'personal' || t.type === 'user'
+          ? ` – ${formatMinutesToTime(getTaskStartMinutes(t, prayerTimes) + (Number(t.duration) || 15))}`
+          : '';
+        lines.push(`> - [x] **${translateTaskName(t.name)}** — ${time}${end}`);
+        if (t.details) lines.push(`>   - ${t.details}`);
+      });
       lines.push('');
-      lines.push(`## ${t('journal.studyNotes')}`);
+    }
+
+    if (pendingTasks.length > 0) {
+      lines.push('> [!todo]- Remaining Tasks');
+      lines.push('>');
+      pendingTasks.forEach(t => {
+        const time = getTaskDisplayTime(t, prayerTimes);
+        const end = t.type === 'personal' || t.type === 'user'
+          ? ` – ${formatMinutesToTime(getTaskStartMinutes(t, prayerTimes) + (Number(t.duration) || 15))}`
+          : '';
+        lines.push(`> - [ ] **${translateTaskName(t.name)}** — ${time}${end}`);
+        if (t.details) lines.push(`>   - ${t.details}`);
+      });
       lines.push('');
-      PLANNER_PERIOD_ORDER.forEach(periodKey => {
-        const periodNotes = notes.filter(n => n.period === periodKey).sort((a, b) => (a.time || '').localeCompare(b.time || ''));
-        if (periodNotes.length === 0) return;
-        const periodLabel = `${t('period.' + periodKey)} — ${t('period.' + periodKey + 'Range')}`;
-        lines.push(`### ${periodLabel}`);
+    }
+
+    // Task breakdown by period
+    if (total > 0) {
+      const periodStats = PLANNER_PERIOD_ORDER.map(pk => {
+        const pt = allTasks.filter(t => t.period === pk);
+        if (pt.length === 0) return null;
+        const d = pt.filter(t => t.completed).length;
+        return { pk, name: t('period.' + pk), range: (PERIODS_META[pk]?.range || ''), done: d, total: pt.length, pct: Math.round((d / pt.length) * 100) };
+      }).filter(Boolean);
+
+      if (periodStats.length > 0) {
+        lines.push('> [!summary]- Task Breakdown by Period');
+        lines.push('>');
+        lines.push('> | Period | Done/Total | Progress |');
+        lines.push('> |--------|:----------:|:--------:|');
+        periodStats.forEach(ps => {
+          const bar = '█'.repeat(Math.round(ps.pct / 10)) + '░'.repeat(10 - Math.round(ps.pct / 10));
+          lines.push(`> | ${ps.name} | ${ps.done}/${ps.total} | ${bar} ${ps.pct}% |`);
+        });
         lines.push('');
-        periodNotes.forEach(n => {
-          const timeLabel = n.time ? `\`${n.time}\` ` : '';
-          lines.push(`- ${timeLabel}${n.text}`);
+      }
+    }
+
+    // Study Notes
+    if (notes.length > 0) {
+      lines.push('---');
+      lines.push('');
+      lines.push('## 📝 Study Notes');
+      lines.push('');
+      PLANNER_PERIOD_ORDER.forEach(pk => {
+        const pn = notes.filter(n => n.period === pk).sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+        if (pn.length === 0) return;
+        const meta = PERIODS_META[pk];
+        lines.push(`### ${t('period.' + pk)} — ${meta?.range || ''}`);
+        lines.push('');
+        pn.forEach(n => {
+          const tl = n.time ? `\`${n.time}\` ` : '';
+          lines.push(`- ${tl}${n.text}`);
         });
         lines.push('');
       });
     }
+
+    // Habits
+    if (todayHabits.length > 0) {
+      lines.push('---');
+      lines.push('');
+      lines.push('## 🏆 Habits');
+      lines.push('');
+      lines.push('> [!example]+ Today\'s Habits');
+      lines.push('>');
+      todayHabits.forEach(h => {
+        const done = h.entries?.[date]?.completed;
+        lines.push(`> - ${done ? '✅' : '❌'} **${h.name}**`);
+      });
+      if (completedHabits > 0) {
+        lines.push('>');
+        lines.push(`> _${completedHabits}/${todayHabits.length} habits completed_`);
+      }
+      lines.push('');
+    }
+
+    // Journal
     if (diary) {
+      lines.push('---');
       lines.push('');
-      lines.push(`## ${t('export.notes')}`);
+      lines.push('## 📓 Journal');
       lines.push('');
-      lines.push(diary);
-      lines.push('');
-    }
-    if (day.mood) {
-      const emoji = MOOD_EMOJIS[day.mood] || '';
-      const moodLabel = t('mood.' + day.mood);
-      lines.push(`_${t('mood.title')}: ${emoji} ${moodLabel}_`);
+      lines.push('> [!quote] Daily Reflection');
+      lines.push('>');
+      diary.split('\n').forEach(l => lines.push('> ' + l));
       lines.push('');
     }
+
+    // Summary
+    lines.push('---');
+    lines.push('');
+    lines.push('## 📊 Summary');
+    lines.push('');
+    lines.push('| Metric | Value |');
+    lines.push('|--------|:-----:|');
+    lines.push(`| Tasks Completed | ${completed}/${total} (${overallPct}%) |`);
+    lines.push(`| Fixed Tasks | ${fixedPct}% |`);
+    lines.push(`| Personal Tasks | ${personalPct}% |`);
+    lines.push(`| Prayers on Time | ${onTime}/5 |`);
+    if (todayHabits.length > 0) lines.push(`| Habits Done | ${completedHabits}/${todayHabits.length} |`);
+    if (notes.length > 0) lines.push(`| Study Notes | ${notes.length} |`);
+    lines.push(`| Streak | ${streak} days |`);
+    if (mood) {
+      lines.push(`| Mood | ${MOOD_EMOJIS[mood] || ''} ${t('mood.' + mood)} |`);
+    }
+    lines.push('');
+    lines.push('---');
+    lines.push(`_Exported from Tarteeb Muslim Daily Planner_`);
+    lines.push('');
+
     const blob = new Blob([lines.join('\n')], { type: 'text/markdown' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -1354,132 +1422,222 @@ function App() {
     );
   };
 
-  // ---- Pulse Dashboard ----
+  // ---- Pulse Dashboard (Today-Focused) ----
   const renderPulseDashboard = () => {
-    const days = [];
-    const today = new Date();
-    for (let i = 6; i >= 0; i--) {
-      const d = formatDateLocal(addDays(today, -i));
-      const saved = localStorage.getItem(`tarteeb_day_${d}`);
-      if (saved) {
-        try { days.push({ date: d, data: JSON.parse(saved) }); } catch { days.push({ date: d, data: null }); }
-      } else {
-        days.push({ date: d, data: null });
-      }
-    }
-    const hasData = days.some(d => d.data);
-    const weekDone = days.reduce((s, d) => s + (d.data?.stats?.completedTasks || 0), 0);
-    const weekTotal = days.reduce((s, d) => s + (d.data?.stats?.totalTasks || 0), 0);
-    const weekPct = weekTotal > 0 ? Math.round((weekDone / weekTotal) * 100) : 0;
-    const bestDay = days.reduce((best, d) => {
-      if (!d.data) return best;
-      const pct = d.data.stats?.overallCompleted || 0;
-      return pct > (best.pct || 0) ? { date: d.date, pct } : best;
-    }, { date: '', pct: 0 });
+    const todayStr = activeDate;
     const streak = computeStreak();
 
-    return (
-      <div className="pulse-page">
-        <div className="pulse-header">
-          <Activity size={22} className="pulse-header-icon" />
-          <h2 className="pulse-header-title">{t('pulse.title')}</h2>
-        </div>
-        <p className="pulse-subtitle">{t('pulse.subtitle')}</p>
-        {!hasData ? (
+    if (!dayData) {
+      return (
+        <div className="pulse-page">
+          <div className="pulse-header">
+            <Activity size={22} className="pulse-header-icon" />
+            <h2 className="pulse-header-title">{t('pulse.title')}</h2>
+          </div>
+          <p className="pulse-subtitle">{t('pulse.subtitle')}</p>
           <div className="empty-state">
             <TrendingUp size={32} />
             <span className="empty-state-title">{t('pulse.noData')}</span>
           </div>
-        ) : (
-          <>
-            <div className="pulse-metrics">
-              <div className="pulse-metric pulse-metric-completion">
-                <span className="pulse-metric-value">{weekPct}%</span>
-                <span className="pulse-metric-label">{t('pulse.completionRate')}</span>
-                <div className="pulse-metric-bar"><div style={{ width: `${weekPct}%` }} /></div>
-              </div>
-              <div className="pulse-metric pulse-metric-tasks">
-                <span className="pulse-metric-value">{weekDone}/{weekTotal}</span>
-                <span className="pulse-metric-label">{t('pulse.tasksDone')}</span>
-              </div>
-              <div className="pulse-metric pulse-metric-best">
-                <span className="pulse-metric-value">
-                  {bestDay.pct > 0 ? `${bestDay.pct}%` : '—'}
-                </span>
-                <span className="pulse-metric-label">{t('pulse.bestDay')}</span>
-                {bestDay.date && <span className="pulse-metric-date">{formatHumanDate(bestDay.date)}</span>}
-              </div>
-              <div className="pulse-metric pulse-metric-streak">
-                <span className="pulse-metric-value">{streak}</span>
-                <span className="pulse-metric-label">{t('streak.days')}</span>
-                <Zap size={16} className="pulse-streak-icon" />
-              </div>
+        </div>
+      );
+    }
+
+    const stats = dayData.stats;
+    const allTasks = dayData.tasks || [];
+    const completedTasks = allTasks.filter(t => t.completed).length;
+    const totalTasks = allTasks.length;
+    const overallPct = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+    const todayPrayerTrack = prayerTracking[todayStr] || {};
+    const prayerCounts = { onTime: 0, late: 0, missed: 0, pending: 0 };
+    PRAYER_KEYS.forEach(pk => {
+      const status = todayPrayerTrack[pk] || 'pending';
+      prayerCounts[status] = (prayerCounts[status] || 0) + 1;
+    });
+    const onTimePrayers = prayerCounts.onTime;
+
+    const todayHabits = habits.filter(h => {
+      const entry = h.entries?.[todayStr];
+      return entry !== undefined;
+    });
+    const completedHabits = todayHabits.filter(h => h.entries?.[todayStr]?.completed).length;
+
+    const notes = dayData.studyNotes || [];
+    const hasNotes = notes.length > 0;
+
+    // Group tasks by period for breakdown
+    const tasksByPeriod = {};
+    PLANNER_PERIOD_ORDER.forEach(pk => {
+      const periodTasks = allTasks.filter(t => t.period === pk);
+      if (periodTasks.length > 0) {
+        const done = periodTasks.filter(t => t.completed).length;
+        tasksByPeriod[pk] = { tasks: periodTasks, total: periodTasks.length, done };
+      }
+    });
+
+    const STATUS_COLORS = { onTime: 'var(--color-emerald)', late: 'var(--color-gold)', missed: 'var(--color-danger)', pending: 'var(--text-tertiary)' };
+    const STATUS_ICONS = { onTime: '✓', late: '~', missed: '✗', pending: '?' };
+
+    return (
+      <div className="pulse-page">
+        {/* Header */}
+        <div className="pulse-header-wrap">
+          <div className="pulse-header">
+            <Activity size={22} className="pulse-header-icon" />
+            <div>
+              <h2 className="pulse-header-title">{t('pulse.title')}</h2>
+              <p className="pulse-subtitle">{t('pulse.subtitle')}</p>
             </div>
-            <div className="pulse-chart">
-              <div className="pulse-chart-header">
-                <BarChart3 size={16} />
-                <span>{t('pulse.completionRate')}</span>
-              </div>
-              <div className="pulse-bars">
-                {days.map((d, idx) => {
-                  const pct = d.data?.stats?.overallCompleted || 0;
-                  const isToday = idx === 6;
-                  const isBest = d.date === bestDay.date && bestDay.pct > 0;
-                  return (
-                    <div key={d.date} className={`pulse-bar-col ${isToday ? 'today' : ''} ${isBest ? 'best' : ''}`}>
-                      <div className="pulse-bar-wrap">
-                        <div className="pulse-bar" style={{ height: `${(pct / 100) * 100}%` }}>
-                          <span className="pulse-bar-pct">{pct > 0 ? `${pct}%` : ''}</span>
-                        </div>
-                      </div>
-                      <span className="pulse-bar-label">
-                        {new Date(d.date).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US', { weekday: 'short' })}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
+          </div>
+          <div className="pulse-date-box">
+            <span className="pulse-date-gregorian">{formatHumanDate(todayStr)}</span>
+            {dayData.hijriDate && <span className="pulse-date-hijri">{dayData.hijriDate}</span>}
+          </div>
+        </div>
+
+        {/* Overview Metric Cards */}
+        <div className="pulse-metrics">
+          <div className="pulse-metric-card pulse-card-completion">
+            <div className="pulse-ring-wrap">
+              <svg className="pulse-ring" viewBox="0 0 72 72">
+                <circle cx="36" cy="36" r="30" fill="none" stroke="var(--bg-primary)" strokeWidth="5" />
+                <circle cx="36" cy="36" r="30" fill="none" stroke="var(--color-emerald)" strokeWidth="5"
+                  strokeDasharray={`${2 * Math.PI * 30}`}
+                  strokeDashoffset={`${2 * Math.PI * 30 * (1 - overallPct / 100)}`}
+                  strokeLinecap="round" transform="rotate(-90 36 36)" style={{ transition: 'stroke-dashoffset 0.6s ease' }} />
+              </svg>
+              <span className="pulse-ring-value">{overallPct}%</span>
             </div>
-            {/* Prayer Tracking Summary */}
-            <div className="pulse-chart">
-              <div className="pulse-chart-header">
-                <Clock size={16} />
-                <span>{t('pulse.prayerAccuracy')}</span>
-              </div>
-              <div className="pulse-prayer-summary">
-                {(() => {
-                  const counts = { onTime: 0, late: 0, missed: 0, pending: 0 };
-                  days.forEach(d => {
-                    const track = prayerTracking[d.date];
-                    if (track) {
-                      PRAYER_KEYS.forEach(pk => {
-                        const status = track[pk] || 'pending';
-                        counts[status] = (counts[status] || 0) + 1;
-                      });
-                    } else {
-                      counts.pending += 5;
-                    }
-                  });
+            <span className="pulse-metric-label">{t('pulse.completionRate')}</span>
+          </div>
+          <div className="pulse-metric-card pulse-card-tasks">
+            <span className="pulse-metric-value">{completedTasks}<span className="pulse-metric-sep">/{totalTasks}</span></span>
+            <span className="pulse-metric-label">{t('pulse.tasksDone')}</span>
+            <div className="pulse-metric-minibar"><div style={{ width: `${overallPct}%` }} /></div>
+          </div>
+          <div className="pulse-metric-card pulse-card-prayer">
+            <span className="pulse-metric-value">{onTimePrayers}<span className="pulse-metric-sep">/5</span></span>
+            <span className="pulse-metric-label">{t('pulse.prayerOnTime')}</span>
+            <div className="pulse-metric-dots">
+              {PRAYER_KEYS.map(pk => {
+                const status = todayPrayerTrack[pk] || 'pending';
+                return <span key={pk} className="pulse-dot" style={{ background: STATUS_COLORS[status] }} />;
+              })}
+            </div>
+          </div>
+          <div className="pulse-metric-card pulse-card-streak">
+            <Flame size={28} className="pulse-streak-icon-big" />
+            <span className="pulse-metric-value">{streak}</span>
+            <span className="pulse-metric-label">{t('streak.days')}</span>
+          </div>
+        </div>
+
+        {/* Prayer Status Cards */}
+        <div className="pulse-card">
+          <div className="pulse-card-header">
+            <Clock size={16} />
+            <span>{t('pulse.prayerAccuracy')}</span>
+          </div>
+          <div className="pulse-prayer-cards">
+            {PRAYER_KEYS.map(pk => {
+              const status = todayPrayerTrack[pk] || 'pending';
+              const time = dayData.prayerTimes?.[pk] || '--:--';
               return (
-                    <div className="pulse-prayer-stats">
-                      <div className="pulse-prayer-stat" style={{ '--stat-color': 'var(--color-emerald)' }}>
-                        <span className="pulse-prayer-stat-value">{counts.onTime}</span>
-                        <span className="pulse-prayer-stat-label">{t('pulse.prayerOnTime')}</span>
-                      </div>
-                      <div className="pulse-prayer-stat" style={{ '--stat-color': 'var(--color-gold)' }}>
-                        <span className="pulse-prayer-stat-value">{counts.late}</span>
-                        <span className="pulse-prayer-stat-label">{t('pulse.prayerLate')}</span>
-                      </div>
-                      <div className="pulse-prayer-stat" style={{ '--stat-color': 'var(--color-danger)' }}>
-                        <span className="pulse-prayer-stat-value">{counts.missed}</span>
-                        <span className="pulse-prayer-stat-label">{t('pulse.prayerMissed')}</span>
-                      </div>
-                    </div>
-                  );
-                })()}
-              </div>
+                <button key={pk} className={`pulse-prayer-btn pulse-prayer-${status}`}
+                  onClick={() => cyclePrayerStatus(todayStr, pk)}
+                  title={t('pulse.status') + ': ' + t('prayerTracker.' + status)}>
+                  <span className="pulse-prayer-btn-name">{t('prayer.' + pk)}</span>
+                  <span className="pulse-prayer-btn-time">{time}</span>
+                  <span className="pulse-prayer-btn-status">
+                    <span className="pulse-status-dot" style={{ background: STATUS_COLORS[status] }} />
+                    {t('prayerTracker.' + status)}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Task Breakdown by Period */}
+        {Object.keys(tasksByPeriod).length > 0 && (
+          <div className="pulse-card">
+            <div className="pulse-card-header">
+              <List size={16} />
+              <span>{t('pulse.taskBreakdown')}</span>
             </div>
-          </>
+            <div className="pulse-period-breakdown">
+              {PLANNER_PERIOD_ORDER.filter(pk => tasksByPeriod[pk]).map(pk => {
+                const block = tasksByPeriod[pk];
+                const pct = block.total > 0 ? Math.round((block.done / block.total) * 100) : 0;
+                return (
+                  <div key={pk} className="pulse-period-row">
+                    <div className="pulse-period-info">
+                      <span className="pulse-period-name">{t('period.' + pk)}</span>
+                      <span className="pulse-period-count">{block.done}/{block.total}</span>
+                    </div>
+                    <div className="pulse-period-bar-wrap">
+                      <div className="pulse-period-bar" style={{ width: `${pct}%` }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Today's Habits */}
+        <div className="pulse-card">
+          <div className="pulse-card-header">
+            <Target size={16} />
+            <span>{t('pulse.habitsToday')}</span>
+          </div>
+          {todayHabits.length === 0 ? (
+            <div className="pulse-empty-habits">
+              <span>{t('pulse.noHabits')}</span>
+            </div>
+          ) : (
+            <div className="pulse-habits-grid">
+              {todayHabits.map(h => {
+                const entry = h.entries?.[todayStr];
+                const done = entry?.completed || false;
+                return (
+                  <div key={h.id} className={`pulse-habit-item ${done ? 'done' : ''}`}>
+                    <span className={`pulse-habit-check ${done ? 'checked' : ''}`}>
+                      {done ? <Check size={14} /> : <Minus size={14} />}
+                    </span>
+                    <span className="pulse-habit-name">{h.name}</span>
+                  </div>
+                );
+              })}
+              {todayHabits.length > 0 && completedHabits > 0 && (
+                <div className="pulse-habits-summary">
+                  <span className="pulse-habits-summary-text">{completedHabits}/{todayHabits.length} {t('pulse.tasksDone')}</span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Study Notes */}
+        {hasNotes && (
+          <div className="pulse-card">
+            <div className="pulse-card-header">
+              <BookOpen size={16} />
+              <span>{t('pulse.studyNotes')}</span>
+            </div>
+            <div className="pulse-notes-list">
+              {notes.slice(0, 3).map(note => (
+                <div key={note.id} className="pulse-note-item">
+                  <span className="pulse-note-period">{t('period.' + note.period)}</span>
+                  <p className="pulse-note-text">{note.text}</p>
+                </div>
+              ))}
+              {notes.length > 3 && (
+                <div className="pulse-notes-more">+{notes.length - 3} more</div>
+              )}
+            </div>
+          </div>
         )}
       </div>
     );
@@ -1488,9 +1646,9 @@ function App() {
   // ---- Sidebar navigation links ----
   const sidebarLinks = [
     { id: 'home', label: t('nav.home'), icon: Sparkles },
+    { id: 'prayers', label: t('nav.prayers'), icon: Clock },
     { id: 'tasks', label: t('nav.tasks'), icon: List },
     { id: 'habits', label: t('nav.habits'), icon: Target },
-    { id: 'prayers', label: t('nav.prayers'), icon: Clock },
     { id: 'pulse', label: t('nav.pulse'), icon: Activity },
     { id: 'journal', label: t('nav.journal'), icon: BookOpen },
     { id: 'guide', label: t('nav.guide'), icon: HelpCircle },
@@ -1507,27 +1665,16 @@ function App() {
               <Sparkles size={22} className="brand-icon" />
               <span className="brand-latin">{t('brand.title')}</span>
             </h1>
-            {computeStreak() > 0 && (
-              <div className="streak-badge" title={t('streak.title')}>
-                <Zap size={14} />
-                <span>{computeStreak()} {t('streak.days')}</span>
-              </div>
-            )}
           </div>
         <div className="header-actions">
-          <button className="btn btn-menu-mobile" onClick={() => setSidebarOpen(true)} aria-label={t('nav.openSidebar')}>
-            <Menu size={18} />
-          </button>
           {installable && (
             <button className="btn btn-install btn-install-header" onClick={handleInstall} title={t('nav.install')}>
               <Smartphone size={16} />
             </button>
           )}
-          {dayData && (
-            <button className="btn btn-primary btn-add-task" onClick={() => openTaskModal('add')}>
-              <Plus size={18} />
-            </button>
-          )}
+          <button className="btn btn-menu-mobile" onClick={() => setSidebarOpen(true)} aria-label={t('nav.openSidebar')}>
+            <Menu size={18} />
+          </button>
         </div>
       </header>
 
@@ -1536,81 +1683,101 @@ function App() {
       <div className="main-layout full-screen">
         {/* Left Sidebar */}
         <aside className={`full-sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
-            <button className="sidebar-close-btn" onClick={() => setSidebarOpen(false)} aria-label={t('nav.closeSidebar')}>
-              <X size={20} />
-            </button>
-            {dayData && (
-              <div className="sidebar-planner-header">
-                <span className="sidebar-planner-eyebrow">{t('brand.subtitle')}</span>
-                <span className="sidebar-planner-date">{formatHumanDate(dayData.date)}</span>
-                {timelineStatus?.nextPrayerName && (
-                  <span className="sidebar-planner-countdown">
-                    <Clock size={13} /> {timelineStatus.timeToNextPrayer} {t('time.until')} {t('prayer.' + timelineStatus.nextPrayerName.toLowerCase())}
-                  </span>
-                )}
-                <div className="sidebar-planner-meta">
-                  {dayData.hijriDate && <span>{dayData.hijriDate}</span>}
-                  <span>{dayData.stats.overallCompleted}{t('sidebar.complete')}</span>
-                </div>
-              </div>
-            )}
+          <button className="sidebar-close-btn" onClick={() => setSidebarOpen(false)} aria-label={t('nav.closeSidebar')}>
+            <X size={20} />
+          </button>
 
-            <div className="sidebar-header">
-              <span className="sidebar-header-label">{t('nav.navigation')}</span>
+          {/* Profile card */}
+          <div className="sidebar-profile">
+            <div className="sidebar-profile-avatar">
+              <Sparkles size={20} />
             </div>
-            <nav className="sidebar-nav">
-              {sidebarLinks.map(link => (
-                  <button
-                    key={link.id}
-                    className={`sidebar-link ${currentPage === link.id ? 'active' : ''}`}
-                    onClick={() => { setCurrentPage(link.id); setSidebarOpen(false); }}
-                  >
-                  <span className="nav-icon-wrap"><link.icon size={17} /></span>
-                  <span className="nav-label">{link.label}</span>
-                </button>
-              ))}
-            </nav>
-            <div className="sidebar-quick-toggles">
-              <button className="sidebar-toggle-btn" onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} title={t('settings.theme')}>
-                {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
-              </button>
-              <button className="sidebar-toggle-btn" onClick={() => setLang(lang === 'en' ? 'ar' : 'en')} title={t('settings.language')}>
-                {lang === 'en' ? 'AR' : 'EN'}
-              </button>
-              <button className="sidebar-toggle-btn" onClick={() => setFontSize(s => {
-                const idx = FONT_SIZES.indexOf(s);
-                return FONT_SIZES[(idx + 1) % FONT_SIZES.length];
-              })} title={t('settings.fontSize')}>
-                <Type size={16} />
-                <span className="font-size-sidebar-label">{t('settings.fontSize_' + fontSize)}</span>
-              </button>
-              <button className="sidebar-toggle-btn sidebar-timer-btn" onClick={() => setTimer(prev => ({ ...prev, show: !prev.show }))} title={t('timer.title')}>
-                <Hourglass size={16} />
-              </button>
+            <div className="sidebar-profile-body">
+              <span className="sidebar-profile-title">{t('brand.title')}</span>
+              <span className="sidebar-profile-sub">{t('brand.subtitle')}</span>
             </div>
-            {dayData && (
-              <div className="sidebar-export-wrap">
-                <span className="sidebar-export-label">{t('header.export')}</span>
-                <button className="btn btn-export sidebar-export-btn" onClick={exportToMarkdown} title={t('header.exportTitle')}>
-                  <Download size={14} /> {t('header.exportCurrent')}
-                </button>
-                {prevDayData && (
-                  <button className="btn btn-export sidebar-export-btn sidebar-export-btn-prev" onClick={() => exportToMarkdown(prevDayData)} title={t('header.exportTitle')}>
-                    <Download size={14} /> {t('header.exportPrevious')}
-                  </button>
-                )}
+          </div>
+
+          {/* Date + prayer info */}
+          {dayData && (
+            <div className="sidebar-info">
+              <div className="sidebar-info-row">
+                <CalendarDays size={14} className="sidebar-info-icon" />
+                <span className="sidebar-info-date">{formatHumanDate(dayData.date)}</span>
               </div>
-            )}
-            <div className="sidebar-dhikr">
-              <div className="sidebar-dhikr-icon">ﷲ</div>
-              <p className="sidebar-dhikr-text" lang="ar">{getDhikrOfDay().ar}</p>
-              <p className="sidebar-dhikr-translation">{getDhikrOfDay().en}</p>
+              {dayData.hijriDate && (
+                <div className="sidebar-info-row sidebar-info-hijri">
+                  <span>{dayData.hijriDate}</span>
+                </div>
+              )}
+              {timelineStatus?.nextPrayerName && (
+                <div className="sidebar-info-row sidebar-info-prayer">
+                  <Clock size={13} className="sidebar-info-icon" />
+                  <span>{timelineStatus.timeToNextPrayer} {t('time.until')} {t('prayer.' + timelineStatus.nextPrayerName.toLowerCase())}</span>
+                </div>
+              )}
             </div>
-            <div className="sidebar-credit">
-              {t('footer.developedBy')}{' '}
-              <a href="https://nagdista.com" target="_blank" rel="noopener noreferrer">Nagdista</a>
+          )}
+
+          {/* Streak */}
+          {computeStreak() > 0 && (
+            <div className="sidebar-streak" title={t('streak.title')}>
+              <Flame size={16} className="sidebar-streak-icon" />
+              <span className="sidebar-streak-value">{computeStreak()}</span>
+              <span className="sidebar-streak-label">{t('streak.days')}</span>
             </div>
-          </aside>
+          )}
+
+          {/* Navigation */}
+          <div className="sidebar-nav-header">{t('nav.navigation')}</div>
+          <nav className="sidebar-nav">
+            {sidebarLinks.map(link => (
+              <button
+                key={link.id}
+                className={`sidebar-link ${currentPage === link.id ? 'active' : ''}`}
+                onClick={() => { setCurrentPage(link.id); setSidebarOpen(false); }}
+              >
+                <span className="sidebar-link-icon"><link.icon size={17} /></span>
+                <span className="sidebar-link-label">{link.label}</span>
+              </button>
+            ))}
+          </nav>
+
+          {/* Quick actions */}
+          <div className="sidebar-actions">
+            <button className="sidebar-action-btn" onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} title={t('settings.theme')}>
+              {theme === 'light' ? <Moon size={15} /> : <Sun size={15} />}
+            </button>
+            <button className="sidebar-action-btn" onClick={() => setLang(lang === 'en' ? 'ar' : 'en')} title={t('settings.language')}>
+              <span className="sidebar-action-lang">{lang === 'en' ? 'AR' : 'EN'}</span>
+            </button>
+            <button className="sidebar-action-btn" onClick={() => setFontSize(s => {
+              const idx = FONT_SIZES.indexOf(s);
+              return FONT_SIZES[(idx + 1) % FONT_SIZES.length];
+            })} title={t('settings.fontSize')}>
+              <Type size={15} />
+            </button>
+          </div>
+
+          {/* Export */}
+          {dayData && (
+            <div className="sidebar-export">
+              <button className="sidebar-export-btn" onClick={() => exportToMarkdown()} title={t('header.exportTitle')}>
+                <Download size={13} /> {t('header.exportCurrent')}
+              </button>
+              {prevDayData && (
+                <button className="sidebar-export-btn sidebar-export-btn-prev" onClick={() => exportToMarkdown(prevDayData)} title={t('header.exportTitle')}>
+                  <Download size={13} /> {t('header.exportPrevious')}
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Footer */}
+          <div className="sidebar-footer">
+            {t('footer.developedBy')} <a href="https://nagdista.com" target="_blank" rel="noopener noreferrer">Nagdista</a>
+          </div>
+        </aside>
 
           {/* Main Content Area */}
           <main className="content-area">
@@ -1631,27 +1798,6 @@ function App() {
                   <List size={22} className="tasks-header-icon" />
                   <h3 className="tasks-header-title">{t('tasks.title')}</h3>
                   <span className="tasks-header-count">{dayData.stats.completedTasks}/{dayData.stats.totalTasks}</span>
-                </div>
-                <div className="tasks-stats-bar">
-                  <div className="tasks-stat">
-                    <span className="tasks-stat-value">{dayData.stats.totalTasks}</span>
-                    <span className="tasks-stat-label">{t('tasks.total')}</span>
-                  </div>
-                  <div className="tasks-stat">
-                    <span className="tasks-stat-value tasks-stat-done">{dayData.stats.completedTasks}</span>
-                    <span className="tasks-stat-label">{t('tasks.completed')}</span>
-                  </div>
-                  <div className="tasks-stat">
-                    <span className="tasks-stat-value tasks-stat-left">{dayData.stats.totalTasks - dayData.stats.completedTasks}</span>
-                    <span className="tasks-stat-label">{t('tasks.remaining')}</span>
-                  </div>
-                  <div className="tasks-stat tasks-stat-pct">
-                    <span className="tasks-stat-value">{dayData.stats.overallCompleted}%</span>
-                    <span className="tasks-stat-label">{t('tasks.completion')}</span>
-                  </div>
-                </div>
-                <div className="tasks-progress-wrap">
-                  <div className="tasks-progress-bar" style={{ width: `${dayData.stats.overallCompleted}%` }} />
                 </div>
                 <div className="tasks-search-wrap">
                   <Search size={14} className="tasks-search-icon" />
@@ -1761,37 +1907,6 @@ function App() {
 
             {currentPage === 'journal' && dayData && (
               <div className="journal-page">
-                {/* Mood Tracker */}
-                <div className="journal-card mood-card">
-                  <div className="journal-header">
-                    <div className="journal-header-left">
-                      <Smile size={18} className="journal-icon" />
-                      <div>
-                        <h3 className="journal-title">{t('mood.title')}</h3>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mood-grid">
-                    {MOODS.map(m => {
-                      const current = dayData.mood || '';
-                      const isActive = current === m;
-                      return (
-                        <button
-                          key={m}
-                          className={`mood-btn ${isActive ? 'active' : ''}`}
-                          onClick={() => {
-                            const next = isActive ? '' : m;
-                            updateDayData({ ...dayData, mood: next });
-                          }}
-                        >
-                          <span className="mood-emoji">{MOOD_EMOJIS[m]}</span>
-                          <span className="mood-label">{t('mood.' + m)}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
                 <div className="journal-card journal-add-card">
                   <div className="journal-header">
                     <div className="journal-header-left">
@@ -1814,6 +1929,7 @@ function App() {
                       onChange={e => setStudyText(e.target.value)}
                       onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); addStudyNote(); } }}
                       rows={3}
+                      style={{ resize: 'none' }}
                     />
                     <div className="study-input-meta">
                       <span className="study-input-count">{studyText.length}</span>
@@ -2028,25 +2144,6 @@ function App() {
                     })}
                   </div>
                 )}
-                {habits.length > 0 && (
-                  <div style={{ marginTop: 16, textAlign: 'center' }}>
-                    <button className="btn" onClick={() => {
-                      const md = exportHabitsMarkdown();
-                      if (!md) return;
-                      const blob = new Blob([md], { type: 'text/markdown' });
-                      const url = URL.createObjectURL(blob);
-                      const a = document.createElement('a');
-                      a.href = url;
-                      a.download = `habits_${formatDateLocal(new Date())}.md`;
-                      document.body.appendChild(a);
-                      a.click();
-                      document.body.removeChild(a);
-                      URL.revokeObjectURL(url);
-                    }}>
-                      <Download size={14} /> {t('habits.export')}
-                    </button>
-                  </div>
-                )}
               </div>
             )}
 
@@ -2056,42 +2153,6 @@ function App() {
                   <Clock size={20} className="prayers-header-icon" />
                   <h2 className="prayers-header-title">{t('prayerTimes.title')}</h2>
                   <span className="kbd-hint"><kbd>P</kbd></span>
-                </div>
-
-                {/* Prayer Tracker */}
-                <div className="prayer-tracker-card">
-                  <div className="prayer-tracker-header">
-                    <span className="prayer-tracker-title">{t('prayerTracker.title')}</span>
-                    <span className="prayer-tracker-hint">{t('prayerTracker.trackYour')}</span>
-                  </div>
-                  <div className="prayer-tracker-grid">
-                    {PRAYER_KEYS.map(pk => {
-                      const status = getPrayerStatus(activeDate, pk);
-                      const statusColors = {
-                        pending: 'var(--text-tertiary)',
-                        onTime: 'var(--color-emerald)',
-                        late: 'var(--color-gold)',
-                        missed: 'var(--color-danger)'
-                      };
-                      return (
-                        <button
-                          key={pk}
-                          className={`prayer-tracker-btn status-${status}`}
-                          onClick={() => cyclePrayerStatus(activeDate, pk)}
-                          title={t('prayerTracker.' + status)}
-                        >
-                          <span className="prayer-tracker-prayer">{t('prayer.' + pk)}</span>
-                          <span className="prayer-tracker-status" style={{ color: statusColors[status] }}>
-                            {status === 'onTime' && <Check size={14} />}
-                            {status === 'missed' && <X size={14} />}
-                            {status === 'late' && <Clock size={14} />}
-                            {status === 'pending' && '—'}
-                          </span>
-                          <span className="prayer-tracker-time">{dayData.prayerTimes[pk] || '--:--'}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
                 </div>
 
                 {/* Next Prayer Card */}
@@ -2316,6 +2377,7 @@ function App() {
                           <div key={p} className="form-group">
                             <label className="form-label">{t('settings.' + p)}</label>
                             <input className="form-input" type="text" value={manualTimesForm[p]} onChange={e => setManualTimesForm(prev => ({ ...prev, [p]: e.target.value }))} required />
+                            <span className="manual-time-hint">{t('prayer.' + p)}</span>
                           </div>
                         ))}
                       </div>
@@ -2381,6 +2443,13 @@ function App() {
             )}
 
           </main>
+
+        {/* Floating Action Button */}
+        {dayData && (
+          <button className="fab-add-task" onClick={() => openTaskModal('add')} title={t('task.add')}>
+            <Plus size={22} />
+          </button>
+        )}
         </div>
 
       {/* Toast notifications */}
@@ -2551,78 +2620,6 @@ function App() {
                 <button type="submit" className="btn btn-primary">{taskModal.mode === 'add' ? t('modal.create') : t('modal.save')}</button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* Focus Timer Modal */}
-      {timer.show && (
-        <div className="modal-overlay" onClick={() => setTimer(prev => ({ ...prev, show: false, running: false }))}>
-          <div className="modal-content timer-modal" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <span className="modal-title">
-                <Hourglass size={18} /> {t('timer.title')}
-              </span>
-              <button className="btn-task-action" onClick={() => setTimer(prev => ({ ...prev, show: false, running: false }))}>
-                <X size={18} />
-              </button>
-            </div>
-            <div className="timer-body">
-              <div className="timer-circle-wrap">
-                <svg className="timer-circle" viewBox="0 0 120 120">
-                  <circle cx="60" cy="60" r="54" fill="none" stroke="var(--border-color)" strokeWidth="6" />
-                  <circle
-                    cx="60" cy="60" r="54"
-                    fill="none"
-                    stroke={timer.mode === 'focus' ? 'var(--color-emerald)' : 'var(--color-gold)'}
-                    strokeWidth="6"
-                    strokeLinecap="round"
-                    strokeDasharray={`${2 * Math.PI * 54}`}
-                    strokeDashoffset={`${2 * Math.PI * 54 * (1 - timer.remaining / timer.total)}`}
-                    transform="rotate(-90 60 60)"
-                    style={{ transition: 'stroke-dashoffset 0.5s linear' }}
-                  />
-                </svg>
-                <div className="timer-display">
-                  <span className="timer-time">{formatTimer(timer.remaining)}</span>
-                  <span className="timer-mode-label">
-                    {timer.mode === 'focus' ? t('timer.focus') : t('timer.break')}
-                  </span>
-                </div>
-              </div>
-              <div className="timer-info">
-                <span>{t('timer.cycle')} {timer.cycle}</span>
-                {timer.mode === 'focus' ? (
-                  <span>{t('timer.focusTime')}: {FOCUS_MINUTES}m</span>
-                ) : (
-                  <span>{t('timer.breakTime')}: {BREAK_MINUTES}m</span>
-                )}
-              </div>
-              <div className="timer-actions">
-                {!timer.running ? (
-                  <button className="btn btn-primary timer-btn" onClick={() => setTimer(prev => ({ ...prev, running: true }))}>
-                    <Play size={18} /> {t('timer.start')}
-                  </button>
-                ) : (
-                  <button className="btn timer-btn" onClick={() => setTimer(prev => ({ ...prev, running: false }))}>
-                    <Square size={18} /> {t('timer.pause')}
-                  </button>
-                )}
-                <button className="btn timer-btn" onClick={() => {
-                  setTimer(prev => ({ ...prev, running: false, remaining: FOCUS_MINUTES * 60, total: FOCUS_MINUTES * 60, mode: 'focus' }));
-                }}>
-                  <RefreshCw size={16} /> {t('timer.reset')}
-                </button>
-              </div>
-              {timer.mode === 'break' && !timer.running && (
-                <div className="timer-dhikr">
-                  <span className="timer-dhikr-title">{t('timer.dhikrTitle')}</span>
-                  <span className="timer-dhikr-item">{t('timer.adhkar1')}</span>
-                  <span className="timer-dhikr-item">{t('timer.adhkar2')}</span>
-                  <span className="timer-dhikr-item">{t('timer.adhkar3')}</span>
-                </div>
-              )}
-            </div>
           </div>
         </div>
       )}
