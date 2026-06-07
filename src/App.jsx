@@ -4,7 +4,7 @@ import {
   BookOpen, Clock, Sparkles, MapPin, X, AlertCircle,
   ChevronUp, ChevronDown, RefreshCw, Download, HelpCircle, List, Type, Menu, Target,
   Smartphone, Lock, Unlock, Upload, Search, Zap, Activity,
-  TrendingUp, BarChart3, Flame, CalendarDays, PenLine, Heart, Coffee
+  TrendingUp, BarChart3, Flame, CalendarDays, PenLine, Heart, Coffee, Award, Send
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import {
@@ -334,6 +334,8 @@ function App() {
   const [apiError, setApiError] = useState(null);
   const [showWelcome, setShowWelcome] = useState(() => !localStorage.getItem('tarteeb_welcome_dismissed'));
   const [prayerNotif, setPrayerNotif] = useState(null);
+  const [contactMessage, setContactMessage] = useState('');
+  const [contactSending, setContactSending] = useState(false);
   const lastActivePeriod = useRef(null);
   const [habits, setHabits] = useState(() => {
     try { return JSON.parse(localStorage.getItem('tarteeb_habits') || '[]'); }
@@ -754,7 +756,7 @@ function App() {
       if (el && container) {
         const containerRect = container.getBoundingClientRect();
         const elRect = el.getBoundingClientRect();
-        container.scrollTop = elRect.top - containerRect.top + container.scrollTop - containerRect.height / 2;
+        container.scrollTo({ top: elRect.top - containerRect.top + container.scrollTop - containerRect.height / 2, behavior: 'smooth' });
       }
     });
   }, [currentPage, dayData]);
@@ -1174,12 +1176,12 @@ function App() {
     const completedTasksList = allTasks.filter(t => t.status === 'completed' || t.completed);
     const notCompletedTasksList = allTasks.filter(t => t.status === 'not_completed');
     const pendingTasksList = allTasks.filter(t => !t.status || t.status === 'pending' || (!t.completed && t.status !== 'not_completed'));
-    
+
     const completed = completedTasksList.length;
     const notCompleted = notCompletedTasksList.length;
     const pending = pendingTasksList.length;
     const overallPct = total > 0 ? Math.round((completed / total) * 100) : 0;
-    
+
     const fixed = allTasks.filter(t => t.type === 'fixed');
     const fixedDone = fixed.filter(t => t.status === 'completed' || t.completed).length;
     const fixedPct = fixed.length > 0 ? Math.round((fixedDone / fixed.length) * 100) : 100;
@@ -1192,13 +1194,41 @@ function App() {
     PRAYER_KEYS.forEach(pk => { const s = todayTrack[pk] || 'pending'; prayerCounts[s]++; });
     const onTime = prayerCounts.completed;
 
-    const todayHabits = habits.filter(h => h.entries?.[date] !== undefined);
-    const completedHabits = todayHabits.filter(h => h.entries?.[date]?.completed).length;
+    const allHabitsThisDate = habits.filter(h => h.entries?.[date] !== undefined);
+    const completedHabits = allHabitsThisDate.filter(h => h.entries?.[date]?.completed).length;
+    const totalHabitsToday = allHabitsThisDate.length;
+    const habitsPct = totalHabitsToday > 0 ? Math.round((completedHabits / totalHabitsToday) * 100) : 0;
+
     const notes = studyNotes || [];
     const streak = computeStreak();
 
+    // Sleep & drinks
+    const dateSessions = sleepTracking[date] || [];
+    const totalSleepHours = dateSessions.reduce((sum, s) => sum + calcSleepHours(s.start, s.end), 0);
+    const sleepScore = Math.min(Math.round((totalSleepHours / 8) * 100), 100);
+
+    const dateDrinks = drinksTracking[date] || [];
+    const totalDrinksCount = dateDrinks.reduce((sum, d) => sum + d.count, 0);
+
+    const prayerPct = Math.round((onTime / 5) * 100);
+    const streakScore = Math.min(streak * 10, 100);
+    const compositeScore = Math.round(
+      (overallPct * 0.25) + (habitsPct * 0.20) + (prayerPct * 0.30) + (sleepScore * 0.15) + (streakScore * 0.10)
+    );
+    const scoreLabel = compositeScore >= 85 ? t('pulse.scoreExcellent')
+      : compositeScore >= 65 ? t('pulse.scoreGood')
+      : compositeScore >= 45 ? t('pulse.scoreFair')
+      : t('pulse.scoreNeedsWork');
+
     const statusEmoji = { completed: '✅', not_completed: '❌', pending: '—' };
     const prayerOrder = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
+
+    const formatDur = (mins) => {
+      if (!mins || mins <= 0) return '';
+      const h = Math.floor(mins / 60);
+      const m = mins % 60;
+      return h > 0 ? `${h}h${m > 0 ? m + 'm' : ''}` : `${m}m`;
+    };
 
     // ---- Build ----
     lines.push(`# 📅 ${title}`);
@@ -1212,14 +1242,38 @@ function App() {
     lines.push('## 🌅 ' + t('export.dailyOverview'));
     lines.push('');
     lines.push('> [!abstract]+ ' + t('export.dayAtGlance'));
-    lines.push(`> - **${t('export.tasks')}**: ${completed}/${total} (${overallPct}%) - [${completed} ✅ | ${notCompleted} ❌ | ${pending} ⏳]`);
+    lines.push(`> - **${t('export.tasks')}**: ${completed}/${total} (${overallPct}%) — ✅${completed} ❌${notCompleted} ⏳${pending}`);
     lines.push(`> - **${t('export.fixedTasks')}**: ${fixedPct}% | **${t('export.personalTasks')}**: ${personalPct}%`);
-    lines.push(`> - **${t('export.prayersOnTime')}**: ${onTime}/5`);
+    lines.push(`> - **${t('export.prayersOnTime')}**: ${onTime}/5 (${prayerPct}%)`);
+    if (totalHabitsToday > 0) lines.push(`> - **${t('habits.title')}**: ${completedHabits}/${totalHabitsToday} (${habitsPct}%)`);
+    if (dateSessions.length > 0) lines.push(`> - **${t('sleep.title')}**: ${totalSleepHours}h`);
+    if (dateDrinks.length > 0) lines.push(`> - **${t('drinks.title')}**: ${totalDrinksCount}×`);
+    lines.push(`> - **${t('pulse.productivityScore')}**: ${compositeScore}/100 (${scoreLabel})`);
     lines.push(`> - **${t('export.streak')}**: ${streak} ${lang === 'ar' ? 'أيام' : 'days'}`);
     if (mood) {
       const emoji = MOOD_EMOJIS[mood] || '';
       const moodLabel = t('mood.' + mood);
       lines.push(`> - **${t('mood.title')}**: ${emoji} ${moodLabel}`);
+    }
+    lines.push('');
+
+    // Settings / App Info
+    lines.push('---');
+    lines.push('');
+    lines.push('## ⚙️ ' + (lang === 'ar' ? 'التطبيق والإعدادات' : 'App & Settings'));
+    lines.push('');
+    lines.push('| ' + (lang === 'ar' ? 'الإعداد' : 'Setting') + ' | ' + (lang === 'ar' ? 'القيمة' : 'Value') + ' |');
+    lines.push('|' + (lang === 'ar' ? ':----|:-----:' : '--------|:-----:') + '|');
+    lines.push('| App | Tarteeb Muslim Daily Planner |');
+    lines.push('| ' + (lang === 'ar' ? 'التاريخ' : 'Date') + ' | ' + title + ' |');
+    if (hijriDate) lines.push('| ' + (lang === 'ar' ? 'التاريخ الهجري' : 'Hijri Date') + ' | ' + hijriDate + ' |');
+    lines.push('| ' + (lang === 'ar' ? 'اللغة' : 'Language') + ' | ' + (lang === 'ar' ? 'العربية' : 'English') + ' |');
+    lines.push('| ' + (lang === 'ar' ? 'السمة' : 'Theme') + ' | ' + (theme === 'dark' ? (lang === 'ar' ? 'داكن' : 'Dark') : (lang === 'ar' ? 'فاتح' : 'Light')) + ' |');
+    lines.push('| ' + (lang === 'ar' ? 'صيغة الوقت' : 'Time Format') + ' | ' + (getUse12h() ? '12h' : '24h') + ' |');
+    if (locationConfig.city && locationConfig.country) {
+      lines.push('| ' + (lang === 'ar' ? 'الموقع' : 'Location') + ' | ' + locationConfig.city + ', ' + locationConfig.country + ' |');
+    } else if (locationConfig.latitude && locationConfig.longitude) {
+      lines.push('| ' + (lang === 'ar' ? 'الإحداثيات' : 'Coordinates') + ' | ' + locationConfig.latitude + ', ' + locationConfig.longitude + ' |');
     }
     lines.push('');
 
@@ -1260,42 +1314,51 @@ function App() {
     lines.push('');
 
     if (completedTasksList.length > 0) {
-      lines.push('> [!success]- ' + t('tasks.statusCompleted'));
+      lines.push('> [!success]- ' + t('tasks.statusCompleted') + ' (' + completed + ')');
       lines.push('>');
       completedTasksList.forEach(t => {
         const time = getTaskDisplayTime(t, prayerTimes);
         const end = t.type === 'personal' || t.type === 'user'
           ? ` – ${formatMinutesToTime(getTaskStartMinutes(t, prayerTimes) + (Number(t.duration) || 15))}`
           : '';
-        lines.push(`> - [x] **${translateTaskName(t.name)}** — ${time}${end}`);
+        const periodTag = t.period ? ` \`[${t('period.' + t.period)}]\`` : '';
+        const durationTag = t.duration ? ` _(${formatDur(Number(t.duration))})_` : '';
+        const recurringTag = t.isRecurring ? ' ♻️' : '';
+        lines.push(`> - [x] **${translateTaskName(t.name)}** — ${time}${end}${periodTag}${durationTag}${recurringTag}`);
         if (t.details) lines.push(`>   - ${t.details}`);
       });
       lines.push('');
     }
 
     if (notCompletedTasksList.length > 0) {
-      lines.push('> [!fail]- ' + t('tasks.statusNotCompleted'));
+      lines.push('> [!fail]- ' + t('tasks.statusNotCompleted') + ' (' + notCompleted + ')');
       lines.push('>');
       notCompletedTasksList.forEach(t => {
         const time = getTaskDisplayTime(t, prayerTimes);
         const end = t.type === 'personal' || t.type === 'user'
           ? ` – ${formatMinutesToTime(getTaskStartMinutes(t, prayerTimes) + (Number(t.duration) || 15))}`
           : '';
-        lines.push(`> - [x] ~~**${translateTaskName(t.name)}**~~ — ${time}${end} (❌)`);
+        const periodTag = t.period ? ` \`[${t('period.' + t.period)}]\`` : '';
+        const durationTag = t.duration ? ` _(${formatDur(Number(t.duration))})_` : '';
+        const recurringTag = t.isRecurring ? ' ♻️' : '';
+        lines.push(`> - [x] ~~**${translateTaskName(t.name)}**~~ — ${time}${end}${periodTag}${durationTag}${recurringTag} (❌)`);
         if (t.details) lines.push(`>   - ${t.details}`);
       });
       lines.push('');
     }
 
     if (pendingTasksList.length > 0) {
-      lines.push('> [!todo]- ' + t('tasks.statusPending'));
+      lines.push('> [!todo]- ' + t('tasks.statusPending') + ' (' + pending + ')');
       lines.push('>');
       pendingTasksList.forEach(t => {
         const time = getTaskDisplayTime(t, prayerTimes);
         const end = t.type === 'personal' || t.type === 'user'
           ? ` – ${formatMinutesToTime(getTaskStartMinutes(t, prayerTimes) + (Number(t.duration) || 15))}`
           : '';
-        lines.push(`> - [ ] **${translateTaskName(t.name)}** — ${time}${end}`);
+        const periodTag = t.period ? ` \`[${t('period.' + t.period)}]\`` : '';
+        const durationTag = t.duration ? ` _(${formatDur(Number(t.duration))})_` : '';
+        const recurringTag = t.isRecurring ? ' ♻️' : '';
+        lines.push(`> - [ ] **${translateTaskName(t.name)}** — ${time}${end}${periodTag}${durationTag}${recurringTag}`);
         if (t.details) lines.push(`>   - ${t.details}`);
       });
       lines.push('');
@@ -1317,7 +1380,7 @@ function App() {
         lines.push('> |' + (lang === 'ar' ? ':----|:----------:|:--------:' : '--------|:----------:|:--------:') + '|');
         periodStats.forEach(ps => {
           const bar = '█'.repeat(Math.round(ps.pct / 10)) + '░'.repeat(10 - Math.round(ps.pct / 10));
-          lines.push(`> | ${ps.name} | ${ps.done}/${ps.total} | ${bar} ${ps.pct}% |`);
+          lines.push(`> | ${ps.name} ${ps.range ? '(' + ps.range + ')' : ''} | ${ps.done}/${ps.total} | ${bar} ${ps.pct}% |`);
         });
         lines.push('');
       }
@@ -1344,28 +1407,35 @@ function App() {
     }
 
     // Habits
-    if (todayHabits.length > 0) {
+    if (allHabitsThisDate.length > 0) {
       lines.push('---');
       lines.push('');
       lines.push('## 🏆 ' + t('habits.title'));
       lines.push('');
       lines.push('> [!example]+ ' + t('export.todaysHabits'));
       lines.push('>');
-      todayHabits.forEach(h => {
+      allHabitsThisDate.forEach(h => {
         const done = h.entries?.[date]?.completed;
         lines.push('> - ' + (done ? '✅' : '❌') + ' **' + h.name + '**');
       });
-      if (completedHabits > 0) {
-        lines.push('>');
-        lines.push('> _' + completedHabits + '/' + todayHabits.length + ' ' + t('export.habitsDone') + '_');
-      }
+      lines.push('>');
+      lines.push('> _' + completedHabits + '/' + totalHabitsToday + ' ' + t('export.habitsDone') + '_');
+      lines.push('');
+    }
+
+    // All habits (including ones not tracked today)
+    const untrackedHabits = habits.filter(h => !h.entries?.[date]);
+    if (untrackedHabits.length > 0) {
+      lines.push('> [!note]- ' + (lang === 'ar' ? 'عادات لم تسجل اليوم' : 'Habits Not Logged Today') + ' (' + untrackedHabits.length + ')');
+      lines.push('>');
+      untrackedHabits.forEach(h => {
+        lines.push('> - ⚪ **' + h.name + '**');
+      });
       lines.push('');
     }
 
     // Sleep Data
-    const dateSessions = sleepTracking[date] || [];
     if (dateSessions.length > 0) {
-      const totalSleepHours = dateSessions.reduce((sum, s) => sum + calcSleepHours(s.start, s.end), 0);
       lines.push('---');
       lines.push('');
       lines.push('## 🌙 ' + t('sleep.title'));
@@ -1377,12 +1447,17 @@ function App() {
       });
       lines.push('| **' + t('sleep.totalSleep') + '** | | | **' + totalSleepHours + ' ' + t('sleep.hours') + '** |');
       lines.push('');
+    } else {
+      lines.push('---');
+      lines.push('');
+      lines.push('## 🌙 ' + t('sleep.title'));
+      lines.push('');
+      lines.push('_' + (lang === 'ar' ? 'لم يتم تسجيل أي جلسات نوم' : 'No sleep sessions recorded') + '_');
+      lines.push('');
     }
 
     // Drinks Data
-    const dateDrinks = drinksTracking[date] || [];
     if (dateDrinks.length > 0) {
-      const totalDrinks = dateDrinks.reduce((sum, d) => sum + d.count, 0);
       lines.push('---');
       lines.push('');
       lines.push('## 🥤 ' + t('drinks.title'));
@@ -1392,7 +1467,14 @@ function App() {
       dateDrinks.forEach(d => {
         lines.push(`| ${d.name || t('drinks.drink')} | ${d.count} |`);
       });
-      lines.push('| **' + t('drinks.total') + '** | **' + totalDrinks + '** |');
+      lines.push('| **' + t('drinks.total') + '** | **' + totalDrinksCount + '** |');
+      lines.push('');
+    } else {
+      lines.push('---');
+      lines.push('');
+      lines.push('## 🥤 ' + t('drinks.title'));
+      lines.push('');
+      lines.push('_' + (lang === 'ar' ? 'لم يتم تسجيل أي مشروبات' : 'No drinks recorded') + '_');
       lines.push('');
     }
 
@@ -1420,19 +1502,12 @@ function App() {
     lines.push('| ' + t('tasks.statusPending') + ' | ' + pending + '/' + total + ' |');
     lines.push('| ' + t('export.fixedTasks') + ' | ' + fixedPct + '% |');
     lines.push('| ' + t('export.personalTasks') + ' | ' + personalPct + '% |');
-    lines.push('| ' + t('export.prayersOnTime') + ' | ' + onTime + '/5 |');
-    if (todayHabits.length > 0) lines.push('| ' + t('export.habitsDone') + ' | ' + completedHabits + '/' + todayHabits.length + ' |');
-    if (notes.length > 0) lines.push('| ' + t('journal.studyNotes') + ' | ' + notes.length + ' |');
-    const sleepSessionsSum = sleepTracking[date] || [];
-    if (sleepSessionsSum.length > 0) {
-      const totalSleepHours = sleepSessionsSum.reduce((sum, s) => sum + calcSleepHours(s.start, s.end), 0);
-      lines.push('| ' + t('sleep.totalSleep') + ' | ' + totalSleepHours + ' ' + t('sleep.hours') + ' |');
-    }
-    const dateDrinksSum = drinksTracking[date] || [];
-    if (dateDrinksSum.length > 0) {
-      const totalDrinksSum = dateDrinksSum.reduce((sum, d) => sum + d.count, 0);
-      lines.push('| ' + t('drinks.total') + ' | ' + totalDrinksSum + ' |');
-    }
+    lines.push('| ' + t('export.prayersOnTime') + ' | ' + onTime + '/5 (' + prayerPct + '%) |');
+    if (totalHabitsToday > 0) lines.push('| ' + t('export.habitsDone') + ' | ' + completedHabits + '/' + totalHabitsToday + ' (' + habitsPct + '%) |');
+    lines.push('| ' + t('pulse.productivityScore') + ' | ' + compositeScore + '/100 (' + scoreLabel + ') |');
+    if (notes.length > 0) lines.push('| ' + t('journal.studyNotes') + ' | ' + notes.length + ' ' + (lang === 'ar' ? 'ملاحظة' : 'notes') + ' |');
+    if (dateSessions.length > 0) lines.push('| ' + t('sleep.totalSleep') + ' | ' + totalSleepHours + ' ' + t('sleep.hours') + ' |');
+    if (dateDrinks.length > 0) lines.push('| ' + t('drinks.total') + ' | ' + totalDrinksCount + '× |');
     lines.push('| ' + t('export.streak') + ' | ' + streak + ' ' + (lang === 'ar' ? 'أيام' : 'days') + ' |');
     if (mood) {
       lines.push('| ' + t('mood.title') + ' | ' + (MOOD_EMOJIS[mood] || '') + ' ' + t('mood.' + mood) + ' |');
@@ -1451,6 +1526,7 @@ function App() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    showToast(t('export.success'), { label: t('dialog.ok'), action: () => {} }, 86400000);
   };
 
   const handleDiaryChange = (e) => {
@@ -1678,7 +1754,7 @@ function App() {
                 const isAdhkar = task.name.includes('Adhkar');
                 const taskEnd = taskStart + duration;
                 return (
-                  <div
+                    <div
                     key={task.id}
                     className={`timeline-task-card task-${task.type}${isAdhkar ? ' task-adhkar' : ''} ${task.completed ? 'completed' : ''}`}
                     style={{ top: `${top}%`, height: `${heightPct}%` }}
@@ -1689,7 +1765,7 @@ function App() {
                     <div className="timeline-task-body">
                       <span className="timeline-task-time">
                         {getTaskDisplayTime(task, prayers)}–{formatMinutesToTime(taskEnd)}
-                        <span className="timeline-task-duration-badge">{duration}m</span>
+                        <span className="timeline-task-duration-badge">{translateDuration(duration)}</span>
                       </span>
                       <span
                         className="timeline-task-name"
@@ -1697,6 +1773,24 @@ function App() {
                       >
                         {translateTaskName(task.name)}
                       </span>
+                      {task.type !== 'fixed' && (
+                        <div className="timeline-task-actions">
+                          <button
+                            className="timeline-task-btn edit"
+                            onClick={e => { e.stopPropagation(); openTaskModal('edit', task); }}
+                            title={t('task.edit')}
+                          >
+                            <Edit2 size={11} />
+                          </button>
+                          <button
+                            className="timeline-task-btn delete"
+                            onClick={e => { e.stopPropagation(); deleteTask(task.id); }}
+                            title={t('task.deleteAria')}
+                          >
+                            <Trash2 size={11} />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
@@ -1718,7 +1812,75 @@ function App() {
     );
   };
 
-  // ---- Pulse Dashboard (Today-Focused) ----
+  // ---- Contact Developer ----
+  const renderContactPage = () => {
+    const handleContactSend = () => {
+      const msg = contactMessage.trim();
+      if (!msg) {
+        showToast(t('contact.empty'), { label: t('dialog.ok'), action: () => {} }, 3000);
+        return;
+      }
+      setContactSending(true);
+      const phone = '201143044699';
+      const encoded = encodeURIComponent(msg);
+      const url = `https://wa.me/${phone}?text=${encoded}`;
+      window.open(url, '_blank');
+      setTimeout(() => {
+        setContactSending(false);
+        setContactMessage('');
+        showToast(t('contact.success'), { label: t('dialog.ok'), action: () => {} }, 4000);
+      }, 1500);
+    };
+
+    return (
+      <div className="contact-page">
+        <div className="contact-header-wrap">
+          <div className="contact-header-main">
+            <Send size={28} className="contact-icon" />
+            <div>
+              <h2 className="contact-title">{t('contact.title')}</h2>
+              <p className="contact-subtitle">{t('contact.subtitle')}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="contact-card">
+          <div className="contact-intro-box">
+            <Heart size={18} className="contact-intro-icon" />
+            <p className="contact-intro-text">{t('contact.intro')}</p>
+          </div>
+
+          <div className="contact-form">
+            <textarea
+              className="contact-textarea"
+              placeholder={t('contact.placeholder')}
+              value={contactMessage}
+              onChange={e => setContactMessage(e.target.value)}
+              rows={5}
+              dir="auto"
+            />
+            <button
+              className="btn btn-primary contact-send-btn"
+              onClick={handleContactSend}
+              disabled={contactSending}
+            >
+              {contactSending ? (
+                <><RefreshCw size={16} className="animate-spin" /> {t('contact.sending')}</>
+              ) : (
+                <><Send size={16} /> {t('contact.send')}</>
+              )}
+            </button>
+          </div>
+
+          <div className="contact-footer">
+            <span className="contact-response-time">{t('contact.response')}</span>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // ---- Pulse Dashboard (Professional Resume-Style) ----
   const renderPulseDashboard = () => {
     const todayStr = activeDate;
     const streak = computeStreak();
@@ -1743,6 +1905,7 @@ function App() {
       );
     }
 
+    // ---- Data computation ----
     const allTasks = dayData.tasks || [];
     const totalTasks = allTasks.length;
     const completedTasks = allTasks.filter(t => t.status === 'completed' || t.completed).length;
@@ -1768,11 +1931,11 @@ function App() {
     const totalHabits = todayHabits.length;
     const completedHabits = todayHabits.filter(h => h.entries?.[todayStr]?.completed).length;
     const pendingHabits = totalHabits - completedHabits;
+    const habitsPct = totalHabits > 0 ? Math.round((completedHabits / totalHabits) * 100) : 0;
 
     const notes = dayData.studyNotes || [];
     const hasNotes = notes.length > 0;
 
-    // Group tasks by period for breakdown
     const tasksByPeriod = {};
     PLANNER_PERIOD_ORDER.forEach(pk => {
       const periodTasks = allTasks.filter(t => t.period === pk);
@@ -1782,7 +1945,63 @@ function App() {
       }
     });
 
+    const prayerPct = Math.round((onTimePrayers / 5) * 100);
+    const sleepHours = todayTotalHours;
+    const sleepScore = Math.min(Math.round((sleepHours / 8) * 100), 100);
+    const streakScore = Math.min(streak * 10, 100);
+
+    // Composite score (weighted)
+    const compositeScore = Math.round(
+      (overallPct * 0.25) + (habitsPct * 0.20) + (prayerPct * 0.30) + (sleepScore * 0.15) + (streakScore * 0.10)
+    );
+    const scoreLabel = compositeScore >= 85 ? t('pulse.scoreExcellent')
+      : compositeScore >= 65 ? t('pulse.scoreGood')
+      : compositeScore >= 45 ? t('pulse.scoreFair')
+      : t('pulse.scoreNeedsWork');
+
+    // Yesterday comparison
+    let yesterdayComparison = null;
+    if (prevDayData) {
+      const yTasks = prevDayData.tasks || [];
+      const yCompleted = yTasks.filter(t => t.status === 'completed' || t.completed).length;
+      const yTotal = yTasks.length;
+      const yPct = yTotal > 0 ? Math.round((yCompleted / yTotal) * 100) : 0;
+      const taskDiff = completedTasks - yCompleted;
+      const pctDiff = overallPct - yPct;
+      yesterdayComparison = { yCompleted, yTotal, yPct, taskDiff, pctDiff };
+    }
+
     const STATUS_COLORS = { completed: 'var(--color-emerald)', not_completed: 'var(--color-danger)', pending: 'var(--text-tertiary)' };
+
+    // ---- SVG Progress Ring component ----
+    const ProgressRing = ({ pct, size = 72, strokeWidth = 5, color, bgColor = 'var(--bg-primary)' }) => {
+      const r = (size - strokeWidth) / 2;
+      const circumference = 2 * Math.PI * r;
+      const offset = circumference - (Math.min(pct, 100) / 100) * circumference;
+      const center = size / 2;
+      return (
+        <svg width={size} height={size} className="pulse-ring-svg">
+          <circle cx={center} cy={center} r={r} fill="none" stroke={bgColor} strokeWidth={strokeWidth} />
+          <circle cx={center} cy={center} r={r} fill="none" stroke={color} strokeWidth={strokeWidth}
+            strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round"
+            transform={`rotate(-90 ${center} ${center})`} className="pulse-ring-fill" />
+        </svg>
+      );
+    };
+
+    // ---- Score Detail Row ----
+    const ScoreRow = ({ label, pct, pts, color }) => (
+      <div className="pulse-score-row">
+        <div className="pulse-score-row-label">
+          <span className="pulse-score-dot" style={{ background: color }} />
+          <span>{label}</span>
+        </div>
+        <div className="pulse-score-row-bar-wrap">
+          <div className="pulse-score-row-bar" style={{ width: `${pct}%`, background: color }} />
+        </div>
+        <span className="pulse-score-row-pts">{pts}</span>
+      </div>
+    );
 
     return (
       <div className="new-pulse-page">
@@ -1801,252 +2020,294 @@ function App() {
           </div>
         </div>
 
-        {/* Top Overview Cards */}
+        {/* Top Overview Cards with Progress Rings */}
         <div className="new-pulse-overview-grid">
-          {/* Tasks Overview */}
           <div className="new-pulse-card overview-tasks">
-             <div className="overview-icon"><List size={20} /></div>
-             <div className="overview-data">
-               <h3>{t('pulse.tasksDone')}</h3>
-               <div className="overview-value">{completedTasks} <span>/ {totalTasks}</span></div>
-               <div className="overview-sub">
-                 <span className="sub-tag tag-pending">{pendingTasks} {t('tasks.statusPending')}</span>
-                 <span className="sub-tag tag-missed">{notCompletedTasks} {t('tasks.statusNotCompleted')}</span>
-               </div>
-             </div>
-          </div>
-          
-          {/* Habits Overview */}
-          <div className="new-pulse-card overview-habits">
-             <div className="overview-icon"><Target size={20} /></div>
-             <div className="overview-data">
-               <h3>{t('pulse.habitsToday')}</h3>
-               <div className="overview-value">{completedHabits} <span>/ {totalHabits}</span></div>
-               <div className="overview-sub">
-                 <span className="sub-tag tag-pending">{pendingHabits} {t('tasks.statusPending')}</span>
-               </div>
-             </div>
+            <div className="pulse-ring-card-inner">
+              <ProgressRing pct={overallPct} color="var(--color-teal)" />
+              <div className="overview-data">
+                <h3>{t('pulse.tasksDone')}</h3>
+                <div className="overview-value">{completedTasks}<span>/{totalTasks}</span></div>
+                <div className="overview-sub">
+                  <span className="sub-tag tag-pending">{pendingTasks} {t('tasks.statusPending')}</span>
+                  <span className="sub-tag tag-missed">{notCompletedTasks} {t('tasks.statusNotCompleted')}</span>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Prayers Overview */}
+          <div className="new-pulse-card overview-habits">
+            <div className="pulse-ring-card-inner">
+              <ProgressRing pct={habitsPct} color="#3b82f6" />
+              <div className="overview-data">
+                <h3>{t('pulse.habitsToday')}</h3>
+                <div className="overview-value">{completedHabits}<span>/{totalHabits}</span></div>
+                <div className="overview-sub">
+                  <span className="sub-tag tag-pending">{pendingHabits} {t('tasks.statusPending')}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="new-pulse-card overview-prayers">
-             <div className="overview-icon"><Clock size={20} /></div>
-             <div className="overview-data">
+            <div className="pulse-ring-card-inner">
+              <ProgressRing pct={prayerPct} color="var(--color-emerald)" />
+              <div className="overview-data">
                 <h3>{t('pulse.prayerStatus')}</h3>
-                <div className="overview-value">{onTimePrayers} <span>/ 5</span></div>
+                <div className="overview-value">{onTimePrayers}<span>/5</span></div>
                 <div className="overview-sub pulse-metric-dots">
                   {PRAYER_KEYS.map(pk => {
                     const status = prayerTaskStatuses[pk] || 'pending';
-                    return <span key={pk} className="pulse-dot" style={{ background: STATUS_COLORS[status] }} title={t('prayer.' + pk)} />
+                    return <span key={pk} className="pulse-dot" style={{ background: STATUS_COLORS[status] }} title={t('prayer.' + pk)} />;
                   })}
                 </div>
-             </div>
+              </div>
+            </div>
           </div>
 
-          {/* Streak Overview */}
           <div className="new-pulse-card overview-streak">
-             <div className="overview-icon"><Flame size={20} /></div>
-             <div className="overview-data">
-               <h3>{t('streak.title')}</h3>
-               <div className="overview-value">{streak} <span>{t('streak.days')}</span></div>
-               <div className="overview-sub">
-                 <span className="sub-tag tag-streak">{overallPct}% {t('pulse.completionRate')}</span>
-               </div>
-             </div>
+            <div className="pulse-ring-card-inner">
+              <ProgressRing pct={streakScore} color="var(--color-gold)" />
+              <div className="overview-data">
+                <h3>{t('streak.title')}</h3>
+                <div className="overview-value">{streak}<span>{t('streak.days')}</span></div>
+                <div className="overview-sub">
+                  <span className="sub-tag tag-streak">{overallPct}% {t('pulse.completionRate')}</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
+        {/* Main Dashboard Content - Two Column */}
         <div className="new-pulse-content-grid">
-          {/* Detailed Task Analysis */}
-          <div className="new-pulse-card detail-tasks">
-            <div className="new-pulse-card-header">
-              <BarChart3 size={18} />
-              <h4>{t('pulse.taskBreakdown')}</h4>
-            </div>
-            
-            <div className="task-status-bars">
-              <div className="status-bar-row">
-                <span className="status-label">{t('tasks.statusCompleted')}</span>
-                <div className="status-track"><div className="status-fill completed" style={{width: totalTasks ? `${(completedTasks/totalTasks)*100}%` : '0%'}}></div></div>
-                <span className="status-count">{completedTasks}</span>
+          {/* Left Column */}
+          <div className="new-pulse-column-left">
+            {/* Task Breakdown */}
+            <div className="new-pulse-card detail-tasks">
+              <div className="new-pulse-card-header">
+                <BarChart3 size={18} />
+                <h4>{t('pulse.taskBreakdown')}</h4>
               </div>
-              <div className="status-bar-row">
-                <span className="status-label">{t('tasks.statusPending')}</span>
-                <div className="status-track"><div className="status-fill pending" style={{width: totalTasks ? `${(pendingTasks/totalTasks)*100}%` : '0%'}}></div></div>
-                <span className="status-count">{pendingTasks}</span>
+              <div className="task-status-bars">
+                <div className="status-bar-row">
+                  <span className="status-label">{t('tasks.statusCompleted')}</span>
+                  <div className="status-track"><div className="status-fill completed" style={{width: totalTasks ? `${(completedTasks/totalTasks)*100}%` : '0%'}} /></div>
+                  <span className="status-count">{completedTasks}</span>
+                </div>
+                <div className="status-bar-row">
+                  <span className="status-label">{t('tasks.statusPending')}</span>
+                  <div className="status-track"><div className="status-fill pending" style={{width: totalTasks ? `${(pendingTasks/totalTasks)*100}%` : '0%'}} /></div>
+                  <span className="status-count">{pendingTasks}</span>
+                </div>
+                <div className="status-bar-row">
+                  <span className="status-label">{t('tasks.statusNotCompleted')}</span>
+                  <div className="status-track"><div className="status-fill not-completed" style={{width: totalTasks ? `${(notCompletedTasks/totalTasks)*100}%` : '0%'}} /></div>
+                  <span className="status-count">{notCompletedTasks}</span>
+                </div>
               </div>
-              <div className="status-bar-row">
-                <span className="status-label">{t('tasks.statusNotCompleted')}</span>
-                <div className="status-track"><div className="status-fill not-completed" style={{width: totalTasks ? `${(notCompletedTasks/totalTasks)*100}%` : '0%'}}></div></div>
-                <span className="status-count">{notCompletedTasks}</span>
+              <div className="pulse-period-breakdown new-style">
+                {PLANNER_PERIOD_ORDER.filter(pk => tasksByPeriod[pk]).map(pk => {
+                  const block = tasksByPeriod[pk];
+                  const pct = block.total > 0 ? Math.round((block.done / block.total) * 100) : 0;
+                  return (
+                    <div key={pk} className="pulse-period-row">
+                      <div className="pulse-period-info">
+                        <span className="pulse-period-name">{t('period.' + pk)}</span>
+                        <span className="pulse-period-count">{block.done}/{block.total}</span>
+                      </div>
+                      <div className="pulse-period-bar-wrap">
+                        <div className="pulse-period-bar" style={{ width: `${pct}%` }} />
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
-            <div className="pulse-period-breakdown new-style">
-              {PLANNER_PERIOD_ORDER.filter(pk => tasksByPeriod[pk]).map(pk => {
-                const block = tasksByPeriod[pk];
-                const pct = block.total > 0 ? Math.round((block.done / block.total) * 100) : 0;
-                return (
-                  <div key={pk} className="pulse-period-row">
-                    <div className="pulse-period-info">
-                      <span className="pulse-period-name">{t('period.' + pk)}</span>
-                      <span className="pulse-period-count">{block.done}/{block.total}</span>
+            {/* Yesterday Comparison Card */}
+            <div className="new-pulse-card detail-comparison">
+              <div className="new-pulse-card-header">
+                <TrendingUp size={18} />
+                <h4>{t('pulse.vsYesterday')}</h4>
+              </div>
+              <div className="pulse-comparison-content">
+                {yesterdayComparison ? (
+                  <>
+                    <div className="pulse-compare-row">
+                      <span className="pulse-compare-label">{t('pulse.tasksDone')}</span>
+                      <div className="pulse-compare-values">
+                        <span className="pulse-compare-today">{completedTasks}</span>
+                        <span className="pulse-compare-sep">/</span>
+                        <span className="pulse-compare-yesterday">{yesterdayComparison.yCompleted}</span>
+                      </div>
+                      <span className={`pulse-compare-diff ${yesterdayComparison.taskDiff >= 0 ? 'up' : 'down'}`}>
+                        {yesterdayComparison.taskDiff >= 0 ? '▲' : '▼'} {Math.abs(yesterdayComparison.taskDiff)}
+                      </span>
                     </div>
-                    <div className="pulse-period-bar-wrap">
-                      <div className="pulse-period-bar" style={{ width: `${pct}%` }} />
+                    <div className="pulse-compare-row">
+                      <span className="pulse-compare-label">{t('pulse.completionRate')}</span>
+                      <div className="pulse-compare-values">
+                        <span className="pulse-compare-today">{overallPct}%</span>
+                        <span className="pulse-compare-sep">/</span>
+                        <span className="pulse-compare-yesterday">{yesterdayComparison.yPct}%</span>
+                      </div>
+                      <span className={`pulse-compare-diff ${yesterdayComparison.pctDiff >= 0 ? 'up' : 'down'}`}>
+                        {yesterdayComparison.pctDiff >= 0 ? '▲' : '▼'} {Math.abs(yesterdayComparison.pctDiff)}%
+                      </span>
                     </div>
+                    <div className="pulse-compare-bar-group">
+                      <div className="pulse-compare-bar-item">
+                        <span className="pulse-compare-bar-label">{t('pulse.today')}</span>
+                        <div className="pulse-compare-bar-track">
+                          <div className="pulse-compare-bar-fill today" style={{ width: `${overallPct}%` }} />
+                        </div>
+                      </div>
+                      <div className="pulse-compare-bar-item">
+                        <span className="pulse-compare-bar-label">{t('pulse.yesterday')}</span>
+                        <div className="pulse-compare-bar-track">
+                          <div className="pulse-compare-bar-fill yesterday" style={{ width: `${yesterdayComparison.yPct}%` }} />
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <span className="pulse-empty-habits">{t('pulse.noComparison')}</span>
+                )}
+              </div>
+            </div>
+
+            {/* Sleep & Drinks */}
+            <div className="new-pulse-card detail-prayers">
+              <div className="new-pulse-card-header">
+                <Moon size={18} />
+                <h4>{t('sleep.title')} &amp; {t('drinks.title')}</h4>
+              </div>
+              <div className="pulse-sleep-drinks-grid">
+                <div className="pulse-sd-box">
+                  <span className="pulse-sd-icon"><Moon size={16} /></span>
+                  <div>
+                    <span className="pulse-sd-label">{t('sleep.totalSleep')}</span>
+                    <span className="pulse-sd-value">{sleepHours > 0 ? `${sleepHours}h` : '--'}</span>
                   </div>
-                );
-              })}
+                  <div className="pulse-sd-bar-mini">
+                    <div className="pulse-sd-bar-fill" style={{ width: `${sleepScore}%`, background: 'linear-gradient(90deg, #6366f1, #8b5cf6)' }} />
+                  </div>
+                </div>
+                <div className="pulse-sd-box">
+                  <span className="pulse-sd-icon"><Coffee size={16} /></span>
+                  <div>
+                    <span className="pulse-sd-label">{t('drinks.total')}</span>
+                    <span className="pulse-sd-value">{todayDrinks.reduce((s, d) => s + d.count, 0)}×</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
+          {/* Right Column */}
           <div className="new-pulse-column-right">
-             {/* Habits List View-Only */}
-             <div className="new-pulse-card detail-habits">
-               <div className="new-pulse-card-header">
-                 <Target size={18} />
-                 <h4>{t('pulse.habitsToday')}</h4>
-               </div>
-               <div className="new-pulse-habits-list">
-                 {todayHabits.map(h => {
-                   const entry = h.entries?.[todayStr];
-                   const done = entry?.completed || false;
-                   return (
-                     <div key={h.id} className={`new-pulse-habit-item ${done ? 'done' : 'pending'}`}>
-                       {done ? <Check size={14} className="icon-done" /> : <Minus size={14} className="icon-pending" />}
-                       <span>{h.name}</span>
-                     </div>
-                   );
-                 })}
-                 {todayHabits.length === 0 && (
-                   <span className="pulse-empty-habits">{t('pulse.noHabits')}</span>
-                 )}
-               </div>
-             </div>
-
-              {/* Sleep Card */}
-              <div className="new-pulse-card detail-prayers">
-                <div className="new-pulse-card-header">
-                  <Moon size={18} />
-                  <h4>{t('sleep.title')}</h4>
+            {/* Productivity Score Card */}
+            <div className="new-pulse-card detail-score">
+              <div className="new-pulse-card-header">
+                <Award size={18} />
+                <h4>{t('pulse.productivityScore')}</h4>
+              </div>
+              <div className="pulse-score-main">
+                <div className="pulse-score-gauge">
+                  <ProgressRing pct={compositeScore} size={120} strokeWidth={8}
+                    color={compositeScore >= 85 ? 'var(--color-emerald)' : compositeScore >= 65 ? 'var(--color-gold)' : compositeScore >= 45 ? '#f59e0b' : 'var(--color-danger)'} />
+                  <div className="pulse-score-gauge-text">
+                    <span className="pulse-score-big">{compositeScore}</span>
+                    <span className="pulse-score-label">{scoreLabel}</span>
+                  </div>
                 </div>
-                <div className="new-pulse-prayer-grid">
-                  {todaySessions.length === 0 ? (
-                    <span className="pulse-empty-habits">{t('sleep.noSessions')}</span>
-                  ) : (
-                    todaySessions.map((s, i) => (
-                      <div key={s.id} className="new-pulse-prayer-box status-completed">
-                        <div className="prayer-info">
-                          <span className="prayer-name">{t('sleep.session')} #{i + 1}</span>
-                          <span className="prayer-time">{s.start} – {s.end}</span>
-                        </div>
-                        <span className="prayer-status-text">
-                          {calcSleepHours(s.start, s.end)} {t('sleep.hours')}
-                        </span>
-                      </div>
-                    ))
-                  )}
-                  {todaySessions.length > 0 && (
-                    <div className="new-pulse-prayer-box status-completed" style={{ gridColumn: '1 / -1' }}>
+                <div className="pulse-score-details">
+                  <ScoreRow label={t('pulse.scoreTasks')} pct={overallPct} pts={`${overallPct}%`} color="var(--color-teal)" />
+                  <ScoreRow label={t('pulse.scoreHabits')} pct={habitsPct} pts={`${habitsPct}%`} color="#3b82f6" />
+                  <ScoreRow label={t('pulse.scorePrayers')} pct={prayerPct} pts={`${prayerPct}%`} color="var(--color-emerald)" />
+                  <ScoreRow label={t('pulse.scoreSleep')} pct={sleepScore} pts={`${sleepScore}%`} color="#6366f1" />
+                  <ScoreRow label={t('pulse.scoreStreak')} pct={streakScore} pts={`${streakScore}%`} color="var(--color-gold)" />
+                </div>
+              </div>
+            </div>
+
+            {/* Habits List */}
+            <div className="new-pulse-card detail-habits">
+              <div className="new-pulse-card-header">
+                <Target size={18} />
+                <h4>{t('pulse.habitsToday')}</h4>
+              </div>
+              <div className="new-pulse-habits-list">
+                {todayHabits.map(h => {
+                  const entry = h.entries?.[todayStr];
+                  const done = entry?.completed || false;
+                  return (
+                    <div key={h.id} className={`new-pulse-habit-item ${done ? 'done' : 'pending'}`}>
+                      {done ? <Check size={14} className="icon-done" /> : <Minus size={14} className="icon-pending" />}
+                      <span>{h.name}</span>
+                    </div>
+                  );
+                })}
+                {todayHabits.length === 0 && (
+                  <span className="pulse-empty-habits">{t('pulse.noHabits')}</span>
+                )}
+              </div>
+            </div>
+
+            {/* Prayer Status */}
+            <div className="new-pulse-card detail-prayers">
+              <div className="new-pulse-card-header">
+                <Clock size={18} />
+                <h4>{t('pulse.prayerStatus')}</h4>
+              </div>
+              <div className="new-pulse-prayer-grid">
+                {PRAYER_KEYS.map(pk => {
+                  const status = prayerTaskStatuses[pk] || 'pending';
+                  const time = dayData.prayerTimes?.[pk] || '--:--';
+                  return (
+                    <div key={pk} className={`new-pulse-prayer-box status-${status}`}>
                       <div className="prayer-info">
-                        <span className="prayer-name">{t('sleep.totalSleep')}</span>
+                        <span className="prayer-name">{t('prayer.' + pk)}</span>
+                        <span className="prayer-time">{time}</span>
                       </div>
                       <span className="prayer-status-text">
-                        <strong>{todayTotalHours} {t('sleep.hours')}</strong>
+                        <span className="pulse-status-dot" style={{ background: STATUS_COLORS[status] }} />
+                        {t(status === 'pending' ? 'tasks.statusPending' : (status === 'completed' ? 'tasks.statusCompleted' : 'tasks.statusNotCompleted'))}
                       </span>
                     </div>
-                  )}
-                </div>
+                  );
+                })}
               </div>
+            </div>
 
-              {/* Drinks Card */}
-              <div className="new-pulse-card detail-prayers">
-                <div className="new-pulse-card-header">
-                  <Coffee size={18} />
-                  <h4>{t('drinks.title')}</h4>
-                </div>
-                <div className="new-pulse-prayer-grid">
-                  {todayDrinks.length === 0 ? (
-                    <span className="pulse-empty-habits">{t('drinks.noDrinks')}</span>
-                  ) : (
-                    todayDrinks.map(d => (
-                      <div key={d.id} className="new-pulse-prayer-box status-completed">
-                        <div className="prayer-info">
-                          <span className="prayer-name">{d.name || t('drinks.drink')}</span>
-                        </div>
-                        <span className="prayer-status-text">
-                          {d.count}×
-                        </span>
-                      </div>
-                    ))
-                  )}
-                  {todayDrinks.length > 0 && (
-                    <div className="new-pulse-prayer-box status-completed" style={{ gridColumn: '1 / -1' }}>
+            {/* Adhkar */}
+            <div className="new-pulse-card detail-prayers">
+              <div className="new-pulse-card-header">
+                <BookOpen size={18} />
+                <h4>{t('adhkar.title')}</h4>
+              </div>
+              <div className="new-pulse-prayer-grid">
+                {['morning', 'evening'].map(key => {
+                  const status = (prayerTracking[todayStr] || {})[`adhkar_${key}`] || 'pending';
+                  return (
+                    <div key={key} className={`new-pulse-prayer-box status-${status}`}>
                       <div className="prayer-info">
-                        <span className="prayer-name">{t('drinks.total')}</span>
+                        <span className="prayer-name">{t('adhkar.' + key)}</span>
                       </div>
                       <span className="prayer-status-text">
-                        <strong>{todayDrinks.reduce((s, d) => s + d.count, 0)}</strong>
+                        <span className="pulse-status-dot" style={{ background: STATUS_COLORS[status] }} />
+                        {t(status === 'pending' ? 'tasks.statusPending' : (status === 'completed' ? 'tasks.statusCompleted' : 'tasks.statusNotCompleted'))}
                       </span>
                     </div>
-                  )}
-                </div>
+                  );
+                })}
               </div>
+            </div>
+          </div>
+        </div>
 
-              {/* Prayers View-Only Grid */}
-             <div className="new-pulse-card detail-prayers">
-               <div className="new-pulse-card-header">
-                 <Clock size={18} />
-                  <h4>{t('pulse.prayerStatus')}</h4>
-                </div>
-                <div className="new-pulse-prayer-grid">
-                  {PRAYER_KEYS.map(pk => {
-                    const status = prayerTaskStatuses[pk] || 'pending';
-                    const time = dayData.prayerTimes?.[pk] || '--:--';
-                   return (
-                     <div key={pk} className={`new-pulse-prayer-box status-${status}`}>
-                       <div className="prayer-info">
-                         <span className="prayer-name">{t('prayer.' + pk)}</span>
-                         <span className="prayer-time">{time}</span>
-                       </div>
-                       <span className="prayer-status-text">
-                         <span className="pulse-status-dot" style={{ background: STATUS_COLORS[status] }} />
-                         {t(status === 'pending' ? 'tasks.statusPending' : (status === 'completed' ? 'tasks.statusCompleted' : 'tasks.statusNotCompleted'))}
-                       </span>
-                     </div>
-                   );
-                 })}
-                </div>
-              </div>
-
-              {/* Adhkar View-Only */}
-              <div className="new-pulse-card detail-prayers">
-                <div className="new-pulse-card-header">
-                  <BookOpen size={18} />
-                  <h4>{t('adhkar.title')}</h4>
-                </div>
-                <div className="new-pulse-prayer-grid">
-                  {['morning', 'evening'].map(key => {
-                    const status = (prayerTracking[todayStr] || {})[`adhkar_${key}`] || 'pending';
-                    return (
-                      <div key={key} className={`new-pulse-prayer-box status-${status}`}>
-                        <div className="prayer-info">
-                          <span className="prayer-name">{t('adhkar.' + key)}</span>
-                        </div>
-                        <span className="prayer-status-text">
-                          <span className="pulse-status-dot" style={{ background: STATUS_COLORS[status] }} />
-                          {t(status === 'pending' ? 'tasks.statusPending' : (status === 'completed' ? 'tasks.statusCompleted' : 'tasks.statusNotCompleted'))}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-           </div>
-         </div>
- 
-         {/* Notes (if any) */}
+        {/* Notes */}
         {hasNotes && (
           <div className="new-pulse-card detail-notes">
             <div className="new-pulse-card-header">
@@ -2070,15 +2331,16 @@ function App() {
   // ---- Sidebar navigation links ----
   const sidebarLinks = [
     { id: 'home', label: t('nav.home'), icon: Sparkles },
-    { id: 'prayers', label: t('nav.prayers'), icon: Clock },
+    { id: 'journal', label: t('nav.journal'), icon: BookOpen },
     { id: 'tasks', label: t('nav.tasks'), icon: List },
     { id: 'habits', label: t('nav.habits'), icon: Target },
     { id: 'sleep', label: t('nav.sleep'), icon: Moon },
     { id: 'drinks', label: t('nav.drinks'), icon: Coffee },
+    { id: 'prayers', label: t('nav.prayers'), icon: Clock },
     { id: 'pulse', label: t('nav.pulse'), icon: Activity },
-    { id: 'journal', label: t('nav.journal'), icon: BookOpen },
+    { id: 'settings', label: t('nav.settings'), icon: Settings },
     { id: 'guide', label: t('nav.guide'), icon: HelpCircle },
-    { id: 'settings', label: t('nav.settings'), icon: Settings }
+    { id: 'contact', label: t('nav.contact'), icon: Send },
   ];
 
   // ---- Main render ----
@@ -2183,6 +2445,22 @@ function App() {
             ))}
           </nav>
 
+          {/* Export buttons in nav style */}
+          {dayData && (
+            <div className="sidebar-export-nav">
+              <button className="sidebar-link sidebar-export-link" onClick={() => exportToMarkdown()}>
+                <span className="sidebar-link-icon"><Download size={17} /></span>
+                <span className="sidebar-link-label">{t('header.exportCurrent')}</span>
+              </button>
+              {prevDayData && (
+                <button className="sidebar-link sidebar-export-link" onClick={() => exportToMarkdown(prevDayData)}>
+                  <span className="sidebar-link-icon"><Download size={17} /></span>
+                  <span className="sidebar-link-label">{t('header.exportPrevious')}</span>
+                </button>
+              )}
+            </div>
+          )}
+
           {/* Quick actions */}
           <div className="sidebar-actions">
             <button className="sidebar-action-btn" onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} title={t('settings.theme')}>
@@ -2197,21 +2475,10 @@ function App() {
             })} title={t('settings.fontSize')}>
               <Type size={15} />
             </button>
+            <button className="sidebar-action-btn sidebar-action-reload" onClick={() => window.location.reload()} title={t('nav.refresh')}>
+              <RefreshCw size={14} />
+            </button>
           </div>
-
-          {/* Export */}
-          {dayData && (
-            <div className="sidebar-export">
-              <button className="sidebar-export-btn" onClick={() => exportToMarkdown()} title={t('header.exportTitle')}>
-                <Download size={13} /> {t('header.exportCurrent')}
-              </button>
-              {prevDayData && (
-                <button className="sidebar-export-btn sidebar-export-btn-prev" onClick={() => exportToMarkdown(prevDayData)} title={t('header.exportTitle')}>
-                  <Download size={13} /> {t('header.exportPrevious')}
-                </button>
-              )}
-            </div>
-          )}
 
           {/* Footer */}
           <div className="sidebar-footer">
@@ -2268,84 +2535,61 @@ function App() {
                 </div>
 
                 <div className="new-tasks-sections">
-                  {PLANNER_PERIOD_ORDER.map(periodKey => {
-                    const periodTasks = dayData.tasks.filter(t => t.period === periodKey && (
-                      !taskSearch ||
-                      t.name.toLowerCase().includes(taskSearch.toLowerCase()) ||
-                      (t.details || '').toLowerCase().includes(taskSearch.toLowerCase())
-                    ));
-                    if (!periodTasks.length) return null;
-                    
-                    const done = periodTasks.filter(t => t.completed).length;
-                    const pct = Math.round((done / periodTasks.length) * 100);
-                    
-                    return (
-                      <div key={periodKey} className="new-period-section">
-                        <div className="new-period-header">
-                          <div className="new-period-title">
-                            <span className="new-period-dot"></span>
-                            <h3>{t('period.' + periodKey)}</h3>
-                          </div>
-                          <div className="new-period-stats">
-                            <div className="new-period-progress-bar"><div style={{ width: `${pct}%` }}></div></div>
-                            <span className="new-period-count">{done}/{periodTasks.length}</span>
-                          </div>
-                        </div>
-
-                        <div className="new-period-task-list">
-                          {periodTasks.map(task => {
-                            const taskStart = getTaskStartMinutes(task, dayData.prayerTimes);
-                            const taskEnd = taskStart + (Number(task.duration) || 15);
-                            const currentStatus = task.status || (task.completed ? 'completed' : 'pending');
-                            
-                            return (
-                              <div key={task.id} className={`new-task-card status-${currentStatus}`}>
-                                <div className="new-task-main">
-                                  <div className="new-task-content">
-                                    <h4 className="new-task-title">{translateTaskName(task.name)}</h4>
-                                    <div className="new-task-meta">
-                                      <span className="new-task-duration">{translateDuration(Number(task.duration) || 15)}</span>
-                                    </div>
-                                    {task.details && (
-                                      <p className="new-task-desc">{task.details}</p>
-                                    )}
+                  <div className="new-period-section">
+                    <div className="new-period-task-list">
+                      {(() => {
+                        const allTasks = taskSearch
+                          ? dayData.tasks.filter(t =>
+                              t.name.toLowerCase().includes(taskSearch.toLowerCase()) ||
+                              (t.details || '').toLowerCase().includes(taskSearch.toLowerCase())
+                            )
+                          : dayData.tasks;
+                        return allTasks.map(task => {
+                          const taskStart = getTaskStartMinutes(task, dayData.prayerTimes);
+                          const taskEnd = taskStart + (Number(task.duration) || 15);
+                          const currentStatus = task.status || (task.completed ? 'completed' : 'pending');
+                          
+                          return (
+                            <div key={task.id} className={`t-card status-${currentStatus}`}>
+                              <span className={`t-dot ${currentStatus}`} />
+                              <div className="t-body">
+                                <div className="t-row">
+                                  <h4 className="t-title">{translateTaskName(task.name)}</h4>
+                                  <div className="t-actions">
+                                    <button
+                                      className={`t-btn ${currentStatus === 'pending' ? 'active' : ''}`}
+                                      onClick={() => setTaskStatus(task.id, 'pending')}
+                                      title={t('tasks.statusPending')}
+                                    >
+                                      <Clock size={12} />
+                                    </button>
+                                    <button
+                                      className={`t-btn ${currentStatus === 'completed' ? 'active' : ''}`}
+                                      onClick={() => setTaskStatus(task.id, 'completed')}
+                                      title={t('tasks.statusCompleted')}
+                                    >
+                                      <Check size={12} />
+                                    </button>
+                                    <button
+                                      className={`t-btn ${currentStatus === 'not_completed' ? 'active' : ''}`}
+                                      onClick={() => setTaskStatus(task.id, 'not_completed')}
+                                      title={t('tasks.statusNotCompleted')}
+                                    >
+                                      <X size={12} />
+                                    </button>
                                   </div>
-                                  
-                                  {task.type !== 'fixed' && (
-                                    <div className="new-task-menu">
-                                      <button onClick={() => openTaskModal('edit', task)} title={t('task.edit')}><Edit2 size={14} /></button>
-                                      <button className="delete" onClick={() => deleteTask(task.id)} title={t('task.deleteAria')}><Trash2 size={14} /></button>
-                                    </div>
-                                  )}
                                 </div>
-                                
-                                <div className="new-task-status-row">
-                                  <button 
-                                    className={`new-status-btn btn-pending ${currentStatus === 'pending' ? 'active' : ''}`}
-                                    onClick={() => setTaskStatus(task.id, 'pending')}
-                                  >
-                                    {t('tasks.statusPending')}
-                                  </button>
-                                  <button 
-                                    className={`new-status-btn btn-not-completed ${currentStatus === 'not_completed' ? 'active' : ''}`}
-                                    onClick={() => setTaskStatus(task.id, 'not_completed')}
-                                  >
-                                    <X size={14} /> {t('tasks.statusNotCompleted')}
-                                  </button>
-                                  <button 
-                                    className={`new-status-btn btn-completed ${currentStatus === 'completed' ? 'active' : ''}`}
-                                    onClick={() => setTaskStatus(task.id, 'completed')}
-                                  >
-                                    <Check size={14} /> {t('tasks.statusCompleted')}
-                                  </button>
-                                </div>
+                                {task.details && (
+                                  <p className="t-desc">{task.details}</p>
+                                )}
+                                <span className="t-meta">{translateDuration(Number(task.duration) || 15)}</span>
                               </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    );
-                  })}
+                            </div>
+                          );
+                        });
+                      })()}
+                    </div>
+                  </div>
                 </div>
                 
                 {taskSearch && dayData.tasks.filter(t =>
@@ -2390,21 +2634,18 @@ function App() {
                     />
                   </div>
 
-                  <div className="note-composer-footer">
+                    <div className="note-composer-footer">
                     <div className="note-composer-footer-left">
-                      <div className="note-composer-period-wrap">
-                        <Clock size={13} className="note-composer-clock-icon" />
-                        <select
-                          className="note-composer-period-select"
-                          value={studyPeriod}
-                          onChange={e => setStudyPeriod(e.target.value)}
-                        >
-                          {PLANNER_PERIOD_ORDER.map(key => (
-                            <option key={key} value={key}>
-                              {t('period.' + key)} — {t('period.' + key + 'Range')}
-                            </option>
-                          ))}
-                        </select>
+                      <div className="note-period-chips">
+                        {PLANNER_PERIOD_ORDER.map(key => (
+                          <button
+                            key={key}
+                            className={`note-period-chip ${studyPeriod === key ? 'active' : ''}`}
+                            onClick={() => setStudyPeriod(key)}
+                          >
+                            {t('period.' + key)}
+                          </button>
+                        ))}
                       </div>
                       {studyText.length > 0 && (
                         <span className="note-composer-char-count">{studyText.length}</span>
@@ -2478,18 +2719,21 @@ function App() {
 
             {currentPage === 'guide' && (
               <div className="guide-page">
-                <div className="new-tasks-header-wrap">
-                  <div className="new-tasks-header">
-                    <div>
-                      <h2 className="new-tasks-title">{t('guide.title')}</h2>
-                      <p className="new-tasks-subtitle">{t('guide.subtitle')}</p>
-                    </div>
-                    <div className="guide-steps-badge">
-                      <span>8 {t('guide.steps')}</span>
-                    </div>
+                <div className="guide-hero">
+                  <div className="guide-hero-icon-wrap">
+                    <Sparkles size={32} className="guide-hero-icon" />
+                  </div>
+                  <h1 className="guide-title">{t('guide.title')}</h1>
+                  <p className="guide-subtitle">{t('guide.subtitle')}</p>
+                  <div className="guide-steps-badge">
+                    <Zap size={12} />
+                    <span>15 {t('guide.steps')}</span>
                   </div>
                 </div>
+
                 <div className="guide-sections">
+
+                  {/* What is Tarteeb */}
                   <div className="guide-card" style={{ '--card-accent': 'var(--color-emerald)' }}>
                     <div className="guide-card-step">01</div>
                     <div className="guide-card-icon-wrap"><Sparkles size={22} /></div>
@@ -2498,65 +2742,161 @@ function App() {
                       <p className="guide-card-desc">{t('guide.whatIsDesc')}</p>
                     </div>
                   </div>
+
+                  {/* Getting Started */}
                   <div className="guide-card" style={{ '--card-accent': 'var(--color-teal)' }}>
                     <div className="guide-card-step">02</div>
+                    <div className="guide-card-icon-wrap"><Settings size={22} /></div>
+                    <div className="guide-card-content">
+                      <h3 className="guide-card-title">{t('guide.gettingStarted')}</h3>
+                      <p className="guide-card-desc">{t('guide.gettingStartedDesc')}</p>
+                    </div>
+                  </div>
+
+                  {/* Home Timeline */}
+                  <div className="guide-card" style={{ '--card-accent': 'var(--color-emerald)' }}>
+                    <div className="guide-card-step">03</div>
                     <div className="guide-card-icon-wrap"><Clock size={22} /></div>
                     <div className="guide-card-content">
                       <h3 className="guide-card-title">{t('guide.timeline')}</h3>
                       <p className="guide-card-desc">{t('guide.timelineDesc')}</p>
                     </div>
                   </div>
+
+                  {/* Add Task */}
                   <div className="guide-card" style={{ '--card-accent': 'var(--color-gold)' }}>
-                    <div className="guide-card-step">03</div>
+                    <div className="guide-card-step">04</div>
                     <div className="guide-card-icon-wrap"><Plus size={22} /></div>
                     <div className="guide-card-content">
                       <h3 className="guide-card-title">{t('guide.addTask')}</h3>
                       <p className="guide-card-desc">{t('guide.addTaskDesc')}</p>
                     </div>
                   </div>
+
+                  {/* Tasks Page */}
                   <div className="guide-card" style={{ '--card-accent': 'var(--color-emerald)' }}>
-                    <div className="guide-card-step">04</div>
+                    <div className="guide-card-step">05</div>
+                    <div className="guide-card-icon-wrap"><List size={22} /></div>
+                    <div className="guide-card-content">
+                      <h3 className="guide-card-title">{t('guide.tasksPage')}</h3>
+                      <p className="guide-card-desc">{t('guide.tasksPageDesc')}</p>
+                    </div>
+                  </div>
+
+                  {/* Journal */}
+                  <div className="guide-card" style={{ '--card-accent': 'var(--color-gold)' }}>
+                    <div className="guide-card-step">06</div>
                     <div className="guide-card-icon-wrap"><BookOpen size={22} /></div>
                     <div className="guide-card-content">
                       <h3 className="guide-card-title">{t('guide.journal')}</h3>
                       <p className="guide-card-desc">{t('guide.journalDesc')}</p>
                     </div>
                   </div>
+
+                  {/* Habits */}
+                  <div className="guide-card" style={{ '--card-accent': 'var(--color-emerald)' }}>
+                    <div className="guide-card-step">07</div>
+                    <div className="guide-card-icon-wrap"><Target size={22} /></div>
+                    <div className="guide-card-content">
+                      <h3 className="guide-card-title">{t('guide.habits')}</h3>
+                      <p className="guide-card-desc">{t('guide.habitsDesc')}</p>
+                    </div>
+                  </div>
+
+                  {/* Sleep */}
                   <div className="guide-card" style={{ '--card-accent': 'var(--color-gold)' }}>
-                    <div className="guide-card-step">05</div>
+                    <div className="guide-card-step">08</div>
+                    <div className="guide-card-icon-wrap"><Moon size={22} /></div>
+                    <div className="guide-card-content">
+                      <h3 className="guide-card-title">{t('guide.sleep')}</h3>
+                      <p className="guide-card-desc">{t('guide.sleepDesc')}</p>
+                    </div>
+                  </div>
+
+                  {/* Drinks */}
+                  <div className="guide-card" style={{ '--card-accent': 'var(--color-teal)' }}>
+                    <div className="guide-card-step">09</div>
+                    <div className="guide-card-icon-wrap"><Coffee size={22} /></div>
+                    <div className="guide-card-content">
+                      <h3 className="guide-card-title">{t('guide.drinks')}</h3>
+                      <p className="guide-card-desc">{t('guide.drinksDesc')}</p>
+                    </div>
+                  </div>
+
+                  {/* Prayers */}
+                  <div className="guide-card" style={{ '--card-accent': 'var(--color-emerald)' }}>
+                    <div className="guide-card-step">10</div>
+                    <div className="guide-card-icon-wrap"><Clock size={22} /></div>
+                    <div className="guide-card-content">
+                      <h3 className="guide-card-title">{t('guide.prayers')}</h3>
+                      <p className="guide-card-desc">{t('guide.prayersDesc')}</p>
+                    </div>
+                  </div>
+
+                  {/* Statistics */}
+                  <div className="guide-card" style={{ '--card-accent': 'var(--color-gold)' }}>
+                    <div className="guide-card-step">11</div>
                     <div className="guide-card-icon-wrap"><Activity size={22} /></div>
                     <div className="guide-card-content">
                       <h3 className="guide-card-title">{t('guide.history')}</h3>
                       <p className="guide-card-desc">{t('guide.historyDesc')}</p>
                     </div>
                   </div>
-                  <div className="guide-card" style={{ '--card-accent': 'var(--color-gold)' }}>
-                    <div className="guide-card-step">06</div>
+
+                  {/* Settings */}
+                  <div className="guide-card" style={{ '--card-accent': 'var(--color-teal)' }}>
+                    <div className="guide-card-step">12</div>
                     <div className="guide-card-icon-wrap"><Settings size={22} /></div>
                     <div className="guide-card-content">
                       <h3 className="guide-card-title">{t('guide.settings')}</h3>
                       <p className="guide-card-desc">{t('guide.settingsDesc')}</p>
                     </div>
                   </div>
+
+                  {/* Export */}
                   <div className="guide-card" style={{ '--card-accent': 'var(--color-emerald)' }}>
-                    <div className="guide-card-step">07</div>
+                    <div className="guide-card-step">13</div>
                     <div className="guide-card-icon-wrap"><Download size={22} /></div>
                     <div className="guide-card-content">
                       <h3 className="guide-card-title">{t('guide.export')}</h3>
                       <p className="guide-card-desc">{t('guide.exportDesc')}</p>
                     </div>
                   </div>
-                  <div className="guide-card" style={{ '--card-accent': 'var(--color-teal)' }}>
-                    <div className="guide-card-step">08</div>
+
+                  {/* Theme & Language */}
+                  <div className="guide-card" style={{ '--card-accent': 'var(--color-gold)' }}>
+                    <div className="guide-card-step">14</div>
                     <div className="guide-card-icon-wrap"><Sun size={22} /></div>
                     <div className="guide-card-content">
                       <h3 className="guide-card-title">{t('guide.theme')}</h3>
                       <p className="guide-card-desc">{t('guide.themeDesc')}</p>
                     </div>
                   </div>
+
+                  {/* Keyboard Shortcuts */}
+                  <div className="guide-card" style={{ '--card-accent': 'var(--color-teal)' }}>
+                    <div className="guide-card-step">15</div>
+                    <div className="guide-card-icon-wrap"><Zap size={22} /></div>
+                    <div className="guide-card-content">
+                      <h3 className="guide-card-title">{t('guide.shortcuts')}</h3>
+                      <p className="guide-card-desc">{t('guide.shortcutsDesc')}</p>
+                    </div>
+                  </div>
+
+                  {/* Pro Tips */}
+                  <div className="guide-card guide-card-tips" style={{ '--card-accent': 'var(--color-gold)' }}>
+                    <div className="guide-card-icon-wrap"><Heart size={22} /></div>
+                    <div className="guide-card-content">
+                      <h3 className="guide-card-title">{t('guide.tips')}</h3>
+                      <p className="guide-card-desc">{t('guide.tipsDesc')}</p>
+                    </div>
+                  </div>
+
                 </div>
               </div>
             )}
+
+            {currentPage === 'contact' && renderContactPage()}
 
             {currentPage === 'habits' && (
               <div className="habits-page">
@@ -2721,48 +3061,46 @@ function App() {
                     <span className="empty-state-title">{t('drinks.noDrinks')}</span>
                   </div>
                 ) : (
-                  <div className="drinks-list">
+                  <div className="drinks-list-new">
                     {todayDrinks.map(drink => (
-                      <div key={drink.id} className="drink-card">
-                        <div className="drink-main">
-                          <div className="drink-info">
+                      <div key={drink.id} className="d-card">
+                        <div className="d-card-top">
+                          <div className="d-card-info">
                             <input
                               type="text"
-                              className="form-input drink-name-input"
+                              className="d-card-name"
                               value={drink.name}
                               onChange={e => updateDrink(drink.id, 'name', e.target.value)}
                               placeholder={t('drinks.name')}
                             />
-                            <div className="drink-count-wrap">
-                              <button
-                                type="button"
-                                className="btn-task-action"
-                                onClick={() => updateDrink(drink.id, 'count', Math.max(0, drink.count - 1))}
-                              >
-                                <Minus size={13} />
-                              </button>
-                              <span className="drink-count-value">{drink.count}</span>
-                              <button
-                                type="button"
-                                className="btn-task-action"
-                                onClick={() => updateDrink(drink.id, 'count', drink.count + 1)}
-                              >
-                                <Plus size={13} />
-                              </button>
-                            </div>
                           </div>
-                          <button
-                            type="button"
-                            className="btn-task-action delete"
-                            onClick={() => deleteDrink(drink.id)}
-                            title={t('drinks.delete')}
-                          >
-                            <Trash2 size={13} />
-                          </button>
+                          <div className="d-card-actions">
+                            <button
+                              className="d-count-btn"
+                              onClick={() => updateDrink(drink.id, 'count', Math.max(0, drink.count - 1))}
+                            >
+                              <Minus size={12} />
+                            </button>
+                            <span className="d-count-val">{drink.count}</span>
+                            <button
+                              className="d-count-btn"
+                              onClick={() => updateDrink(drink.id, 'count', drink.count + 1)}
+                            >
+                              <Plus size={12} />
+                            </button>
+                            <span className="d-card-divider" />
+                            <button
+                              className="d-del-btn"
+                              onClick={() => deleteDrink(drink.id)}
+                              title={t('drinks.delete')}
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
                         </div>
                       </div>
                     ))}
-                    <div className="drink-total-card">
+                    <div className="d-total">
                       <span>{t('drinks.total')}</span>
                       <strong>{todayDrinks.reduce((s, d) => s + d.count, 0)}</strong>
                     </div>
@@ -2772,150 +3110,30 @@ function App() {
             )}
 
             {currentPage === 'prayers' && dayData && (
-              <div className="new-tasks-page">
+              <div className="prayers-page">
                 <div className="new-tasks-header-wrap">
                   <div className="new-tasks-header">
                     <div style={{display: 'flex', alignItems: 'center', gap: '16px'}}>
                       <Clock size={32} className="new-tasks-title-icon" />
                       <div>
                         <h2 className="new-tasks-title">{t('prayerTimes.title')}</h2>
-                        <p className="new-tasks-subtitle">{t('prayerTracker.trackYour')}</p>
+                        <p className="new-tasks-subtitle">{t('prayerTimes.subtitle')}</p>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Next Prayer Card */}
-                {timelineStatus?.nextPrayerName && (() => {
-                  const nextKey = timelineStatus.nextPrayerName.toLowerCase();
-                  const nextTime = dayData.prayerTimes[nextKey];
-                  return (
-                    <div className="prayers-next-card" style={{marginBottom: '32px'}}>
-                      <span className="prayers-next-label">{t('prayerTimes.nextPrayer')}</span>
-                      <span className="prayers-next-name">{t('prayer.' + nextKey)}</span>
-                      <span className="prayers-next-time">{nextTime ? formatMinutesToTime(parseTimeToMinutes(nextTime)) : '--:--'}</span>
-                      <span className="prayers-next-countdown">
-                        <Clock size={14} />
-                        {timelineStatus.timeToNextPrayer} {t('time.until')} {t('prayer.' + nextKey)}
-                      </span>
-                    </div>
-                  );
-                })()}
-
-                <div className="new-tasks-sections">
-                  {/* Prayers Tracker */}
-                  <div className="new-period-section">
-                    <div className="new-period-header">
-                      <div className="new-period-title">
-                        <div className="new-period-dot" style={{background: 'var(--color-emerald)'}}></div>
-                        <h3>{t('prayerTimes.title')}</h3>
+                <div className="prayers-list">
+                  {['maghrib', 'isha', 'fajr', 'dhuhr', 'asr'].map((key) => {
+                    const timeStr = dayData.prayerTimes[key];
+                    const timeLabel = timeStr ? formatMinutesToTime(parseTimeToMinutes(timeStr)) : '--:--';
+                    return (
+                      <div key={key} className="prayer-time-row">
+                        <span className="prayer-time-name">{t('prayer.' + key)}</span>
+                        <span className="prayer-time-value">{timeLabel}</span>
                       </div>
-                    </div>
-                    <div className="new-period-task-list">
-                      {['maghrib', 'isha', 'fajr', 'dhuhr', 'asr'].map((key) => {
-                        const timeStr = dayData.prayerTimes[key];
-                        const currentStatus = prayerTracking[activeDate]?.[key] || 'pending';
-                        
-                        const setThisPrayerStatus = (status) => {
-                          setPrayerTracking(prev => ({ ...prev, [activeDate]: { ...(prev[activeDate] || {}), [key]: status } }));
-                          syncPrayerToTask(key, status);
-                        };
-
-                        return (
-                          <div key={key} className={`new-task-card status-${currentStatus}`}>
-                            <div className="new-task-main">
-                              <div className="new-task-content">
-                                <h4 className="new-task-title">{t('prayer.' + key)}</h4>
-                                <div className="new-task-meta">
-                                  <span className="new-task-time-badge">
-                                    <Clock size={12} /> {timeStr ? formatMinutesToTime(parseTimeToMinutes(timeStr)) : '--:--'}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                            
-                            <div className="new-task-status-row">
-                              <button 
-                                className={`new-status-btn btn-pending ${currentStatus === 'pending' ? 'active' : ''}`}
-                                onClick={() => setThisPrayerStatus('pending')}
-                              >
-                                {t('tasks.statusPending')}
-                              </button>
-                              <button 
-                                className={`new-status-btn btn-not-completed ${currentStatus === 'not_completed' ? 'active' : ''}`}
-                                onClick={() => setThisPrayerStatus('not_completed')}
-                              >
-                                <X size={14} /> {t('tasks.statusNotCompleted')}
-                              </button>
-                              <button 
-                                className={`new-status-btn btn-completed ${currentStatus === 'completed' ? 'active' : ''}`}
-                                onClick={() => {
-                                  setThisPrayerStatus('completed');
-                                  triggerConfetti();
-                                }}
-                              >
-                                <Check size={14} /> {t('tasks.statusCompleted')}
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Adhkar Tracker */}
-                  <div className="new-period-section" style={{marginTop: '16px'}}>
-                    <div className="new-period-header">
-                      <div className="new-period-title">
-                        <div className="new-period-dot" style={{background: 'var(--color-teal)'}}></div>
-                        <h3>{t('adhkar.title')}</h3>
-                      </div>
-                    </div>
-                    <div className="new-period-task-list">
-                      {['morning', 'evening'].map((key) => {
-                        const currentStatus = prayerTracking[activeDate]?.[`adhkar_${key}`] || 'pending';
-                        
-                        const setThisAdhkarStatus = (status) => {
-                          setPrayerTracking(prev => ({ ...prev, [activeDate]: { ...(prev[activeDate] || {}), [`adhkar_${key}`]: status } }));
-                          syncAdhkarToTask(`adhkar_${key}`, status);
-                        };
-
-                        return (
-                          <div key={key} className={`new-task-card status-${currentStatus}`}>
-                            <div className="new-task-main">
-                              <div className="new-task-content">
-                                <h4 className="new-task-title">{t('adhkar.' + key)}</h4>
-                              </div>
-                            </div>
-                            
-                            <div className="new-task-status-row">
-                              <button 
-                                className={`new-status-btn btn-pending ${currentStatus === 'pending' ? 'active' : ''}`}
-                                onClick={() => setThisAdhkarStatus('pending')}
-                              >
-                                {t('tasks.statusPending')}
-                              </button>
-                              <button 
-                                className={`new-status-btn btn-not-completed ${currentStatus === 'not_completed' ? 'active' : ''}`}
-                                onClick={() => setThisAdhkarStatus('not_completed')}
-                              >
-                                <X size={14} /> {t('tasks.statusNotCompleted')}
-                              </button>
-                              <button 
-                                className={`new-status-btn btn-completed ${currentStatus === 'completed' ? 'active' : ''}`}
-                                onClick={() => {
-                                  setThisAdhkarStatus('completed');
-                                  triggerConfetti();
-                                }}
-                              >
-                                <Check size={14} /> {t('tasks.statusCompleted')}
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
