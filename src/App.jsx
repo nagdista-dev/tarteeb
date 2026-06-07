@@ -2053,7 +2053,6 @@ function App() {
                           <div className="new-period-title">
                             <span className="new-period-dot"></span>
                             <h3>{t('period.' + periodKey)}</h3>
-                            <span className="new-period-time">{t('period.' + periodKey + 'Range')}</span>
                           </div>
                           <div className="new-period-stats">
                             <div className="new-period-progress-bar"><div style={{ width: `${pct}%` }}></div></div>
@@ -2073,9 +2072,6 @@ function App() {
                                   <div className="new-task-content">
                                     <h4 className="new-task-title">{translateTaskName(task.name)}</h4>
                                     <div className="new-task-meta">
-                                      <span className="new-task-time-badge">
-                                        <Clock size={12} /> {getTaskDisplayTime(task, dayData.prayerTimes)} – {formatMinutesToTime(taskEnd)}
-                                      </span>
                                       <span className="new-task-duration">{translateDuration(Number(task.duration) || 15)}</span>
                                     </div>
                                     {task.details && (
@@ -2136,17 +2132,19 @@ function App() {
 
             {currentPage === 'journal' && dayData && (
               <div className="journal-page">
-                <div className="note-composer-card">
-                  <div className="note-composer-top">
-                    <div className="note-composer-icon-wrap">
-                      <PenLine size={16} />
+                <div className="new-tasks-header-wrap">
+                  <div className="new-tasks-header">
+                    <div>
+                      <h2 className="new-tasks-title">{t('journal.title')}</h2>
+                      <p className="new-tasks-subtitle">{formatHumanDate(dayData.date)}{dayData.hijriDate ? ` · ${dayData.hijriDate}` : ''}</p>
                     </div>
-                    <div className="note-composer-meta">
-                      <span className="note-composer-heading" dir="auto">{t('journal.studyNotes')}</span>
-                      <span className="note-composer-date" dir="auto">{formatHumanDate(dayData.date)}{dayData.hijriDate ? ` · ${dayData.hijriDate}` : ''}</span>
+                    <div className="new-tasks-progress-ring">
+                      <PenLine size={32} className="new-tasks-title-icon" />
                     </div>
                   </div>
+                </div>
 
+                <div className="note-composer-card">
                   <div className="note-composer-body">
                     <textarea
                       className="note-composer-input"
@@ -2192,7 +2190,7 @@ function App() {
                 </div>
 
                 <div className="journal-section-divider">
-                  <span>{t('journal.allNotes')}</span>
+                  <span>{t('journal.allNotes')}{(dayData.studyNotes || []).length > 0 ? ` (${(dayData.studyNotes || []).length})` : ''}</span>
                 </div>
 
                 <div className="journal-study-notes">
