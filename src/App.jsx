@@ -59,6 +59,24 @@ const FIXED_TASK_SCHEDULE = {
   'Evening Adhkar': { period: 'late_afternoon', offset: 0 }
 };
 
+const PRAYER_TO_TASK_NAME = {
+  'fajr': 'Fajr Prayer',
+  'dhuhr': 'Dhuhr Prayer',
+  'asr': 'Asr Prayer',
+  'maghrib': 'Maghrib Prayer',
+  'isha': 'Isha Prayer'
+};
+
+const TASK_TO_ADHKAR_KEY = {
+  'Morning Adhkar': 'adhkar_morning',
+  'Evening Adhkar': 'adhkar_evening'
+};
+
+const ADHKAR_KEY_TO_TASK = {
+  'adhkar_morning': 'Morning Adhkar',
+  'adhkar_evening': 'Evening Adhkar'
+};
+
 const getFixedTaskSchedule = (task, prayers) => {
   const isAdhkar = task.name.includes('Adhkar');
   const duration = isAdhkar ? 10 : 15;
@@ -677,63 +695,106 @@ function App() {
   };
 
   const toggleTaskCompletion = (id) => {
+    const task = dayData?.tasks.find(t => t.id === id);
+    if (!task) return;
+
+    const wasCompleted = task.completed;
+    const newCompleted = !wasCompleted;
+    const newStatus = newCompleted ? 'completed' : 'pending';
+
+    if (!wasCompleted) {
+      confetti({
+        particleCount: 120,
+        spread: 80,
+        origin: { x: 0.5, y: 0.5 },
+        colors: ['#059669', '#0d9488', '#d97706', '#f59e0b', '#10b981']
+      });
+    }
+
     setDayData(prev => {
       if (!prev) return prev;
-      const task = prev.tasks.find(t => t.id === id);
-      if (!task) return prev;
-      
-      const wasCompleted = task.completed;
-      if (!wasCompleted) {
-        confetti({
-          particleCount: 120,
-          spread: 80,
-          origin: { x: 0.5, y: 0.5 },
-          colors: ['#059669', '#0d9488', '#d97706', '#f59e0b', '#10b981']
-        });
-      }
-
-      const newCompleted = !wasCompleted;
-      const newStatus = newCompleted ? 'completed' : 'pending';
-
       const updTasks = prev.tasks.map(t => t.id === id ? { ...t, completed: newCompleted, status: newStatus } : t);
       const updated = { ...prev, tasks: updTasks };
       updated.stats = calculateStats(updated.tasks);
       localStorage.setItem(`tarteeb_day_${updated.date}`, JSON.stringify(updated));
-
-      // Show toast directly inside since it uses the new state reliably 
-      // without needing to capture 'dayData' from scope
       showToast(
         !wasCompleted ? t('toast.taskCompleted') : t('toast.taskUncompleted'),
         { label: t('toast.undo'), action: () => toggleTaskCompletion(id) }
       );
-      
       return updated;
     });
+
+    syncTaskToPrayerTracking(task.name, newStatus);
   };
 
   const setTaskStatus = (id, newStatus) => {
+    const task = dayData?.tasks.find(t => t.id === id);
+    if (!task) return;
+
+    if (newStatus === 'completed' && task.status !== 'completed' && !task.completed) {
+      confetti({
+        particleCount: 120,
+        spread: 80,
+        origin: { x: 0.5, y: 0.5 },
+        colors: ['#059669', '#0d9488', '#d97706', '#f59e0b', '#10b981']
+      });
+    }
+
     setDayData(prev => {
       if (!prev) return prev;
-      const task = prev.tasks.find(t => t.id === id);
-      if (!task) return prev;
-      
-      if (newStatus === 'completed' && task.status !== 'completed' && !task.completed) {
-        confetti({
-          particleCount: 120,
-          spread: 80,
-          origin: { x: 0.5, y: 0.5 },
-          colors: ['#059669', '#0d9488', '#d97706', '#f59e0b', '#10b981']
-        });
-      }
-
       const updTasks = prev.tasks.map(t => 
         t.id === id ? { ...t, status: newStatus, completed: newStatus === 'completed' } : t
       );
       const updated = { ...prev, tasks: updTasks };
       updated.stats = calculateStats(updated.tasks);
       localStorage.setItem(`tarteeb_day_${updated.date}`, JSON.stringify(updated));
-
       return updated;
+    });
+
+    syncTaskToPrayerTracking(task.name, newStatus);
+  };
+
+  const triggerConfetti = () => {
+    confetti({
+      particleCount: 80,
+      spread: 70,
+      origin: { x: 0.5, y: 0.5 },
+      colors: ['#059669', '#0d9488', '#d97706', '#f59e0b', '#10b981']
+    });
+  };
+
+  const syncTaskToPrayerTracking = (taskName, newStatus, dateStr) => {
+    const targetDate = dateStr || activeDate;
+    const prayerKey = FIXED_TASK_PRAYER_KEY[taskName];
+    if (prayerKey) {
+      setPrayerTracking(prev => ({ ...prev, [targetDate]: { ...(prev[targetDate] || {}), [prayerKey]: newStatus } }));
+      return;
+    }
+    const adhkarKey = TASK_TO_ADHKAR_KEY[taskName];
+    if (adhkarKey) {
+      setPrayerTracking(prev => ({ ...prev, [targetDate]: { ...(prev[targetDate] || {}), [adhkarKey]: newStatus } }));
+    }
+  };
+
+  const syncPrayerToTask = (prayerKey, status) => {
+    const taskName = PRAYER_TO_TASK_NAME[prayerKey];
+    if (!taskName || !dayData) return;
+    setDayData(prev => {
+      const updTasks = prev.tasks.map(t =>
+        t.name === taskName ? { ...t, completed: status === 'completed', status } : t
+      );
+      return { ...prev, tasks: updTasks };
+    });
+  };
+
+  const syncAdhkarToTask = (adhkarKey, status) => {
+    const taskName = ADHKAR_KEY_TO_TASK[adhkarKey];
+    if (!taskName || !dayData) return;
+    setDayData(prev => {
+      const updTasks = prev.tasks.map(t =>
+        t.name === taskName ? { ...t, completed: status === 'completed', status } : t
+      );
+      return { ...prev, tasks: updTasks };
     });
   };
 
@@ -985,7 +1046,6 @@ function App() {
   };
 
   const exportToMarkdown = (data = null) => {
-  const exportToMarkdown = (data = null) => {
     const day = data || dayData;
     if (!day) return;
     const { tasks, diary, date, hijriDate, prayerTimes, studyNotes, mood } = day;
@@ -1016,7 +1076,7 @@ function App() {
     const todayTrack = prayerTracking[date] || {};
     const prayerCounts = { completed: 0, not_completed: 0, pending: 0 };
     PRAYER_KEYS.forEach(pk => { const s = todayTrack[pk] || 'pending'; prayerCounts[s]++; });
-    const onTime = prayerCounts.onTime;
+    const onTime = prayerCounts.completed;
 
     const todayHabits = habits.filter(h => h.entries?.[date] !== undefined);
     const completedHabits = todayHabits.filter(h => h.entries?.[date]?.completed).length;
@@ -1727,12 +1787,36 @@ function App() {
                      </div>
                    );
                  })}
-               </div>
-             </div>
-          </div>
-        </div>
+                </div>
+              </div>
 
-        {/* Notes (if any) */}
+              {/* Adhkar View-Only */}
+              <div className="new-pulse-card detail-prayers">
+                <div className="new-pulse-card-header">
+                  <BookOpen size={18} />
+                  <h4>{t('adhkar.title')}</h4>
+                </div>
+                <div className="new-pulse-prayer-grid">
+                  {['morning', 'evening'].map(key => {
+                    const status = todayPrayerTrack[`adhkar_${key}`] || 'pending';
+                    return (
+                      <div key={key} className={`new-pulse-prayer-box status-${status}`}>
+                        <div className="prayer-info">
+                          <span className="prayer-name">{t('adhkar.' + key)}</span>
+                        </div>
+                        <span className="prayer-status-text">
+                          <span className="pulse-status-dot" style={{ background: STATUS_COLORS[status] }} />
+                          {t(status === 'pending' ? 'tasks.statusPending' : (status === 'completed' ? 'tasks.statusCompleted' : 'tasks.statusNotCompleted'))}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+           </div>
+         </div>
+ 
+         {/* Notes (if any) */}
         {hasNotes && (
           <div className="new-pulse-card detail-notes">
             <div className="new-pulse-card-header">
@@ -2349,6 +2433,7 @@ function App() {
                         
                         const setThisPrayerStatus = (status) => {
                           setPrayerTracking(prev => ({ ...prev, [activeDate]: { ...(prev[activeDate] || {}), [key]: status } }));
+                          syncPrayerToTask(key, status);
                         };
 
                         return (
@@ -2407,6 +2492,7 @@ function App() {
                         
                         const setThisAdhkarStatus = (status) => {
                           setPrayerTracking(prev => ({ ...prev, [activeDate]: { ...(prev[activeDate] || {}), [`adhkar_${key}`]: status } }));
+                          syncAdhkarToTask(`adhkar_${key}`, status);
                         };
 
                         return (
@@ -3027,6 +3113,4 @@ function App() {
       )}
     </div>
   )}
-}
-
 export default App;
