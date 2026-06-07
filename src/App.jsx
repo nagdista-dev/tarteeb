@@ -5,7 +5,7 @@ import {
   ChevronUp, ChevronDown, RefreshCw, Download, HelpCircle, List, Type, Menu, Target,
   Smartphone, Lock, Unlock, Upload, Search, Zap, Activity,
   TrendingUp, BarChart3, Flame, CalendarDays, PenLine, Heart, Coffee, Award, Send,
-  Maximize, Minimize, Contrast
+  Maximize, Minimize
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import {
@@ -409,12 +409,7 @@ function App() {
   const MOODS = ['happy', 'grateful', 'peaceful', 'energetic', 'tired', 'stressed', 'anxious', 'sad'];
   const MOOD_EMOJIS = { happy: '😊', grateful: '🤲', peaceful: '🕊️', energetic: '⚡', tired: '😴', stressed: '😰', anxious: '😟', sad: '😢' };
 
-  // ---- Fullscreen & High Contrast ----
-  const [highContrast, setHighContrast] = useState(() => localStorage.getItem('tarteeb_high_contrast') === 'true');
-  useEffect(() => {
-    document.documentElement.classList.toggle('high-contrast', highContrast);
-    localStorage.setItem('tarteeb_high_contrast', highContrast);
-  }, [highContrast]);
+  // ---- Fullscreen ----
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch(() => {});
@@ -2492,9 +2487,6 @@ function App() {
             </button>
             <button className="sidebar-action-btn" onClick={toggleFullscreen} title={t('nav.fullscreen')}>
               {document.fullscreenElement ? <Minimize size={15} /> : <Maximize size={15} />}
-            </button>
-            <button className={`sidebar-action-btn${highContrast ? ' active' : ''}`} onClick={() => setHighContrast(v => !v)} title={t('nav.highContrast')}>
-              <Contrast size={15} />
             </button>
             <button className="sidebar-action-btn sidebar-action-reload" onClick={() => window.location.reload()} title={t('nav.refresh')}>
               <RefreshCw size={14} />
