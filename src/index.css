@@ -6226,10 +6226,9 @@ textarea.form-textarea {
 
 /* Content Grid */
 .new-pulse-content-grid {
-  display: grid;
-  grid-template-columns: 3fr 2fr;
+  display: flex;
+  flex-direction: column;
   gap: 24px;
-  align-items: start;
 }
 
 .new-pulse-column-right {
@@ -6459,7 +6458,7 @@ textarea.form-textarea {
     grid-template-columns: repeat(2, 1fr);
   }
   .new-pulse-content-grid {
-    grid-template-columns: 1fr;
+    gap: 16px;
   }
 }
 
