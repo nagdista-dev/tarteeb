@@ -33,6 +33,7 @@ const en = {
   'header.loading': 'Updating prayer times...',
   'header.exportCurrent': 'Current Day',
   'header.exportPrevious': 'Previous Day',
+  'header.downloadCurrentDay': 'Download Current Day',
 
   /* Sidebar planner */
   'sidebar.complete': '% complete',
@@ -88,6 +89,9 @@ const en = {
   'tasks.search': 'Search tasks…',
   'tasks.searchPlaceholder': 'Type to filter tasks…',
   'tasks.noTasksMatch': 'No tasks match your search.',
+  'tasks.statusPending': 'Pending',
+  'tasks.statusNotCompleted': 'Not Completed',
+  'tasks.statusCompleted': 'Completed',
 
   /* Streak */
   'streak.title': 'Daily Streak',
@@ -324,6 +328,9 @@ const en = {
   'prayerTracker.late': 'Late',
   'prayerTracker.missed': 'Missed ✗',
   'prayerTracker.trackYour': 'Track your prayers',
+  'adhkar.title': 'Adhkar (Remembrances)',
+  'adhkar.morning': 'Morning Adhkar',
+  'adhkar.evening': 'Evening Adhkar',
 
   /* Mood Tracker */
   'mood.title': 'Daily Mood',
@@ -397,6 +404,7 @@ const ar = {
   'header.loading': 'جاري تحديث أوقات الصلاة...',
   'header.exportCurrent': 'اليوم الحالي',
   'header.exportPrevious': 'اليوم السابق',
+  'header.downloadCurrentDay': 'تحميل اليوم الحالي',
 
   /* Sidebar planner */
   'sidebar.complete': '% مكتمل',
@@ -452,6 +460,9 @@ const ar = {
   'tasks.search': 'بحث في المهام…',
   'tasks.searchPlaceholder': 'اكتب لتصفية المهام…',
   'tasks.noTasksMatch': 'لا توجد مهام تطابق بحثك.',
+  'tasks.statusPending': 'قيد الانتظار',
+  'tasks.statusNotCompleted': 'غير مكتمل',
+  'tasks.statusCompleted': 'مكتمل',
 
   /* Streak */
   'streak.title': 'التسلسل اليومي',
@@ -688,6 +699,9 @@ const ar = {
   'prayerTracker.late': 'متأخرة',
   'prayerTracker.missed': 'فائتة ✗',
   'prayerTracker.trackYour': 'تتبع صلواتك',
+  'adhkar.title': 'الأذكار',
+  'adhkar.morning': 'أذكار الصباح',
+  'adhkar.evening': 'أذكار المساء',
 
   /* Mood Tracker */
   'mood.title': 'المزاج اليومي',

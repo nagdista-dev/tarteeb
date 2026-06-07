@@ -387,6 +387,38 @@ a {
   transform: translateY(-1px);
 }
 
+.btn-download-header {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  padding: 0 16px;
+  gap: 8px;
+  border-radius: 100px;
+  border: 1.5px solid var(--color-emerald);
+  background: transparent;
+  color: var(--color-emerald);
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.btn-download-header:hover {
+  background: var(--color-emerald);
+  color: #ffffff;
+  border-color: var(--color-emerald);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-emerald) 40%, transparent);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+  .btn-download-header {
+    display: none;
+  }
+}
+
 .btn-icon {
   width: 38px;
   height: 38px;
@@ -3981,280 +4013,78 @@ textarea.form-textarea {
 }
 
 /* ===== Tasks Page ===== */
-.tasks-page {
-  max-width: 720px;
+/* ===== New Tasks Page Layout ===== */
+.new-tasks-page {
+  max-width: 800px;
   margin: 0 auto;
-  padding: 16px;
+  padding: 24px;
 }
 
-.tasks-header {
+.new-tasks-header-wrap {
+  margin-bottom: 24px;
+}
+
+.new-tasks-header {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 20px;
+  background: linear-gradient(135deg, var(--color-emerald) 0%, var(--color-teal) 100%);
+  border-radius: 16px;
+  padding: 24px 32px;
+  color: white;
+  box-shadow: 0 10px 25px -5px rgba(17, 94, 59, 0.3);
 }
 
-.tasks-header-icon {
-  color: var(--color-emerald);
+.new-tasks-title {
+  font-size: 1.8rem;
+  font-weight: 800;
+  margin: 0 0 4px 0;
+}
+
+.new-tasks-subtitle {
+  font-size: 0.95rem;
+  opacity: 0.9;
+  margin: 0;
+}
+
+.new-tasks-title-icon {
   opacity: 0.8;
 }
 
-.tasks-header-title {
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0;
-  flex: 1;
-}
-
-.tasks-header-count {
-  font-size: 1.1rem;
-  font-weight: 800;
-  color: var(--color-emerald);
-  background: var(--color-emerald-light);
-  padding: 4px 14px;
-  border-radius: 20px;
-}
-
-.tasks-block {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  overflow: hidden;
-  margin-bottom: 8px;
-}
-
-.tasks-block-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
-  background: var(--bg-primary);
-  border-bottom: 1px solid var(--border-color);
-  transition: background 0.15s ease;
-  user-select: none;
-}
-
-.tasks-block-header:hover {
-  background: var(--bg-tertiary);
-}
-
-.tasks-block-header-left {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex: 1;
-  min-width: 0;
-}
-
-.tasks-block-header-actions {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex-shrink: 0;
-}
-
-.btn-bulk {
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  border-radius: 6px;
-  border: 1px solid var(--border-color);
-  background: var(--bg-secondary);
-  color: var(--text-tertiary);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.15s ease;
-}
-
-.btn-bulk:hover {
-  background: var(--color-emerald-light);
-  color: var(--color-emerald);
-  border-color: var(--color-emerald);
-}
-
-.tasks-block.collapsed .tasks-block-header {
-  border-bottom: none;
-}
-
-.tasks-block-list {
-  overflow: hidden;
-}
-
-.tasks-block-name {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.tasks-block-meta {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--text-tertiary);
-}
-
-.tasks-block-meta svg {
-  margin-left: 6px;
-}
-
-.tasks-block-list {
-  display: flex;
-  flex-direction: column;
-}
-
-.tasks-task-card {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 16px;
-  border-bottom: 1px solid var(--border-color);
-  transition: background 0.15s ease;
-}
-
-.tasks-task-card:last-child {
-  border-bottom: none;
-}
-
-.tasks-task-card:hover {
-  background: var(--bg-primary);
-}
-
-.tasks-task-card.expanded {
-  background: var(--bg-primary);
-}
-
-.tasks-task-card.completed .tasks-task-name {
-  text-decoration: line-through;
-  opacity: 0.55;
-}
-
-.tasks-task-card.completed {
-  opacity: 0.65;
-  background: var(--bg-primary);
-}
-
-.tasks-task-card.completed .tasks-task-time {
-  opacity: 0.5;
-}
-
-.tasks-task-details {
-  display: block;
-  margin-top: 4px;
-  font-size: 0.78rem;
-  color: var(--text-secondary);
-  line-height: 1.5;
-  white-space: pre-wrap;
-  padding: 6px 10px;
-  background: var(--bg-secondary);
-  border-radius: 6px;
-  border: 1px solid var(--border-color);
-}
-
-.tasks-task-check {
-  flex-shrink: 0;
-  width: 22px;
-  height: 22px;
-  border-radius: 6px;
-  border: 2px solid var(--border-color);
-  background: transparent;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.15s ease;
-  padding: 0;
-}
-
-.tasks-task-check:hover {
-  border-color: var(--color-emerald);
-}
-
-.tasks-task-check.checked {
-  background: var(--color-emerald);
-  border-color: var(--color-emerald);
-  color: #fff;
-}
-
-.tasks-task-body {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.tasks-task-name {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.tasks-task-time {
-  font-size: 0.7rem;
-  font-weight: 500;
-  color: var(--text-tertiary);
-}
-
-.tasks-task-actions {
-  display: flex;
-  gap: 4px;
-  flex-shrink: 0;
-}
-
-[dir="rtl"] .tasks-header {
-  text-align: right;
-}
-
-[dir="rtl"] .tasks-block-header {
-  text-align: right;
-}
-
-[dir="rtl"] .tasks-block-meta svg {
-  margin-left: 0;
-  margin-right: 6px;
-}
-
-[dir="rtl"] .tasks-task-card {
-  text-align: right;
-}
-
-/* ===== Task Search ===== */
-.tasks-search-wrap {
+.new-search-wrap {
+  margin-bottom: 32px;
   position: relative;
-  margin: 10px 0 6px;
   display: flex;
   align-items: center;
 }
+
 .tasks-search-icon {
   position: absolute;
-  left: 10px;
-  top: 50%;
-  transform: translateY(-50%);
+  left: 14px;
   color: var(--text-tertiary);
   pointer-events: none;
 }
-.tasks-search-input {
+
+.new-search-wrap .tasks-search-input {
   width: 100%;
-  padding: 8px 32px 8px 32px;
+  padding: 12px 36px;
+  font-size: 0.95rem;
+  border-radius: 12px;
   border: 1.5px solid var(--border-color);
-  border-radius: 10px;
   background-color: var(--bg-primary);
   color: var(--text-primary);
-  font-size: 0.78rem;
-  font-family: inherit;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.02);
   outline: none;
   transition: border-color 0.2s;
 }
-.tasks-search-input:focus {
+
+.new-search-wrap .tasks-search-input:focus {
   border-color: var(--color-emerald);
 }
+
 .tasks-search-clear {
   position: absolute;
-  right: 6px;
-  top: 50%;
-  transform: translateY(-50%);
+  right: 14px;
   background: none;
   border: none;
   color: var(--text-tertiary);
@@ -4263,10 +4093,281 @@ textarea.form-textarea {
   display: flex;
   border-radius: 4px;
 }
+
 .tasks-search-clear:hover {
   color: var(--text-primary);
   background-color: var(--bg-secondary);
 }
+
+.new-tasks-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.new-period-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.new-period-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  border-bottom: 2px solid var(--border-color);
+  padding-bottom: 8px;
+}
+
+.new-period-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.new-period-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-emerald);
+}
+
+.new-period-title h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.new-period-time {
+  font-size: 0.85rem;
+  color: var(--text-tertiary);
+  font-weight: 500;
+  margin-left: 8px;
+}
+
+.new-period-stats {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.new-period-progress-bar {
+  width: 60px;
+  height: 6px;
+  background: var(--bg-tertiary);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.new-period-progress-bar > div {
+  height: 100%;
+  background: var(--color-emerald);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.new-period-count {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.new-period-task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.new-task-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 16px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.new-task-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  border-color: var(--text-tertiary);
+}
+
+.new-task-card.status-completed {
+  background: color-mix(in srgb, var(--color-emerald) 5%, var(--bg-secondary));
+  border-color: color-mix(in srgb, var(--color-emerald) 30%, transparent);
+}
+
+.new-task-card.status-not_completed {
+  background: color-mix(in srgb, var(--color-danger) 5%, var(--bg-secondary));
+  border-color: color-mix(in srgb, var(--color-danger) 30%, transparent);
+}
+
+.new-task-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.new-task-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.new-task-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.new-task-card.status-completed .new-task-title {
+  text-decoration: line-through;
+  color: var(--text-secondary);
+}
+
+.new-task-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.new-task-time-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--bg-primary);
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+}
+
+.new-task-duration {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+}
+
+.new-task-desc {
+  margin: 6px 0 0 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  background: var(--bg-primary);
+  padding: 8px 12px;
+  border-radius: 8px;
+  border-left: 3px solid var(--color-teal);
+}
+
+.new-task-menu {
+  display: flex;
+  gap: 6px;
+}
+
+.new-task-menu button {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.new-task-menu button:hover {
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+  border-color: var(--text-secondary);
+}
+
+.new-task-menu button.delete:hover {
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+  background: var(--color-danger-bg);
+}
+
+.new-task-status-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  background: var(--bg-primary);
+  padding: 6px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+}
+
+.new-status-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: transparent;
+  color: var(--text-tertiary);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.new-status-btn:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.new-status-btn.btn-pending.active {
+  background: var(--color-gold);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(178, 94, 0, 0.3);
+}
+
+.new-status-btn.btn-not-completed.active {
+  background: var(--color-danger);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(185, 28, 28, 0.3);
+}
+
+.new-status-btn.btn-completed.active {
+  background: var(--color-emerald);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(17, 94, 59, 0.3);
+}
+
+[dir="rtl"] .new-period-time {
+  margin-left: 0;
+  margin-right: 8px;
+}
+
+[dir="rtl"] .new-task-desc {
+  border-left: none;
+  border-right: 3px solid var(--color-teal);
+}
+
+[dir="rtl"] .tasks-search-icon {
+  left: auto;
+  right: 14px;
+}
+
+[dir="rtl"] .tasks-search-clear {
+  right: auto;
+  left: 14px;
+}
+
 .tasks-empty-search {
   display: flex;
   flex-direction: column;
@@ -5646,45 +5747,40 @@ textarea.form-textarea {
   }
 
   /* Tasks page mobile */
-  .tasks-page {
-    padding: 10px 0 48px;
+  .new-tasks-page {
+    padding: 12px 16px 48px;
   }
 
-  .tasks-task-card {
-    padding: 10px 12px;
-    gap: 6px;
+  .new-tasks-header {
+    padding: 20px 24px;
   }
 
-  .tasks-task-check {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    flex-shrink: 0;
+  .new-tasks-title {
+    font-size: 1.4rem;
   }
 
-  .tasks-block-header {
-    padding: 12px 14px;
+  .new-tasks-subtitle {
+    font-size: 0.85rem;
   }
 
-  .tasks-task-name {
-    font-size: 0.82rem;
+  .new-task-main {
+    flex-direction: column;
   }
 
-  .tasks-task-actions {
-    gap: 3px;
+  .new-task-menu {
+    width: 100%;
+    justify-content: flex-end;
   }
 
-  .tasks-task-actions .btn-task-action {
-    width: 34px;
-    height: 34px;
-    padding: 0;
-    border-radius: 8px;
+  .new-task-status-row {
+    display: flex;
+    flex-wrap: wrap;
   }
 
-  .btn-bulk {
-    width: 26px;
-    height: 26px;
-    border-radius: 5px;
+  .new-status-btn {
+    flex: 1;
+    font-size: 0.75rem;
+    padding: 8px 4px;
   }
 
   /* Hide keyboard hints on mobile */
@@ -5707,12 +5803,12 @@ textarea.form-textarea {
   }
 
   /* Mobile search */
-  .tasks-search-wrap {
-    margin: 8px 0 4px;
+  .new-search-wrap {
+    margin: 8px 0 16px;
   }
-  .tasks-search-input {
-    padding: 7px 30px 7px 30px;
-    font-size: 0.75rem;
+  .new-search-wrap .tasks-search-input {
+    padding: 10px 30px 10px 30px;
+    font-size: 0.85rem;
   }
 
 }
@@ -5732,478 +5828,417 @@ textarea.form-textarea {
   }
 }
 
-/* ===== Pulse Dashboard ===== */
-.pulse-page {
+/* ===== New Pulse Dashboard ===== */
+.new-pulse-page {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  max-width: 720px;
+  gap: 24px;
+  max-width: 900px;
   margin: 0 auto;
   width: 100%;
-  padding-bottom: 40px;
+  padding-bottom: 60px;
 }
 
-/* Header */
-.pulse-header-wrap {
+.new-pulse-header-wrap {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 4px;
+  align-items: center;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  padding: 24px 32px;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.02);
 }
 
-.pulse-header {
+.new-pulse-header-main {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 16px;
 }
 
-.pulse-header-icon {
+.new-pulse-icon {
   color: var(--color-emerald);
-  flex-shrink: 0;
-  margin-top: 2px;
+  background: var(--color-emerald-light);
+  padding: 8px;
+  border-radius: 12px;
+  width: 48px;
+  height: 48px;
 }
 
-.pulse-header-title {
-  font-size: 1.15rem;
-  font-weight: 700;
+.new-pulse-title {
+  font-size: 1.5rem;
+  font-weight: 800;
   color: var(--text-primary);
-  margin: 0;
+  margin: 0 0 4px 0;
 }
 
-.pulse-subtitle {
-  font-size: 0.72rem;
+.new-pulse-subtitle {
+  font-size: 0.85rem;
   color: var(--text-tertiary);
   margin: 0;
 }
 
-.pulse-date-box {
+.new-pulse-date {
   text-align: right;
-  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.pulse-date-gregorian {
-  display: block;
-  font-size: 0.72rem;
-  font-weight: 600;
+.new-pulse-date .date-gregorian {
+  font-size: 0.95rem;
+  font-weight: 700;
   color: var(--text-secondary);
 }
 
-.pulse-date-hijri {
-  display: block;
-  font-size: 0.68rem;
+.new-pulse-date .date-hijri {
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--color-emerald);
-  margin-top: 1px;
 }
 
-[dir="rtl"] .pulse-date-box {
+[dir="rtl"] .new-pulse-date {
   text-align: left;
 }
 
-/* Metric Cards */
-.pulse-metrics {
+/* Overview Grid */
+.new-pulse-overview-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
+  gap: 16px;
 }
 
-.pulse-metric-card {
+.new-pulse-card {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  padding: 18px 14px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  position: relative;
-  min-height: 120px;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.015);
 }
 
-.pulse-metric-value {
-  font-size: 1.6rem;
+.new-pulse-card .overview-icon {
+  margin-bottom: 16px;
+  color: var(--text-secondary);
+}
+
+.overview-tasks .overview-icon { color: var(--color-teal); }
+.overview-habits .overview-icon { color: var(--color-blue, #3b82f6); }
+.overview-prayers .overview-icon { color: var(--color-emerald); }
+.overview-streak .overview-icon { color: var(--color-gold); }
+
+.overview-data h3 {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-tertiary);
+  margin: 0 0 8px 0;
+}
+
+.overview-value {
+  font-size: 1.8rem;
   font-weight: 800;
   color: var(--text-primary);
-  line-height: 1.1;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
 }
 
-.pulse-metric-sep {
+.overview-value span {
   font-size: 0.9rem;
   font-weight: 600;
   color: var(--text-tertiary);
-  margin-left: 2px;
 }
 
-.pulse-metric-label {
-  font-size: 0.6rem;
-  font-weight: 600;
-  color: var(--text-tertiary);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-/* Completion ring card */
-.pulse-card-completion {
-  background: linear-gradient(145deg, var(--bg-secondary), color-mix(in srgb, var(--color-emerald) 4%, var(--bg-secondary)));
-}
-
-.pulse-ring-wrap {
-  position: relative;
-  width: 72px;
-  height: 72px;
+.overview-sub {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
-.pulse-ring {
-  position: absolute;
-  inset: 0;
-}
-
-.pulse-ring-value {
-  font-size: 1rem;
-  font-weight: 800;
-  color: var(--color-emerald);
-  z-index: 1;
-}
-
-/* Tasks card */
-.pulse-card-tasks {
-  background: linear-gradient(145deg, var(--bg-secondary), color-mix(in srgb, var(--color-teal) 4%, var(--bg-secondary)));
-}
-
-.pulse-metric-minibar {
-  width: 100%;
-  height: 3px;
+.sub-tag {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 6px;
   background: var(--bg-primary);
-  border-radius: 4px;
-  overflow: hidden;
-  margin-top: 2px;
-}
-.pulse-metric-minibar div {
-  height: 100%;
-  background: linear-gradient(90deg, var(--color-teal), var(--color-emerald));
-  border-radius: 4px;
-  transition: width 0.5s ease;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
 }
 
-/* Prayer card */
-.pulse-card-prayer {
-  background: linear-gradient(145deg, var(--bg-secondary), color-mix(in srgb, var(--color-gold) 4%, var(--bg-secondary)));
-}
+.sub-tag.tag-pending { color: var(--color-gold); border-color: color-mix(in srgb, var(--color-gold) 30%, transparent); background: color-mix(in srgb, var(--color-gold) 10%, transparent); }
+.sub-tag.tag-missed { color: var(--color-danger); border-color: color-mix(in srgb, var(--color-danger) 30%, transparent); background: color-mix(in srgb, var(--color-danger) 10%, transparent); }
+.sub-tag.tag-streak { color: var(--color-emerald); border-color: color-mix(in srgb, var(--color-emerald) 30%, transparent); background: color-mix(in srgb, var(--color-emerald) 10%, transparent); }
 
 .pulse-metric-dots {
   display: flex;
-  gap: 4px;
-  margin-top: 2px;
+  gap: 6px;
+  align-items: center;
 }
 
 .pulse-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  transition: background 0.3s ease;
-}
-
-/* Streak card */
-.pulse-card-streak {
-  background: linear-gradient(145deg, var(--bg-secondary), color-mix(in srgb, #f59e0b 4%, var(--bg-secondary)));
-}
-
-.pulse-streak-icon-big {
-  color: var(--color-gold);
-  filter: drop-shadow(0 1px 3px rgba(245, 158, 11, 0.3));
-}
-
-/* Generic card sections */
-.pulse-card {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  padding: 16px 18px;
-}
-
-.pulse-card-header {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--text-secondary);
-  margin-bottom: 14px;
-}
-
-/* Prayer cards (interactive) */
-.pulse-prayer-cards {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 8px;
-}
-
-.pulse-prayer-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 12px 6px;
-  border: 1.5px solid var(--border-color);
-  border-radius: var(--radius-md);
-  background: var(--bg-primary);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-family: inherit;
-}
-.pulse-prayer-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-}
-
-.pulse-prayer-btn-name {
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.pulse-prayer-btn-time {
-  font-size: 0.6rem;
-  font-weight: 600;
-  color: var(--text-tertiary);
-  direction: ltr;
-}
-
-.pulse-prayer-btn-status {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.55rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-
-.pulse-status-dot {
-  width: 6px;
-  height: 6px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   flex-shrink: 0;
 }
 
-/* Per-status styling */
-.pulse-prayer-onTime {
-  border-color: color-mix(in srgb, var(--color-emerald) 30%, var(--border-color));
-}
-.pulse-prayer-onTime .pulse-prayer-btn-status {
-  color: var(--color-emerald);
-}
-.pulse-prayer-late {
-  border-color: color-mix(in srgb, var(--color-gold) 30%, var(--border-color));
-}
-.pulse-prayer-late .pulse-prayer-btn-status {
-  color: var(--color-gold);
-}
-.pulse-prayer-missed {
-  border-color: color-mix(in srgb, var(--color-danger) 30%, var(--border-color));
-}
-.pulse-prayer-missed .pulse-prayer-btn-status {
-  color: var(--color-danger);
-}
-.pulse-prayer-pending .pulse-prayer-btn-status {
-  color: var(--text-tertiary);
+/* Content Grid */
+.new-pulse-content-grid {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 24px;
 }
 
-/* Task breakdown by period */
-.pulse-period-breakdown {
+.new-pulse-column-right {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 24px;
+}
+
+.new-pulse-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+
+.new-pulse-card-header h4 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* Tasks Detail */
+.task-status-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.status-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.status-label {
+  width: 100px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.status-track {
+  flex: 1;
+  height: 8px;
+  background: var(--bg-primary);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.status-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+.status-fill.completed { background: var(--color-emerald); }
+.status-fill.pending { background: var(--color-gold); }
+.status-fill.not-completed { background: var(--color-danger); }
+
+.status-count {
+  width: 30px;
+  text-align: right;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.pulse-period-breakdown.new-style {
+  background: var(--bg-primary);
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
 }
 
 .pulse-period-row {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
+  margin-bottom: 12px;
 }
+.pulse-period-row:last-child { margin-bottom: 0; }
 
 .pulse-period-info {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-}
-
-.pulse-period-name {
-  font-size: 0.72rem;
+  font-size: 0.8rem;
   font-weight: 600;
-  color: var(--text-primary);
-}
-
-.pulse-period-count {
-  font-size: 0.65rem;
-  font-weight: 700;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
 }
 
 .pulse-period-bar-wrap {
   height: 6px;
-  background: var(--bg-primary);
-  border-radius: 6px;
+  background: var(--bg-secondary);
+  border-radius: 3px;
   overflow: hidden;
 }
 
 .pulse-period-bar {
   height: 100%;
   background: linear-gradient(90deg, var(--color-emerald), var(--color-teal));
-  border-radius: 6px;
-  transition: width 0.5s ease;
+  border-radius: 3px;
 }
 
-/* Habits */
-.pulse-habits-grid {
+/* Habits Detail */
+.new-pulse-habits-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 10px;
 }
 
-.pulse-habit-item {
+.new-pulse-habit-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 8px;
-  border-radius: 8px;
+  gap: 12px;
+  padding: 10px 14px;
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
-  transition: all 0.2s ease;
-}
-.pulse-habit-item.done {
-  border-color: color-mix(in srgb, var(--color-emerald) 30%, var(--border-color));
-}
-
-.pulse-habit-check {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.65rem;
-  background: var(--bg-secondary);
-  border: 1.5px solid var(--border-color);
-  color: var(--text-tertiary);
-  flex-shrink: 0;
-  transition: all 0.2s ease;
-}
-.pulse-habit-check.checked {
-  background: var(--color-emerald);
-  border-color: var(--color-emerald);
-  color: #fff;
-}
-
-.pulse-habit-name {
-  font-size: 0.75rem;
+  border-radius: 10px;
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-primary);
 }
 
-.pulse-habits-summary {
-  margin-top: 4px;
-  text-align: center;
+.new-pulse-habit-item.done {
+  border-color: color-mix(in srgb, var(--color-emerald) 30%, transparent);
 }
-.pulse-habits-summary-text {
-  font-size: 0.6rem;
-  font-weight: 600;
-  color: var(--text-tertiary);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
+.new-pulse-habit-item.done .icon-done { color: var(--color-emerald); }
+.new-pulse-habit-item.pending .icon-pending { color: var(--text-tertiary); }
 
 .pulse-empty-habits {
-  text-align: center;
-  padding: 10px 0;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   color: var(--text-tertiary);
+  text-align: center;
+  padding: 16px 0;
 }
 
-/* Study Notes */
-.pulse-notes-list {
+/* Prayers Detail */
+.new-pulse-prayer-grid {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
-.pulse-note-item {
-  padding: 8px 10px;
+.new-pulse-prayer-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border-radius: 10px;
+}
+
+.prayer-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.prayer-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.prayer-time {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  direction: ltr;
+}
+
+.prayer-status-text {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.status-onTime { border-color: color-mix(in srgb, var(--color-emerald) 40%, transparent); }
+.status-onTime .prayer-status-text { color: var(--color-emerald); }
+.status-late { border-color: color-mix(in srgb, var(--color-gold) 40%, transparent); }
+.status-late .prayer-status-text { color: var(--color-gold); }
+.status-missed { border-color: color-mix(in srgb, var(--color-danger) 40%, transparent); }
+.status-missed .prayer-status-text { color: var(--color-danger); }
+.status-pending .prayer-status-text { color: var(--text-tertiary); }
+
+/* Notes */
+.pulse-notes-list.new-style {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pulse-note-item.new-style {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  padding: 14px 16px;
+  border-radius: 12px;
 }
 
 .pulse-note-period {
-  display: block;
-  font-size: 0.58rem;
+  font-size: 0.7rem;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
   color: var(--color-emerald);
-  margin-bottom: 3px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  display: block;
 }
 
 .pulse-note-text {
-  font-size: 0.75rem;
-  color: var(--text-primary);
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
   margin: 0;
-  line-height: 1.4;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
 
-.pulse-notes-more {
-  text-align: center;
-  font-size: 0.65rem;
-  font-weight: 600;
-  color: var(--text-tertiary);
-  padding: 4px 0;
-}
-
-/* ===== Mobile Pulse ===== */
-@media (max-width: 768px) {
-  .pulse-header-wrap {
-    flex-direction: column;
-    gap: 6px;
+/* Mobile Responsiveness */
+@media (max-width: 900px) {
+  .new-pulse-overview-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
-  .pulse-date-box {
+  .new-pulse-content-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .new-pulse-page {
+    padding-bottom: 80px;
+  }
+  .new-pulse-header-wrap {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 20px;
+  }
+  .new-pulse-date {
     text-align: left;
   }
-  [dir="rtl"] .pulse-date-box {
+  [dir="rtl"] .new-pulse-date {
     text-align: right;
   }
-
-  .pulse-metrics {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 6px;
-  }
-  .pulse-metric-card {
-    padding: 14px 10px;
-    min-height: 100px;
-  }
-  .pulse-metric-value {
-    font-size: 1.3rem;
-  }
-  .pulse-ring-wrap {
-    width: 60px;
-    height: 60px;
-  }
-  .pulse-ring-value {
-    font-size: 0.85rem;
-  }
-
-  .pulse-prayer-cards {
-    grid-template-columns: repeat(3, 1fr);
-  }
-  .pulse-prayer-cards > :nth-last-child(-n+2) {
-    grid-column: span 1;
+  .new-pulse-overview-grid {
+    grid-template-columns: 1fr;
   }
 }
