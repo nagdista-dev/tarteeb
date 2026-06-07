@@ -25,6 +25,8 @@ const en = {
   'nav.toggleTheme': 'Toggle Light/Dark',
   'nav.install': 'Install App',
   'nav.refresh': 'Reload App',
+  'nav.fullscreen': 'Fullscreen',
+  'nav.highContrast': 'High Contrast',
   'nav.contact': 'Contact Developer',
 
   /* Header actions */
@@ -472,6 +474,8 @@ const ar = {
   'nav.toggleTheme': 'تبديل السمة',
   'nav.install': 'تثبيت التطبيق',
   'nav.refresh': 'إعادة تحميل التطبيق',
+  'nav.fullscreen': 'ملء الشاشة',
+  'nav.highContrast': 'تباين عالي',
   'nav.contact': 'تواصل مع المطور',
 
   /* Header actions */

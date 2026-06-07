@@ -2338,6 +2338,15 @@ textarea.form-textarea {
   transform: scale(0.95);
 }
 
+.sidebar-action-btn.active {
+  background: var(--color-emerald);
+  color: #fff;
+}
+.sidebar-action-btn.active:hover {
+  background: var(--color-emerald) !important;
+  color: #fff !important;
+}
+
 .sidebar-action-reload {
   color: var(--color-emerald);
 }
@@ -7121,4 +7130,19 @@ textarea.form-textarea {
   .pulse-sleep-drinks-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* ===== High Contrast Mode ===== */
+html.high-contrast {
+  --bg-primary: #000;
+  --bg-secondary: #111;
+  --bg-tertiary: #222;
+  --text-primary: #fff;
+  --text-secondary: #ddd;
+  --text-tertiary: #aaa;
+  --border-color: #444;
+  --color-emerald: #00e676;
+  --color-gold: #ffd740;
+  --color-danger: #ff5252;
+  --color-teal: #00bcd4;
 }

@@ -4,7 +4,8 @@ import {
   BookOpen, Clock, Sparkles, MapPin, X, AlertCircle,
   ChevronUp, ChevronDown, RefreshCw, Download, HelpCircle, List, Type, Menu, Target,
   Smartphone, Lock, Unlock, Upload, Search, Zap, Activity,
-  TrendingUp, BarChart3, Flame, CalendarDays, PenLine, Heart, Coffee, Award, Send
+  TrendingUp, BarChart3, Flame, CalendarDays, PenLine, Heart, Coffee, Award, Send,
+  Maximize, Minimize, Contrast
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import {
@@ -407,6 +408,20 @@ function App() {
   // ---- Mood Tracker ----
   const MOODS = ['happy', 'grateful', 'peaceful', 'energetic', 'tired', 'stressed', 'anxious', 'sad'];
   const MOOD_EMOJIS = { happy: '😊', grateful: '🤲', peaceful: '🕊️', energetic: '⚡', tired: '😴', stressed: '😰', anxious: '😟', sad: '😢' };
+
+  // ---- Fullscreen & High Contrast ----
+  const [highContrast, setHighContrast] = useState(() => localStorage.getItem('tarteeb_high_contrast') === 'true');
+  useEffect(() => {
+    document.documentElement.classList.toggle('high-contrast', highContrast);
+    localStorage.setItem('tarteeb_high_contrast', highContrast);
+  }, [highContrast]);
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen().catch(() => {});
+    }
+  };
 
   // ---- Task search ----
   const [taskSearch, setTaskSearch] = useState('');
@@ -1316,16 +1331,16 @@ function App() {
     if (completedTasksList.length > 0) {
       lines.push('> [!success]- ' + t('tasks.statusCompleted') + ' (' + completed + ')');
       lines.push('>');
-      completedTasksList.forEach(t => {
-        const time = getTaskDisplayTime(t, prayerTimes);
-        const end = t.type === 'personal' || t.type === 'user'
-          ? ` – ${formatMinutesToTime(getTaskStartMinutes(t, prayerTimes) + (Number(t.duration) || 15))}`
+      completedTasksList.forEach(task => {
+        const time = getTaskDisplayTime(task, prayerTimes);
+        const end = task.type === 'personal' || task.type === 'user'
+          ? ` – ${formatMinutesToTime(getTaskStartMinutes(task, prayerTimes) + (Number(task.duration) || 15))}`
           : '';
-        const periodTag = t.period ? ` \`[${t('period.' + t.period)}]\`` : '';
-        const durationTag = t.duration ? ` _(${formatDur(Number(t.duration))})_` : '';
-        const recurringTag = t.isRecurring ? ' ♻️' : '';
-        lines.push(`> - [x] **${translateTaskName(t.name)}** — ${time}${end}${periodTag}${durationTag}${recurringTag}`);
-        if (t.details) lines.push(`>   - ${t.details}`);
+        const periodTag = task.period ? ` \`[${t('period.' + task.period)}]\`` : '';
+        const durationTag = task.duration ? ` _(${formatDur(Number(task.duration))})_` : '';
+        const recurringTag = task.isRecurring ? ' ♻️' : '';
+        lines.push(`> - [x] **${translateTaskName(task.name)}** — ${time}${end}${periodTag}${durationTag}${recurringTag}`);
+        if (task.details) lines.push(`>   - ${task.details}`);
       });
       lines.push('');
     }
@@ -1333,16 +1348,16 @@ function App() {
     if (notCompletedTasksList.length > 0) {
       lines.push('> [!fail]- ' + t('tasks.statusNotCompleted') + ' (' + notCompleted + ')');
       lines.push('>');
-      notCompletedTasksList.forEach(t => {
-        const time = getTaskDisplayTime(t, prayerTimes);
-        const end = t.type === 'personal' || t.type === 'user'
-          ? ` – ${formatMinutesToTime(getTaskStartMinutes(t, prayerTimes) + (Number(t.duration) || 15))}`
+      notCompletedTasksList.forEach(task => {
+        const time = getTaskDisplayTime(task, prayerTimes);
+        const end = task.type === 'personal' || task.type === 'user'
+          ? ` – ${formatMinutesToTime(getTaskStartMinutes(task, prayerTimes) + (Number(task.duration) || 15))}`
           : '';
-        const periodTag = t.period ? ` \`[${t('period.' + t.period)}]\`` : '';
-        const durationTag = t.duration ? ` _(${formatDur(Number(t.duration))})_` : '';
-        const recurringTag = t.isRecurring ? ' ♻️' : '';
-        lines.push(`> - [x] ~~**${translateTaskName(t.name)}**~~ — ${time}${end}${periodTag}${durationTag}${recurringTag} (❌)`);
-        if (t.details) lines.push(`>   - ${t.details}`);
+        const periodTag = task.period ? ` \`[${t('period.' + task.period)}]\`` : '';
+        const durationTag = task.duration ? ` _(${formatDur(Number(task.duration))})_` : '';
+        const recurringTag = task.isRecurring ? ' ♻️' : '';
+        lines.push(`> - [x] ~~**${translateTaskName(task.name)}**~~ — ${time}${end}${periodTag}${durationTag}${recurringTag} (❌)`);
+        if (task.details) lines.push(`>   - ${task.details}`);
       });
       lines.push('');
     }
@@ -1350,16 +1365,16 @@ function App() {
     if (pendingTasksList.length > 0) {
       lines.push('> [!todo]- ' + t('tasks.statusPending') + ' (' + pending + ')');
       lines.push('>');
-      pendingTasksList.forEach(t => {
-        const time = getTaskDisplayTime(t, prayerTimes);
-        const end = t.type === 'personal' || t.type === 'user'
-          ? ` – ${formatMinutesToTime(getTaskStartMinutes(t, prayerTimes) + (Number(t.duration) || 15))}`
+      pendingTasksList.forEach(task => {
+        const time = getTaskDisplayTime(task, prayerTimes);
+        const end = task.type === 'personal' || task.type === 'user'
+          ? ` – ${formatMinutesToTime(getTaskStartMinutes(task, prayerTimes) + (Number(task.duration) || 15))}`
           : '';
-        const periodTag = t.period ? ` \`[${t('period.' + t.period)}]\`` : '';
-        const durationTag = t.duration ? ` _(${formatDur(Number(t.duration))})_` : '';
-        const recurringTag = t.isRecurring ? ' ♻️' : '';
-        lines.push(`> - [ ] **${translateTaskName(t.name)}** — ${time}${end}${periodTag}${durationTag}${recurringTag}`);
-        if (t.details) lines.push(`>   - ${t.details}`);
+        const periodTag = task.period ? ` \`[${t('period.' + task.period)}]\`` : '';
+        const durationTag = task.duration ? ` _(${formatDur(Number(task.duration))})_` : '';
+        const recurringTag = task.isRecurring ? ' ♻️' : '';
+        lines.push(`> - [ ] **${translateTaskName(task.name)}** — ${time}${end}${periodTag}${durationTag}${recurringTag}`);
+        if (task.details) lines.push(`>   - ${task.details}`);
       });
       lines.push('');
     }
@@ -2474,6 +2489,12 @@ function App() {
               return FONT_SIZES[(idx + 1) % FONT_SIZES.length];
             })} title={t('settings.fontSize')}>
               <Type size={15} />
+            </button>
+            <button className="sidebar-action-btn" onClick={toggleFullscreen} title={t('nav.fullscreen')}>
+              {document.fullscreenElement ? <Minimize size={15} /> : <Maximize size={15} />}
+            </button>
+            <button className={`sidebar-action-btn${highContrast ? ' active' : ''}`} onClick={() => setHighContrast(v => !v)} title={t('nav.highContrast')}>
+              <Contrast size={15} />
             </button>
             <button className="sidebar-action-btn sidebar-action-reload" onClick={() => window.location.reload()} title={t('nav.refresh')}>
               <RefreshCw size={14} />
