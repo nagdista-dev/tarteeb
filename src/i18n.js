@@ -140,6 +140,8 @@ const en = {
   'prayerTimes.completed': 'Completed',
 
   /* Settings page */
+  'settings.title': 'Settings',
+  'settings.subtitle': 'Customize your app experience',
   'settings.locationTitle': 'Location',
   'settings.locationDesc': 'Fetch prayer times for your city or coordinates',
   'settings.useApi': 'Use Aladhan API',
@@ -307,6 +309,7 @@ const en = {
   'pulse.completionRate': 'Completion',
   'pulse.tasksDone': 'Tasks Done',
   'pulse.prayerAccuracy': 'Prayer Accuracy',
+  'pulse.prayerStatus': 'Prayer Status',
   'pulse.status': 'Status',
   'pulse.prayerOnTime': 'On Time',
   'pulse.prayerLate': 'Late',
@@ -532,6 +535,8 @@ const ar = {
   'settings.languageDesc': 'اختر لغتك المفضلة',
   'settings.english': 'English',
   'settings.arabic': 'العربية',
+  'settings.title': 'الإعدادات',
+  'settings.subtitle': 'خصص تجربتك في التطبيق',
   'settings.locationTitle': 'الموقع',
   'settings.locationDesc': 'احصل على أوقات الصلاة لمدينتك أو إحداثياتك',
   'settings.useApi': 'استخدام API الأذان',
@@ -678,6 +683,7 @@ const ar = {
   'pulse.completionRate': 'الإنجاز',
   'pulse.tasksDone': 'المهام المنجزة',
   'pulse.prayerAccuracy': 'دقة الصلاة',
+  'pulse.prayerStatus': 'حالة الصلاة',
   'pulse.status': 'الحالة',
   'pulse.prayerOnTime': 'في الوقت',
   'pulse.prayerLate': 'متأخرة',

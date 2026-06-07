@@ -67,6 +67,14 @@ const PRAYER_TO_TASK_NAME = {
   'isha': 'Isha Prayer'
 };
 
+const FIXED_TASK_PRAYER_KEY = {
+  'Fajr Prayer': 'fajr',
+  'Dhuhr Prayer': 'dhuhr',
+  'Asr Prayer': 'asr',
+  'Maghrib Prayer': 'maghrib',
+  'Isha Prayer': 'isha'
+};
+
 const TASK_TO_ADHKAR_KEY = {
   'Morning Adhkar': 'adhkar_morning',
   'Evening Adhkar': 'adhkar_evening'
@@ -342,6 +350,33 @@ function App() {
   useEffect(() => {
     localStorage.setItem('tarteeb_prayer_tracking', JSON.stringify(prayerTracking));
   }, [prayerTracking]);
+
+  // Clean up old habit entries (>30 days) on mount to prevent localStorage bloat
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('tarteeb_habits') || '[]');
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - 30);
+      const cutoffStr = formatDateLocal(cutoff);
+      let changed = false;
+      const cleaned = stored.map(h => {
+        if (!h.entries) return h;
+        const newEntries = {};
+        Object.keys(h.entries).forEach(dateStr => {
+          if (dateStr >= cutoffStr) {
+            newEntries[dateStr] = h.entries[dateStr];
+          } else {
+            changed = true;
+          }
+        });
+        return { ...h, entries: newEntries };
+      });
+      if (changed) {
+        localStorage.setItem('tarteeb_habits', JSON.stringify(cleaned));
+        setHabits(cleaned);
+      }
+    } catch {}
+  }, []);
 
   const PRAYER_KEYS = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
   const PRAYER_STATUSES = ['pending', 'not_completed', 'completed'];
@@ -1592,13 +1627,16 @@ function App() {
     const pendingTasks = allTasks.filter(t => !t.status || t.status === 'pending' || (!t.completed && t.status !== 'not_completed')).length;
     const overallPct = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
-    const todayPrayerTrack = prayerTracking[todayStr] || {};
-    const prayerCounts = { completed: 0, not_completed: 0, pending: 0 };
+    const prayerTaskCounts = { completed: 0, not_completed: 0, pending: 0 };
+    const prayerTaskStatuses = {};
     PRAYER_KEYS.forEach(pk => {
-      const status = todayPrayerTrack[pk] || 'pending';
-      prayerCounts[status] = (prayerCounts[status] || 0) + 1;
+      const taskName = PRAYER_TO_TASK_NAME[pk];
+      const task = allTasks.find(t => t.name === taskName);
+      const status = task ? (task.status || (task.completed ? 'completed' : 'pending')) : 'pending';
+      prayerTaskStatuses[pk] = status;
+      prayerTaskCounts[status] = (prayerTaskCounts[status] || 0) + 1;
     });
-    const onTimePrayers = prayerCounts.completed;
+    const onTimePrayers = prayerTaskCounts.completed;
 
     const todayHabits = habits.filter(h => {
       const entry = h.entries?.[todayStr];
@@ -1671,14 +1709,14 @@ function App() {
           <div className="new-pulse-card overview-prayers">
              <div className="overview-icon"><Clock size={20} /></div>
              <div className="overview-data">
-               <h3>{t('pulse.prayerAccuracy')}</h3>
-               <div className="overview-value">{onTimePrayers} <span>/ 5</span></div>
-               <div className="overview-sub pulse-metric-dots">
-                 {PRAYER_KEYS.map(pk => {
-                   const status = todayPrayerTrack[pk] || 'pending';
-                   return <span key={pk} className="pulse-dot" style={{ background: STATUS_COLORS[status] }} title={t('prayer.' + pk)} />
-                 })}
-               </div>
+                <h3>{t('pulse.prayerStatus')}</h3>
+                <div className="overview-value">{onTimePrayers} <span>/ 5</span></div>
+                <div className="overview-sub pulse-metric-dots">
+                  {PRAYER_KEYS.map(pk => {
+                    const status = prayerTaskStatuses[pk] || 'pending';
+                    return <span key={pk} className="pulse-dot" style={{ background: STATUS_COLORS[status] }} title={t('prayer.' + pk)} />
+                  })}
+                </div>
              </div>
           </div>
 
@@ -1768,12 +1806,12 @@ function App() {
              <div className="new-pulse-card detail-prayers">
                <div className="new-pulse-card-header">
                  <Clock size={18} />
-                 <h4>{t('pulse.prayerAccuracy')}</h4>
-               </div>
-               <div className="new-pulse-prayer-grid">
-                 {PRAYER_KEYS.map(pk => {
-                   const status = todayPrayerTrack[pk] || 'pending';
-                   const time = dayData.prayerTimes?.[pk] || '--:--';
+                  <h4>{t('pulse.prayerStatus')}</h4>
+                </div>
+                <div className="new-pulse-prayer-grid">
+                  {PRAYER_KEYS.map(pk => {
+                    const status = prayerTaskStatuses[pk] || 'pending';
+                    const time = dayData.prayerTimes?.[pk] || '--:--';
                    return (
                      <div key={pk} className={`new-pulse-prayer-box status-${status}`}>
                        <div className="prayer-info">
@@ -2246,14 +2284,15 @@ function App() {
 
             {currentPage === 'guide' && (
               <div className="guide-page">
-                <div className="guide-hero">
-                  <div className="guide-hero-icon-wrap">
-                    <HelpCircle size={36} className="guide-hero-icon" />
-                  </div>
-                  <h2 className="guide-title">{t('guide.title')}</h2>
-                  <p className="guide-subtitle">{t('guide.subtitle')}</p>
-                  <div className="guide-steps-badge">
-                    <span>8 {t('guide.steps')}</span>
+                <div className="new-tasks-header-wrap">
+                  <div className="new-tasks-header">
+                    <div>
+                      <h2 className="new-tasks-title">{t('guide.title')}</h2>
+                      <p className="new-tasks-subtitle">{t('guide.subtitle')}</p>
+                    </div>
+                    <div className="guide-steps-badge">
+                      <span>8 {t('guide.steps')}</span>
+                    </div>
                   </div>
                 </div>
                 <div className="guide-sections">
@@ -2327,11 +2366,16 @@ function App() {
 
             {currentPage === 'habits' && (
               <div className="habits-page">
-                <div className="habits-header">
-                  <h2 className="habits-title">{t('habits.title')}</h2>
-                  <button className="btn btn-primary" onClick={() => { setHabitForm({ name: '' }); setHabitModal({ open: true, mode: 'add', habit: null }); }}>
-                    <Plus size={16} /> {t('habits.add')}
-                  </button>
+                <div className="new-tasks-header-wrap">
+                  <div className="new-tasks-header">
+                    <div>
+                      <h2 className="new-tasks-title">{t('habits.title')}</h2>
+                      <p className="new-tasks-subtitle">{t('habits.stats')}</p>
+                    </div>
+                    <button className="btn btn-primary" onClick={() => { setHabitForm({ name: '' }); setHabitModal({ open: true, mode: 'add', habit: null }); }}>
+                      <Plus size={16} /> {t('habits.add')}
+                    </button>
+                  </div>
                 </div>
                 {habits.length === 0 ? (
                   <div className="empty-state">
@@ -2535,6 +2579,14 @@ function App() {
 
             {currentPage === 'settings' && (
               <div className="settings-page">
+                <div className="new-tasks-header-wrap">
+                  <div className="new-tasks-header">
+                    <div>
+                      <h2 className="new-tasks-title">{t('settings.title')}</h2>
+                      <p className="new-tasks-subtitle">{t('settings.subtitle')}</p>
+                    </div>
+                  </div>
+                </div>
                 <div className="settings-section-label">{t('settings.appearance')}</div>
 
                 {/* Font Size */}
