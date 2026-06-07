@@ -4,7 +4,7 @@ import {
   BookOpen, Clock, Sparkles, MapPin, X, AlertCircle,
   ChevronUp, ChevronDown, RefreshCw, Download, HelpCircle, List, Type, Menu, Target,
   Smartphone, Lock, Unlock, Upload, Search, Zap, Activity,
-  TrendingUp, BarChart3, Flame, CalendarDays, PenLine
+  TrendingUp, BarChart3, Flame, CalendarDays, PenLine, Heart, Coffee
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import {
@@ -351,6 +351,15 @@ function App() {
     localStorage.setItem('tarteeb_prayer_tracking', JSON.stringify(prayerTracking));
   }, [prayerTracking]);
 
+  // ---- Sleep Tracker ----
+  const [sleepTracking, setSleepTracking] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('tarteeb_sleep_tracking') || '{}'); }
+    catch { return {}; }
+  });
+  useEffect(() => {
+    localStorage.setItem('tarteeb_sleep_tracking', JSON.stringify(sleepTracking));
+  }, [sleepTracking]);
+
   // Clean up old habit entries (>30 days) on mount to prevent localStorage bloat
   useEffect(() => {
     try {
@@ -415,6 +424,74 @@ function App() {
     if (toastTimer.current) clearTimeout(toastTimer.current);
     setToast(null);
     toastTimer.current = null;
+  };
+
+  // ---- Sleep hours calculator ----
+  const calcSleepHours = (start, end) => {
+    const [sh, sm] = start.split(':').map(Number);
+    const [eh, em] = end.split(':').map(Number);
+    const startMin = sh * 60 + sm;
+    let endMin = eh * 60 + em;
+    if (endMin <= startMin) endMin += 24 * 60;
+    return Math.round(((endMin - startMin) / 60) * 10) / 10;
+  };
+
+  const todaySessions = sleepTracking[activeDate] || [];
+  const todayTotalHours = todaySessions.reduce((sum, s) => sum + calcSleepHours(s.start, s.end), 0);
+
+  const addSleepSession = () => {
+    const newSession = { id: createTaskId(), start: '22:00', end: '06:00' };
+    setSleepTracking(prev => ({
+      ...prev,
+      [activeDate]: [...(prev[activeDate] || []), newSession]
+    }));
+  };
+  const updateSleepSession = (id, field, value) => {
+    setSleepTracking(prev => ({
+      ...prev,
+      [activeDate]: (prev[activeDate] || []).map(s =>
+        s.id === id ? { ...s, [field]: value } : s
+      )
+    }));
+  };
+  const deleteSleepSession = (id) => {
+    setSleepTracking(prev => ({
+      ...prev,
+      [activeDate]: (prev[activeDate] || []).filter(s => s.id !== id)
+    }));
+  };
+
+  // ---- Drinks Tracker ----
+  const [drinksTracking, setDrinksTracking] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('tarteeb_drinks_tracking') || '{}'); }
+    catch { return {}; }
+  });
+  useEffect(() => {
+    localStorage.setItem('tarteeb_drinks_tracking', JSON.stringify(drinksTracking));
+  }, [drinksTracking]);
+
+  const todayDrinks = drinksTracking[activeDate] || [];
+
+  const addDrink = () => {
+    const newDrink = { id: createTaskId(), name: '', count: 1 };
+    setDrinksTracking(prev => ({
+      ...prev,
+      [activeDate]: [...(prev[activeDate] || []), newDrink]
+    }));
+  };
+  const updateDrink = (id, field, value) => {
+    setDrinksTracking(prev => ({
+      ...prev,
+      [activeDate]: (prev[activeDate] || []).map(d =>
+        d.id === id ? { ...d, [field]: value } : d
+      )
+    }));
+  };
+  const deleteDrink = (id) => {
+    setDrinksTracking(prev => ({
+      ...prev,
+      [activeDate]: (prev[activeDate] || []).filter(d => d.id !== id)
+    }));
   };
 
   // ---- Daily streak computation ----
@@ -549,6 +626,8 @@ function App() {
       else if (e.key === 'g') setCurrentPage('guide');
       else if (e.key === 's') setCurrentPage('settings');
       else if (e.key === 'b') setCurrentPage('habits');
+      else if (e.key === 'l') setCurrentPage('sleep');
+      else if (e.key === 'd') setCurrentPage('drinks');
       else if (e.key === 'p') setCurrentPage('prayers');
       else if (e.key === 'n' && (currentPage === 'home' || currentPage === 'tasks') && dayData) {
         openTaskModal('add');
@@ -1283,6 +1362,40 @@ function App() {
       lines.push('');
     }
 
+    // Sleep Data
+    const dateSessions = sleepTracking[date] || [];
+    if (dateSessions.length > 0) {
+      const totalSleepHours = dateSessions.reduce((sum, s) => sum + calcSleepHours(s.start, s.end), 0);
+      lines.push('---');
+      lines.push('');
+      lines.push('## 🌙 ' + t('sleep.title'));
+      lines.push('');
+      lines.push('| ' + t('sleep.session') + ' | ' + t('sleep.startTime') + ' | ' + t('sleep.endTime') + ' | ' + t('sleep.hours') + ' |');
+      lines.push('|' + (lang === 'ar' ? ':----|:----:|:----:|:----:' : '--------|:----:|:----:|:----:') + '|');
+      dateSessions.forEach((s, i) => {
+        lines.push(`| #${i + 1} | ${s.start} | ${s.end} | ${calcSleepHours(s.start, s.end)} |`);
+      });
+      lines.push('| **' + t('sleep.totalSleep') + '** | | | **' + totalSleepHours + ' ' + t('sleep.hours') + '** |');
+      lines.push('');
+    }
+
+    // Drinks Data
+    const dateDrinks = drinksTracking[date] || [];
+    if (dateDrinks.length > 0) {
+      const totalDrinks = dateDrinks.reduce((sum, d) => sum + d.count, 0);
+      lines.push('---');
+      lines.push('');
+      lines.push('## 🥤 ' + t('drinks.title'));
+      lines.push('');
+      lines.push('| ' + t('drinks.drink') + ' | ' + t('drinks.count') + ' |');
+      lines.push('|' + (lang === 'ar' ? ':----|:---:' : '--------|---:') + '|');
+      dateDrinks.forEach(d => {
+        lines.push(`| ${d.name || t('drinks.drink')} | ${d.count} |`);
+      });
+      lines.push('| **' + t('drinks.total') + '** | **' + totalDrinks + '** |');
+      lines.push('');
+    }
+
     // Journal
     if (diary) {
       lines.push('---');
@@ -1310,6 +1423,16 @@ function App() {
     lines.push('| ' + t('export.prayersOnTime') + ' | ' + onTime + '/5 |');
     if (todayHabits.length > 0) lines.push('| ' + t('export.habitsDone') + ' | ' + completedHabits + '/' + todayHabits.length + ' |');
     if (notes.length > 0) lines.push('| ' + t('journal.studyNotes') + ' | ' + notes.length + ' |');
+    const sleepSessionsSum = sleepTracking[date] || [];
+    if (sleepSessionsSum.length > 0) {
+      const totalSleepHours = sleepSessionsSum.reduce((sum, s) => sum + calcSleepHours(s.start, s.end), 0);
+      lines.push('| ' + t('sleep.totalSleep') + ' | ' + totalSleepHours + ' ' + t('sleep.hours') + ' |');
+    }
+    const dateDrinksSum = drinksTracking[date] || [];
+    if (dateDrinksSum.length > 0) {
+      const totalDrinksSum = dateDrinksSum.reduce((sum, d) => sum + d.count, 0);
+      lines.push('| ' + t('drinks.total') + ' | ' + totalDrinksSum + ' |');
+    }
     lines.push('| ' + t('export.streak') + ' | ' + streak + ' ' + (lang === 'ar' ? 'أيام' : 'days') + ' |');
     if (mood) {
       lines.push('| ' + t('mood.title') + ' | ' + (MOOD_EMOJIS[mood] || '') + ' ' + t('mood.' + mood) + ' |');
@@ -1802,7 +1925,76 @@ function App() {
                </div>
              </div>
 
-             {/* Prayers View-Only Grid */}
+              {/* Sleep Card */}
+              <div className="new-pulse-card detail-prayers">
+                <div className="new-pulse-card-header">
+                  <Moon size={18} />
+                  <h4>{t('sleep.title')}</h4>
+                </div>
+                <div className="new-pulse-prayer-grid">
+                  {todaySessions.length === 0 ? (
+                    <span className="pulse-empty-habits">{t('sleep.noSessions')}</span>
+                  ) : (
+                    todaySessions.map((s, i) => (
+                      <div key={s.id} className="new-pulse-prayer-box status-completed">
+                        <div className="prayer-info">
+                          <span className="prayer-name">{t('sleep.session')} #{i + 1}</span>
+                          <span className="prayer-time">{s.start} – {s.end}</span>
+                        </div>
+                        <span className="prayer-status-text">
+                          {calcSleepHours(s.start, s.end)} {t('sleep.hours')}
+                        </span>
+                      </div>
+                    ))
+                  )}
+                  {todaySessions.length > 0 && (
+                    <div className="new-pulse-prayer-box status-completed" style={{ gridColumn: '1 / -1' }}>
+                      <div className="prayer-info">
+                        <span className="prayer-name">{t('sleep.totalSleep')}</span>
+                      </div>
+                      <span className="prayer-status-text">
+                        <strong>{todayTotalHours} {t('sleep.hours')}</strong>
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Drinks Card */}
+              <div className="new-pulse-card detail-prayers">
+                <div className="new-pulse-card-header">
+                  <Coffee size={18} />
+                  <h4>{t('drinks.title')}</h4>
+                </div>
+                <div className="new-pulse-prayer-grid">
+                  {todayDrinks.length === 0 ? (
+                    <span className="pulse-empty-habits">{t('drinks.noDrinks')}</span>
+                  ) : (
+                    todayDrinks.map(d => (
+                      <div key={d.id} className="new-pulse-prayer-box status-completed">
+                        <div className="prayer-info">
+                          <span className="prayer-name">{d.name || t('drinks.drink')}</span>
+                        </div>
+                        <span className="prayer-status-text">
+                          {d.count}×
+                        </span>
+                      </div>
+                    ))
+                  )}
+                  {todayDrinks.length > 0 && (
+                    <div className="new-pulse-prayer-box status-completed" style={{ gridColumn: '1 / -1' }}>
+                      <div className="prayer-info">
+                        <span className="prayer-name">{t('drinks.total')}</span>
+                      </div>
+                      <span className="prayer-status-text">
+                        <strong>{todayDrinks.reduce((s, d) => s + d.count, 0)}</strong>
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Prayers View-Only Grid */}
              <div className="new-pulse-card detail-prayers">
                <div className="new-pulse-card-header">
                  <Clock size={18} />
@@ -1881,6 +2073,8 @@ function App() {
     { id: 'prayers', label: t('nav.prayers'), icon: Clock },
     { id: 'tasks', label: t('nav.tasks'), icon: List },
     { id: 'habits', label: t('nav.habits'), icon: Target },
+    { id: 'sleep', label: t('nav.sleep'), icon: Moon },
+    { id: 'drinks', label: t('nav.drinks'), icon: Coffee },
     { id: 'pulse', label: t('nav.pulse'), icon: Activity },
     { id: 'journal', label: t('nav.journal'), icon: BookOpen },
     { id: 'guide', label: t('nav.guide'), icon: HelpCircle },
@@ -2423,6 +2617,155 @@ function App() {
                         </div>
                       );
                     })}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {currentPage === 'sleep' && (
+              <div className="sleep-page">
+                <div className="new-tasks-header-wrap">
+                  <div className="new-tasks-header">
+                    <div>
+                      <h2 className="new-tasks-title">{t('sleep.title')}</h2>
+                      <p className="new-tasks-subtitle">
+                        {todaySessions.length > 0
+                          ? t('sleep.totalSleep') + ': ' + todayTotalHours + ' ' + t('sleep.hours')
+                          : ''}
+                      </p>
+                    </div>
+                    <button className="btn btn-primary" onClick={addSleepSession}>
+                      <Plus size={16} /> {t('sleep.addSession')}
+                    </button>
+                  </div>
+                </div>
+                {todaySessions.length === 0 ? (
+                  <div className="empty-state">
+                    <div className="empty-state-icon"><Moon size={24} /></div>
+                    <span className="empty-state-title">{t('sleep.noSessions')}</span>
+                  </div>
+                ) : (
+                  <div className="sleep-sessions-list">
+                    {todaySessions.map((session, idx) => {
+                      const hours = calcSleepHours(session.start, session.end);
+                      return (
+                        <div key={session.id} className="sleep-session-card">
+                          <div className="sleep-session-main">
+                            <div className="sleep-session-info">
+                              <div className="sleep-session-fields">
+                                <div className="form-group">
+                                  <label className="form-label">{t('sleep.startTime')}</label>
+                                  <input
+                                    type="time"
+                                    className="form-input sleep-time-input"
+                                    value={session.start}
+                                    onChange={e => updateSleepSession(session.id, 'start', e.target.value)}
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label className="form-label">{t('sleep.endTime')}</label>
+                                  <input
+                                    type="time"
+                                    className="form-input sleep-time-input"
+                                    value={session.end}
+                                    onChange={e => updateSleepSession(session.id, 'end', e.target.value)}
+                                  />
+                                </div>
+                              </div>
+                              <span className="sleep-session-hours">
+                                <Moon size={14} /> {hours} {t('sleep.hours')}
+                              </span>
+                            </div>
+                            <span className="sleep-session-badge">#{idx + 1}</span>
+                            <button
+                              type="button"
+                              className="btn-task-action delete"
+                              onClick={() => deleteSleepSession(session.id)}
+                              title={t('sleep.delete')}
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    <div className="sleep-total-card">
+                      <span>{t('sleep.totalSleep')}</span>
+                      <strong>{todayTotalHours} {t('sleep.hours')}</strong>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {currentPage === 'drinks' && (
+              <div className="drinks-page">
+                <div className="new-tasks-header-wrap">
+                  <div className="new-tasks-header">
+                    <div>
+                      <h2 className="new-tasks-title">{t('drinks.title')}</h2>
+                      <p className="new-tasks-subtitle">
+                        {todayDrinks.length > 0
+                          ? t('drinks.total') + ': ' + todayDrinks.reduce((s, d) => s + d.count, 0)
+                          : ''}
+                      </p>
+                    </div>
+                    <button className="btn btn-primary" onClick={addDrink}>
+                      <Plus size={16} /> {t('drinks.add')}
+                    </button>
+                  </div>
+                </div>
+                {todayDrinks.length === 0 ? (
+                  <div className="empty-state">
+                    <div className="empty-state-icon"><Coffee size={24} /></div>
+                    <span className="empty-state-title">{t('drinks.noDrinks')}</span>
+                  </div>
+                ) : (
+                  <div className="drinks-list">
+                    {todayDrinks.map(drink => (
+                      <div key={drink.id} className="drink-card">
+                        <div className="drink-main">
+                          <div className="drink-info">
+                            <input
+                              type="text"
+                              className="form-input drink-name-input"
+                              value={drink.name}
+                              onChange={e => updateDrink(drink.id, 'name', e.target.value)}
+                              placeholder={t('drinks.name')}
+                            />
+                            <div className="drink-count-wrap">
+                              <button
+                                type="button"
+                                className="btn-task-action"
+                                onClick={() => updateDrink(drink.id, 'count', Math.max(0, drink.count - 1))}
+                              >
+                                <Minus size={13} />
+                              </button>
+                              <span className="drink-count-value">{drink.count}</span>
+                              <button
+                                type="button"
+                                className="btn-task-action"
+                                onClick={() => updateDrink(drink.id, 'count', drink.count + 1)}
+                              >
+                                <Plus size={13} />
+                              </button>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            className="btn-task-action delete"
+                            onClick={() => deleteDrink(drink.id)}
+                            title={t('drinks.delete')}
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    <div className="drink-total-card">
+                      <span>{t('drinks.total')}</span>
+                      <strong>{todayDrinks.reduce((s, d) => s + d.count, 0)}</strong>
+                    </div>
                   </div>
                 )}
               </div>

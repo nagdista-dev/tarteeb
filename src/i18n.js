@@ -371,6 +371,31 @@ const en = {
   'habits.export': 'Export Habits',
   'habits.moveUp': 'Move up',
   'habits.moveDown': 'Move down',
+
+  /* Sleep */
+  'nav.sleep': 'Sleep',
+  'sleep.title': 'Sleep Tracker',
+  'sleep.addSession': 'Add Sleep Session',
+  'sleep.startTime': 'Bedtime',
+  'sleep.endTime': 'Wake time',
+  'sleep.totalSleep': 'Total Sleep',
+  'sleep.hours': 'hours',
+  'sleep.noSessions': 'No sleep sessions logged today.',
+  'sleep.delete': 'Delete',
+  'sleep.hoursSlept': 'Hours Slept',
+  'sleep.session': 'Session',
+  'sleep.sleepData': 'Sleep Data',
+
+  /* Drinks */
+  'nav.drinks': 'Drinks',
+  'drinks.title': 'Drink Tracker',
+  'drinks.add': 'Add Drink',
+  'drinks.name': 'Drink Name',
+  'drinks.count': 'Times',
+  'drinks.total': 'Total Drinks',
+  'drinks.noDrinks': 'No drinks logged today.',
+  'drinks.delete': 'Delete',
+  'drinks.drink': 'Drink',
 };
 
 const ar = {
@@ -745,6 +770,31 @@ const ar = {
   'habits.export': 'تصدير العادات',
   'habits.moveUp': 'تحريك لأعلى',
   'habits.moveDown': 'تحريك لأسفل',
+
+  /* Sleep */
+  'nav.sleep': 'النوم',
+  'sleep.title': 'تتبع النوم',
+  'sleep.addSession': 'إضافة جلسة نوم',
+  'sleep.startTime': 'وقت النوم',
+  'sleep.endTime': 'وقت الاستيقاظ',
+  'sleep.totalSleep': 'إجمالي النوم',
+  'sleep.hours': 'ساعات',
+  'sleep.noSessions': 'لا توجد جلسات نوم مسجلة اليوم.',
+  'sleep.delete': 'حذف',
+  'sleep.hoursSlept': 'ساعات النوم',
+  'sleep.session': 'جلسة',
+  'sleep.sleepData': 'بيانات النوم',
+
+  /* Drinks */
+  'nav.drinks': 'المشروبات',
+  'drinks.title': 'تتبع المشروبات',
+  'drinks.add': 'إضافة مشروب',
+  'drinks.name': 'اسم المشروب',
+  'drinks.count': 'العدد',
+  'drinks.total': 'إجمالي المشروبات',
+  'drinks.noDrinks': 'لا توجد مشروبات مسجلة اليوم.',
+  'drinks.delete': 'حذف',
+  'drinks.drink': 'مشروب',
 };
 
 const translations = { en, ar };
