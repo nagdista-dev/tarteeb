@@ -188,6 +188,8 @@ const en = {
   'settings.importData': 'Import Data',
   'settings.importSuccess': 'Data imported successfully! Reloading…',
   'settings.importError': 'Invalid backup file',
+  'settings.dataTypes': 'Data included',
+  'settings.prayers': 'Prayers',
 
   /* Dialog */
   'dialog.cancel': 'Cancel',
@@ -587,6 +589,8 @@ const ar = {
   'settings.importData': 'استيراد البيانات',
   'settings.importSuccess': 'تم استيراد البيانات بنجاح! جاري إعادة التحميل…',
   'settings.importError': 'ملف نسخ احتياطي غير صالح',
+  'settings.dataTypes': 'البيانات المضمنة',
+  'settings.prayers': 'الصلاة',
 
   /* Dialog */
   'dialog.cancel': 'إلغاء',

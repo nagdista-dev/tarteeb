@@ -1454,12 +1454,17 @@ textarea.form-textarea {
 /* Settings Page */
 /* ===== Settings Page ===== */
 .settings-page {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 16px;
-  max-width: 640px;
+  max-width: 780px;
   margin: 0 auto;
   padding: 8px 0 48px;
+}
+
+.settings-page .new-tasks-header-wrap,
+.settings-page > .settings-section-label {
+  grid-column: 1 / -1;
 }
 
 .settings-section-label {
@@ -5741,6 +5746,10 @@ textarea.form-textarea {
 }
 
 /* ===== Backup Section ===== */
+.settings-page .backup-card {
+  grid-column: 1 / -1;
+}
+
 .backup-actions {
   display: flex;
   gap: 10px;
@@ -5751,6 +5760,39 @@ textarea.form-textarea {
   flex: 1;
   justify-content: center;
   min-width: 120px;
+}
+
+.backup-data-types {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-color);
+}
+
+.backup-data-types-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-tertiary);
+  margin-bottom: 10px;
+}
+
+.backup-data-types-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.backup-data-type-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--bg-tertiary);
+  padding: 4px 10px;
+  border-radius: 6px;
 }
 
 .backup-import-hidden {
@@ -5798,6 +5840,7 @@ textarea.form-textarea {
 
   /* Settings page */
   .settings-page {
+    grid-template-columns: 1fr;
     padding: 8px 0 48px;
     gap: 12px;
   }

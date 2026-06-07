@@ -3109,7 +3109,7 @@ function App() {
                 </div>
 
                 {/* Backup & Restore */}
-                <div className="settings-card">
+                <div className="settings-card backup-card">
                   <div className="settings-card-header">
                     <span className="settings-card-icon-wrap"><Download size={20} /></span>
                     <div>
@@ -3158,6 +3158,18 @@ function App() {
                         reader.readAsText(file);
                         e.target.value = '';
                       }} />
+                    </div>
+                    <div className="backup-data-types">
+                      <div className="backup-data-types-label">{t('settings.dataTypes')}</div>
+                      <div className="backup-data-types-list">
+                        <span className="backup-data-type-tag"><Check size={11} /> {t('settings.prayers')}</span>
+                        <span className="backup-data-type-tag"><Check size={11} /> {t('settings.tasks')}</span>
+                        <span className="backup-data-type-tag"><Check size={11} /> {t('habits.title')}</span>
+                        <span className="backup-data-type-tag"><Check size={11} /> {t('adhkar.title')}</span>
+                        <span className="backup-data-type-tag"><Check size={11} /> {t('journal.title')}</span>
+                        <span className="backup-data-type-tag"><Check size={11} /> {t('nav.sleep')}</span>
+                        <span className="backup-data-type-tag"><Check size={11} /> {t('nav.drinks')}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
