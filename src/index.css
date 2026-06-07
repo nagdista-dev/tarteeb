@@ -3074,13 +3074,26 @@ textarea.form-textarea {
   border-right: 1px solid var(--border-color);
 }
 
-.timeline-time-column span {
+.timeline-time-column .timeline-tick {
   position: absolute;
   right: 8px;
   transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.2;
+}
+.timeline-tick-time {
   color: var(--text-tertiary);
   font-size: 0.62rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.timeline-tick-period {
+  color: var(--text-tertiary);
+  font-size: 0.52rem;
   font-weight: 600;
+  opacity: 0.7;
   font-variant-numeric: tabular-nums;
 }
 
@@ -4806,9 +4819,10 @@ textarea.form-textarea {
   border-left: 1px solid var(--border-color);
 }
 
-[dir="rtl"] .timeline-time-column span {
+[dir="rtl"] .timeline-time-column .timeline-tick {
   right: auto;
   left: 8px;
+  align-items: flex-start;
 }
 
 [dir="rtl"] .timeline-prayer-marker {

@@ -1675,20 +1675,20 @@ function App() {
         const period = hour < 12 ? t('time.am') : t('time.pm');
         const h12 = hour % 12 || 12;
         const time = exact || minute !== 0 ? `${h12}:${String(minute).padStart(2, '0')}` : `${h12}`;
-        return `${time} ${period}`;
+        return { time, period };
       }
-      return exact || minute !== 0 ? `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}` : `${hour}`;
+      return { time: exact || minute !== 0 ? `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}` : `${hour}`, period: '' };
     };
     const hourTicks = [
-      { key: 'start', label: formatTimelineTick(dayStart, true), minutes: dayStart },
+      { key: 'start', ...formatTimelineTick(dayStart, true), minutes: dayStart },
       ...Array.from(
         { length: Math.max(0, Math.floor(dayEnd / 60) - Math.ceil(dayStart / 60) + 1) },
         (_, index) => {
           const minutes = (Math.ceil(dayStart / 60) + index) * 60;
-          return { key: `hour-${minutes}`, label: formatTimelineTick(minutes), minutes };
+          return { key: `hour-${minutes}`, ...formatTimelineTick(minutes), minutes };
         }
       ).filter(tick => tick.minutes > dayStart && tick.minutes < dayEnd),
-      { key: 'end', label: formatTimelineTick(dayEnd, true), minutes: dayEnd }
+      { key: 'end', ...formatTimelineTick(dayEnd, true), minutes: dayEnd }
     ];
 
     return (
@@ -1707,8 +1707,9 @@ function App() {
 
             <div className="timeline-time-column">
               {hourTicks.map(tick => (
-                <span key={tick.key} style={{ top: `${toPercent(tick.minutes)}%` }}>
-                  {tick.label}
+                <span key={tick.key} className="timeline-tick" style={{ top: `${toPercent(tick.minutes)}%` }}>
+                  <span className="timeline-tick-time">{tick.time}</span>
+                  {tick.period && <span className="timeline-tick-period">{tick.period}</span>}
                 </span>
               ))}
             </div>
