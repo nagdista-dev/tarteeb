@@ -1836,7 +1836,7 @@ function App() {
                 </div>
                 <div className="new-pulse-prayer-grid">
                   {['morning', 'evening'].map(key => {
-                    const status = todayPrayerTrack[`adhkar_${key}`] || 'pending';
+                    const status = (prayerTracking[todayStr] || {})[`adhkar_${key}`] || 'pending';
                     return (
                       <div key={key} className={`new-pulse-prayer-box status-${status}`}>
                         <div className="prayer-info">
