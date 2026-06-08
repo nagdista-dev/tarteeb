@@ -55,6 +55,24 @@ export function getUse12h() {
   return _use12h;
 }
 
+// Day start mode preference
+export const DAY_START_MODES = {
+  MAGHRIB: 'maghrib',
+  MIDNIGHT: 'midnight'
+};
+
+let _dayStartMode = DAY_START_MODES.MIDNIGHT;
+
+export function setDayStartMode(mode) {
+  if (Object.values(DAY_START_MODES).includes(mode)) {
+    _dayStartMode = mode;
+  }
+}
+
+export function getDayStartMode() {
+  return _dayStartMode;
+}
+
 // Convert minutes from midnight to time string
 export function formatMinutesToTime(totalMinutes) {
   const h = Math.floor((totalMinutes % 1440) / 60);
@@ -97,6 +115,9 @@ export function getPrayerTimesForDate(dateStr) {
  * Otherwise, the active planner day is today (dateStr).
  */
 export function getLogicalPlannerDate(date) {
+  if (_dayStartMode === DAY_START_MODES.MIDNIGHT) {
+    return formatDateLocal(date);
+  }
   const todayStr = formatDateLocal(date);
   const todayPrayers = getPrayerTimesForDate(todayStr);
   const maghribTime = todayPrayers.maghrib || DEFAULT_PRAYER_TIMES.maghrib;
@@ -115,11 +136,24 @@ export function getLogicalPlannerDate(date) {
 
 /**
  * Retrieves the compiled prayer times for a logical planner day.
- * A planner day labeled YYYY-MM-DD (e.g. Friday) consists of:
+ * In Maghrib mode: a planner day labeled YYYY-MM-DD (e.g. Friday) consists of:
  * - Maghrib and Isha from the previous calendar day (Thursday)
  * - Fajr, Dhuhr, and Asr from the current calendar day (Friday)
+ * In Midnight mode: all prayers come from the same calendar day.
  */
 export function getCompiledPrayersForPlannerDate(plannerDateStr) {
+  if (_dayStartMode === DAY_START_MODES.MIDNIGHT) {
+    const currPrayers = getPrayerTimesForDate(plannerDateStr);
+    return {
+      maghrib: currPrayers.maghrib || DEFAULT_PRAYER_TIMES.maghrib,
+      isha: currPrayers.isha || DEFAULT_PRAYER_TIMES.isha,
+      fajr: currPrayers.fajr || DEFAULT_PRAYER_TIMES.fajr,
+      dhuhr: currPrayers.dhuhr || DEFAULT_PRAYER_TIMES.dhuhr,
+      asr: currPrayers.asr || DEFAULT_PRAYER_TIMES.asr,
+      hijriDate: currPrayers.hijriDate || "",
+      isManual: currPrayers.isManual || false
+    };
+  }
   const currDate = new Date(plannerDateStr);
   const prevDateStr = formatDateLocal(addDays(currDate, -1));
 
@@ -251,6 +285,70 @@ export const FIXED_TASKS_TEMPLATES = [
  * }
  */
 export function calculateTimelineStatus(currentTime, compiledPrayers, plannerDateStr) {
+  const currMinutesTotal = currentTime.getHours() * 60 + currentTime.getMinutes();
+
+  if (_dayStartMode === DAY_START_MODES.MIDNIGHT) {
+    const fajr = parseTimeToMinutes(compiledPrayers.fajr);
+    const dhuhr = parseTimeToMinutes(compiledPrayers.dhuhr);
+    const asr = parseTimeToMinutes(compiledPrayers.asr);
+    const maghrib = parseTimeToMinutes(compiledPrayers.maghrib);
+    const isha = parseTimeToMinutes(compiledPrayers.isha);
+
+    let activePeriod = "none";
+    let percentCompleted = 0;
+    let nextPrayerName = "";
+    let minsToNext = 0;
+
+    if (currMinutesTotal >= fajr && currMinutesTotal < dhuhr) {
+      activePeriod = "morning";
+      percentCompleted = ((currMinutesTotal - fajr) / (dhuhr - fajr)) * 100;
+      nextPrayerName = "Dhuhr";
+      minsToNext = dhuhr - currMinutesTotal;
+    } else if (currMinutesTotal >= dhuhr && currMinutesTotal < asr) {
+      activePeriod = "afternoon";
+      percentCompleted = ((currMinutesTotal - dhuhr) / (asr - dhuhr)) * 100;
+      nextPrayerName = "Asr";
+      minsToNext = asr - currMinutesTotal;
+    } else if (currMinutesTotal >= asr && currMinutesTotal < maghrib) {
+      activePeriod = "late_afternoon";
+      percentCompleted = ((currMinutesTotal - asr) / (maghrib - asr)) * 100;
+      nextPrayerName = "Maghrib";
+      minsToNext = maghrib - currMinutesTotal;
+    } else if (currMinutesTotal >= maghrib && currMinutesTotal < isha) {
+      activePeriod = "evening";
+      percentCompleted = ((currMinutesTotal - maghrib) / (isha - maghrib)) * 100;
+      nextPrayerName = "Isha";
+      minsToNext = isha - currMinutesTotal;
+    } else {
+      // Night period (Isha to Fajr, wrapping midnight)
+      let periodEnd;
+      if (currMinutesTotal >= isha) {
+        periodEnd = 1440 + fajr;
+        percentCompleted = ((currMinutesTotal - isha) / (1440 + fajr - isha)) * 100;
+        minsToNext = (periodEnd - currMinutesTotal);
+      } else {
+        // Before Fajr (0 to Fajr)
+        percentCompleted = ((currMinutesTotal + 1440 - isha) / (1440 + fajr - isha)) * 100;
+        minsToNext = fajr - currMinutesTotal;
+      }
+      activePeriod = "night";
+      nextPrayerName = "Fajr";
+    }
+
+    const hoursToNext = Math.floor(minsToNext / 60);
+    const minutesToNext = Math.floor(minsToNext % 60);
+    const timeToNextPrayer = hoursToNext > 0
+      ? `${hoursToNext}h ${minutesToNext}m`
+      : `${minutesToNext}m`;
+
+    return {
+      activePeriod,
+      percentCompleted: Math.min(100, Math.max(0, percentCompleted)),
+      nextPrayerName,
+      timeToNextPrayer
+    };
+  }
+
   // Let's align all times relative to the start of the planner day: Day A Maghrib.
   const maghribA = parseTimeToMinutes(compiledPrayers.maghrib);
   const ishaA = parseTimeToMinutes(compiledPrayers.isha);
@@ -260,30 +358,14 @@ export function calculateTimelineStatus(currentTime, compiledPrayers, plannerDat
   const maghribB = parseTimeToMinutes(compiledPrayers.maghrib) + 1440; // Approx next day Maghrib
 
   // Determine current time in minutes relative to Day A midnight
-  const currHours = currentTime.getHours();
-  const currMins = currentTime.getMinutes();
-  let currMinutesTotal = currHours * 60 + currMins;
+  let currMinutesTotalAdjusted = currMinutesTotal;
 
   // Let's check if the current time falls inside the logical day.
   // The logical day runs from Maghrib A to Maghrib B.
-  // If the current time is before Maghrib A (e.g. 10:00 AM on Day A),
-  // but wait! The planner date is the date of Day B (the daylight portion).
-  // So the current date is either Day A (before midnight) or Day B (after midnight).
   const currentGregStr = formatDateLocal(currentTime);
 
   if (currentGregStr === plannerDateStr) {
-    // We are on Day B (the day of Fajr, Dhuhr, Asr).
-    // Any time from 00:00 to Maghrib B is in the planner day.
-    // So we add 1440 to the current time.
-    currMinutesTotal += 1440;
-  } else {
-    // We are on Day A (the day of Maghrib A, Isha A).
-    // If the time is before Maghrib A, it belongs to the *previous* planner day!
-    // But if we are evaluating the *current* planner day:
-    if (currMinutesTotal < maghribA) {
-      // It's technically in the previous planner day.
-      // But we can clip it or let it be. Let's just adjust it.
-    }
+    currMinutesTotalAdjusted += 1440;
   }
 
   // Intervals and active period
@@ -292,31 +374,31 @@ export function calculateTimelineStatus(currentTime, compiledPrayers, plannerDat
   let nextPrayerName = "";
   let minsToNext = 0;
 
-  if (currMinutesTotal >= maghribA && currMinutesTotal < ishaA) {
+  if (currMinutesTotalAdjusted >= maghribA && currMinutesTotalAdjusted < ishaA) {
     activePeriod = "evening";
-    percentCompleted = ((currMinutesTotal - maghribA) / (ishaA - maghribA)) * 100;
+    percentCompleted = ((currMinutesTotalAdjusted - maghribA) / (ishaA - maghribA)) * 100;
     nextPrayerName = "Isha";
-    minsToNext = ishaA - currMinutesTotal;
-  } else if (currMinutesTotal >= ishaA && currMinutesTotal < fajrB) {
+    minsToNext = ishaA - currMinutesTotalAdjusted;
+  } else if (currMinutesTotalAdjusted >= ishaA && currMinutesTotalAdjusted < fajrB) {
     activePeriod = "night";
-    percentCompleted = ((currMinutesTotal - ishaA) / (fajrB - ishaA)) * 100;
+    percentCompleted = ((currMinutesTotalAdjusted - ishaA) / (fajrB - ishaA)) * 100;
     nextPrayerName = "Fajr";
-    minsToNext = fajrB - currMinutesTotal;
-  } else if (currMinutesTotal >= fajrB && currMinutesTotal < dhuhrB) {
+    minsToNext = fajrB - currMinutesTotalAdjusted;
+  } else if (currMinutesTotalAdjusted >= fajrB && currMinutesTotalAdjusted < dhuhrB) {
     activePeriod = "morning";
-    percentCompleted = ((currMinutesTotal - fajrB) / (dhuhrB - fajrB)) * 100;
+    percentCompleted = ((currMinutesTotalAdjusted - fajrB) / (dhuhrB - fajrB)) * 100;
     nextPrayerName = "Dhuhr";
-    minsToNext = dhuhrB - currMinutesTotal;
-  } else if (currMinutesTotal >= dhuhrB && currMinutesTotal < asrB) {
+    minsToNext = dhuhrB - currMinutesTotalAdjusted;
+  } else if (currMinutesTotalAdjusted >= dhuhrB && currMinutesTotalAdjusted < asrB) {
     activePeriod = "afternoon";
-    percentCompleted = ((currMinutesTotal - dhuhrB) / (asrB - dhuhrB)) * 100;
+    percentCompleted = ((currMinutesTotalAdjusted - dhuhrB) / (asrB - dhuhrB)) * 100;
     nextPrayerName = "Asr";
-    minsToNext = asrB - currMinutesTotal;
-  } else if (currMinutesTotal >= asrB && currMinutesTotal < maghribB) {
+    minsToNext = asrB - currMinutesTotalAdjusted;
+  } else if (currMinutesTotalAdjusted >= asrB && currMinutesTotalAdjusted < maghribB) {
     activePeriod = "late_afternoon";
-    percentCompleted = ((currMinutesTotal - asrB) / (maghribB - asrB)) * 100;
+    percentCompleted = ((currMinutesTotalAdjusted - asrB) / (maghribB - asrB)) * 100;
     nextPrayerName = "Maghrib";
-    minsToNext = maghribB - currMinutesTotal;
+    minsToNext = maghribB - currMinutesTotalAdjusted;
   } else {
     // Fallback or boundary
     activePeriod = "late_afternoon";
@@ -358,6 +440,17 @@ export function getPeriodStartMinutes(periodKey, compiledPrayers) {
   const dhuhr = parseTimeToMinutes(compiledPrayers.dhuhr);
   const asr = parseTimeToMinutes(compiledPrayers.asr);
 
+  if (_dayStartMode === DAY_START_MODES.MIDNIGHT) {
+    switch (periodKey) {
+      case 'evening': return maghrib;
+      case 'night': return isha;
+      case 'morning': return fajr;
+      case 'afternoon': return dhuhr;
+      case 'late_afternoon': return asr;
+      default: return 0;
+    }
+  }
+
   switch (periodKey) {
     case 'evening': return maghrib;
     case 'night': return isha;
@@ -374,6 +467,17 @@ export function getPeriodEndMinutes(periodKey, compiledPrayers) {
   const fajr = parseTimeToMinutes(compiledPrayers.fajr);
   const dhuhr = parseTimeToMinutes(compiledPrayers.dhuhr);
   const asr = parseTimeToMinutes(compiledPrayers.asr);
+
+  if (_dayStartMode === DAY_START_MODES.MIDNIGHT) {
+    switch (periodKey) {
+      case 'evening': return isha;
+      case 'night': return 1440; // End at midnight
+      case 'morning': return dhuhr;
+      case 'afternoon': return asr;
+      case 'late_afternoon': return maghrib;
+      default: return 0;
+    }
+  }
 
   switch (periodKey) {
     case 'evening': return isha;
@@ -417,16 +521,25 @@ export function formatDurationHours(minutes) {
   return `${hours}h ${mins}m`;
 }
 
-/** Ordered keys for the full planner day (Maghrib → next Maghrib). */
-export const PLANNER_PERIOD_ORDER = [
-  'evening', 'night', 'morning', 'afternoon', 'late_afternoon'
-];
+/** Ordered keys for the full planner day. */
+export function getPlannerPeriodOrder() {
+  if (_dayStartMode === DAY_START_MODES.MIDNIGHT) {
+    return ['morning', 'afternoon', 'late_afternoon', 'evening', 'night'];
+  }
+  return ['evening', 'night', 'morning', 'afternoon', 'late_afternoon'];
+}
 
 export function getPlannerDayStartMinutes(compiledPrayers) {
+  if (_dayStartMode === DAY_START_MODES.MIDNIGHT) {
+    return 0;
+  }
   return parseTimeToMinutes(compiledPrayers.maghrib);
 }
 
 export function getPlannerDayEndMinutes(compiledPrayers) {
+  if (_dayStartMode === DAY_START_MODES.MIDNIGHT) {
+    return 1440;
+  }
   return parseTimeToMinutes(compiledPrayers.maghrib) + 1440;
 }
 
@@ -436,6 +549,9 @@ export function getPlannerDayDurationMinutes(compiledPrayers) {
 
 /** Current moment on the planner-day axis (minutes from midnight, may exceed 1440). */
 export function getCurrentPlannerMinutes(currentTime, plannerDateStr) {
+  if (_dayStartMode === DAY_START_MODES.MIDNIGHT) {
+    return currentTime.getHours() * 60 + currentTime.getMinutes();
+  }
   const maghrib = parseTimeToMinutes(getPrayerTimesForDate(plannerDateStr).maghrib || DEFAULT_PRAYER_TIMES.maghrib);
   let mins = currentTime.getHours() * 60 + currentTime.getMinutes();
   const gregStr = formatDateLocal(currentTime);
@@ -458,14 +574,25 @@ export function plannerMinutesToPercent(mins, compiledPrayers) {
 
 export function getPrayerMarkersForPlannerDay(compiledPrayers) {
   const maghrib = parseTimeToMinutes(compiledPrayers.maghrib);
-  const markers = [
-    { key: 'maghrib_start', label: 'Maghrib', time: compiledPrayers.maghrib, minutes: maghrib },
-    { key: 'isha', label: 'Isha', time: compiledPrayers.isha, minutes: parseTimeToMinutes(compiledPrayers.isha) },
-    { key: 'fajr', label: 'Fajr', time: compiledPrayers.fajr, minutes: parseTimeToMinutes(compiledPrayers.fajr) + 1440 },
-    { key: 'dhuhr', label: 'Dhuhr', time: compiledPrayers.dhuhr, minutes: parseTimeToMinutes(compiledPrayers.dhuhr) + 1440 },
-    { key: 'asr', label: 'Asr', time: compiledPrayers.asr, minutes: parseTimeToMinutes(compiledPrayers.asr) + 1440 },
-    { key: 'maghrib_end', label: 'Maghrib', time: compiledPrayers.maghrib, minutes: maghrib + 1440 }
-  ];
+  let markers;
+  if (_dayStartMode === DAY_START_MODES.MIDNIGHT) {
+    markers = [
+      { key: 'fajr', label: 'Fajr', time: compiledPrayers.fajr, minutes: parseTimeToMinutes(compiledPrayers.fajr) },
+      { key: 'dhuhr', label: 'Dhuhr', time: compiledPrayers.dhuhr, minutes: parseTimeToMinutes(compiledPrayers.dhuhr) },
+      { key: 'asr', label: 'Asr', time: compiledPrayers.asr, minutes: parseTimeToMinutes(compiledPrayers.asr) },
+      { key: 'maghrib', label: 'Maghrib', time: compiledPrayers.maghrib, minutes: maghrib },
+      { key: 'isha', label: 'Isha', time: compiledPrayers.isha, minutes: parseTimeToMinutes(compiledPrayers.isha) },
+    ];
+  } else {
+    markers = [
+      { key: 'maghrib_start', label: 'Maghrib', time: compiledPrayers.maghrib, minutes: maghrib },
+      { key: 'isha', label: 'Isha', time: compiledPrayers.isha, minutes: parseTimeToMinutes(compiledPrayers.isha) },
+      { key: 'fajr', label: 'Fajr', time: compiledPrayers.fajr, minutes: parseTimeToMinutes(compiledPrayers.fajr) + 1440 },
+      { key: 'dhuhr', label: 'Dhuhr', time: compiledPrayers.dhuhr, minutes: parseTimeToMinutes(compiledPrayers.dhuhr) + 1440 },
+      { key: 'asr', label: 'Asr', time: compiledPrayers.asr, minutes: parseTimeToMinutes(compiledPrayers.asr) + 1440 },
+      { key: 'maghrib_end', label: 'Maghrib', time: compiledPrayers.maghrib, minutes: maghrib + 1440 }
+    ];
+  }
   return markers.map(m => ({
     ...m,
     percent: plannerMinutesToPercent(m.minutes, compiledPrayers)
@@ -518,10 +645,12 @@ export function scheduledTimeToPlannerMinutes(timeStr, periodKey, compiledPrayer
   const periodStart = getPeriodStartMinutes(periodKey, compiledPrayers);
   const periodEnd = getPeriodEndMinutes(periodKey, compiledPrayers);
 
-  if (periodStart >= 1440 && mins < 1440) {
-    mins += 1440;
-  } else if (periodEnd > 1440 && mins < periodStart) {
-    mins += 1440;
+  if (_dayStartMode !== DAY_START_MODES.MIDNIGHT) {
+    if (periodStart >= 1440 && mins < 1440) {
+      mins += 1440;
+    } else if (periodEnd > 1440 && mins < periodStart) {
+      mins += 1440;
+    }
   }
 
   return Math.min(periodEnd - 1, Math.max(periodStart, mins));

@@ -1424,6 +1424,18 @@ textarea.form-textarea {
   line-height: 1.6;
 }
 
+select.form-select {
+  appearance: auto;
+  cursor: pointer;
+  background-image: none;
+  padding-right: 8px;
+}
+
+select.form-select option {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -3822,69 +3834,6 @@ textarea.form-textarea {
   padding: 28px 24px 56px;
 }
 
-/* Hero */
-.guide-hero {
-  text-align: center;
-  margin-bottom: 44px;
-  position: relative;
-}
-
-.guide-hero-icon-wrap {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 80px;
-  height: 80px;
-  background: linear-gradient(135deg, var(--color-emerald), var(--color-teal));
-  border-radius: 24px;
-  margin-bottom: 20px;
-  box-shadow: 0 8px 32px color-mix(in srgb, var(--color-emerald) 25%, transparent);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  position: relative;
-}
-
-.guide-hero-icon-wrap::after {
-  content: '';
-  position: absolute;
-  inset: -3px;
-  border-radius: 27px;
-  background: linear-gradient(135deg, var(--color-emerald), var(--color-teal), var(--color-emerald));
-  opacity: 0.2;
-  z-index: -1;
-  animation: guidePulse 2s ease-in-out infinite;
-}
-
-@keyframes guidePulse {
-  0%, 100% { opacity: 0.2; transform: scale(1); }
-  50% { opacity: 0.4; transform: scale(1.05); }
-}
-
-.guide-hero-icon-wrap:hover {
-  transform: scale(1.06) rotate(-3deg);
-  box-shadow: 0 12px 40px color-mix(in srgb, var(--color-emerald) 35%, transparent);
-}
-
-.guide-hero-icon {
-  color: #fff;
-}
-
-.guide-title {
-  font-size: 1.85rem;
-  font-weight: 900;
-  color: var(--text-primary);
-  margin: 0 0 12px;
-  letter-spacing: -0.02em;
-  line-height: 1.2;
-}
-
-.guide-subtitle {
-  font-size: 1rem;
-  color: var(--text-secondary);
-  margin: 0 auto;
-  line-height: 1.7;
-  max-width: 560px;
-}
-
 .guide-steps-badge {
   display: inline-flex;
   align-items: center;
@@ -4043,44 +3992,10 @@ textarea.form-textarea {
   margin-left: 12px;
 }
 
-[dir="rtl"] .guide-hero {
-  text-align: center;
-}
-
 /* === Guide Responsive === */
 @media (max-width: 600px) {
   .guide-page {
     padding: 16px 0 60px;
-  }
-
-  .guide-hero {
-    margin-bottom: 32px;
-  }
-
-  .guide-hero-icon-wrap {
-    width: 64px;
-    height: 64px;
-    border-radius: 18px;
-    margin-bottom: 16px;
-  }
-
-  .guide-hero-icon-wrap svg {
-    width: 28px;
-    height: 28px;
-  }
-
-  .guide-hero-icon-wrap::after {
-    border-radius: 21px;
-  }
-
-  .guide-title {
-    font-size: 1.4rem;
-    margin-bottom: 8px;
-  }
-
-  .guide-subtitle {
-    font-size: 0.88rem;
-    line-height: 1.6;
   }
 
   .guide-steps-badge {
@@ -4163,53 +4078,6 @@ textarea.form-textarea {
   max-width: 640px;
   margin: 0 auto;
   padding: 16px 24px 80px;
-}
-
-.contact-header-wrap {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: linear-gradient(135deg, var(--bg-secondary), color-mix(in srgb, #25D366 6%, var(--bg-secondary)));
-  border: 1px solid color-mix(in srgb, #25D366 20%, var(--border-color));
-  padding: 24px 32px;
-  border-radius: 20px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.04);
-  transition: box-shadow 0.3s ease;
-}
-.contact-header-wrap:hover {
-  box-shadow: 0 6px 28px rgba(0,0,0,0.08);
-}
-
-.contact-header-main {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.contact-icon {
-  color: #25D366;
-  background: linear-gradient(135deg, color-mix(in srgb, #25D366 20%, transparent), color-mix(in srgb, #25D366 8%, transparent));
-  padding: 10px;
-  border-radius: 14px;
-  width: 48px;
-  height: 48px;
-  transition: transform 0.3s ease;
-}
-.contact-header-main:hover .contact-icon {
-  transform: scale(1.05) rotate(-3deg);
-}
-
-.contact-title {
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: var(--text-primary);
-  margin: 0 0 4px 0;
-}
-
-.contact-subtitle {
-  font-size: 0.85rem;
-  color: var(--text-tertiary);
-  margin: 0;
 }
 
 .contact-card {
@@ -5934,9 +5802,19 @@ textarea.form-textarea {
   font-variant-numeric: tabular-nums;
 }
 
-/* ===== Backup Section ===== */
-.settings-page .backup-card {
+/* ===== Full-width cards ===== */
+.settings-page .backup-card,
+.settings-page .location-card,
+.settings-page .manual-card {
   grid-column: 1 / -1;
+}
+
+@media (min-width: 768px) {
+  .settings-page .location-card .form-row-stacked {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
 }
 
 .backup-actions {
@@ -6253,58 +6131,6 @@ textarea.form-textarea {
   padding-bottom: 60px;
 }
 
-.new-pulse-header-wrap {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: linear-gradient(135deg, var(--bg-secondary), color-mix(in srgb, var(--color-emerald) 6%, var(--bg-secondary)));
-  border: 1px solid color-mix(in srgb, var(--color-emerald) 20%, var(--border-color));
-  padding: 24px 32px;
-  border-radius: 20px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.04);
-  transition: box-shadow 0.3s ease;
-}
-.new-pulse-header-wrap:hover {
-  box-shadow: 0 6px 28px rgba(0,0,0,0.08);
-}
-
-.new-pulse-header-main {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.new-pulse-icon {
-  color: var(--color-emerald);
-  background: linear-gradient(135deg, var(--color-emerald-light), color-mix(in srgb, var(--color-emerald) 20%, var(--color-emerald-light)));
-  padding: 10px;
-  border-radius: 14px;
-  width: 48px;
-  height: 48px;
-  transition: transform 0.3s ease;
-}
-.new-pulse-header-main:hover .new-pulse-icon {
-  transform: scale(1.05) rotate(-3deg);
-}
-
-.new-pulse-title {
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: var(--text-primary);
-  margin: 0 0 4px 0;
-  background: linear-gradient(135deg, var(--color-emerald), var(--color-teal));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.new-pulse-subtitle {
-  font-size: 0.85rem;
-  color: var(--text-tertiary);
-  margin: 0;
-  -webkit-text-fill-color: var(--text-tertiary);
-}
-
 .new-pulse-date {
   text-align: right;
   display: flex;
@@ -6312,16 +6138,16 @@ textarea.form-textarea {
   gap: 4px;
 }
 
-.new-pulse-date .date-gregorian {
+.new-tasks-header .new-pulse-date .date-gregorian {
   font-size: 0.95rem;
   font-weight: 700;
-  color: var(--text-secondary);
+  color: #fff;
 }
 
-.new-pulse-date .date-hijri {
+.new-tasks-header .new-pulse-date .date-hijri {
   font-size: 0.85rem;
   font-weight: 600;
-  color: var(--color-emerald);
+  color: rgba(255,255,255,0.85);
 }
 
 [dir="rtl"] .new-pulse-date {
@@ -7116,12 +6942,6 @@ textarea.form-textarea {
 @media (max-width: 600px) {
   .new-pulse-page {
     padding-bottom: 80px;
-  }
-  .new-pulse-header-wrap {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
-    padding: 20px;
   }
   .new-pulse-date {
     text-align: left;

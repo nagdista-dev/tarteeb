@@ -14,12 +14,15 @@ import {
   ensurePrayerTimesCached, FIXED_TASKS_TEMPLATES,
   calculateTimelineStatus, PERIODS_META, savePrayerCache, getPrayerCache,
   getPeriodStartMinutes, getPeriodEndMinutes, formatDurationHours,
-  PLANNER_PERIOD_ORDER, getDefaultTimeForPeriod, getCurrentPlannerMinutes,
+  getPlannerPeriodOrder, getDefaultTimeForPeriod, getCurrentPlannerMinutes,
    getTaskDisplayTime, sortTasksForPlannerDay, scheduledTimeToPlannerMinutes,
-  formatMinutesToTime, setUse12h, getUse12h, parseTimeToMinutes
+  formatMinutesToTime, setUse12h, getUse12h, parseTimeToMinutes,
+  setDayStartMode, getDayStartMode, DAY_START_MODES,
+  getPlannerDayStartMinutes, getPlannerDayEndMinutes, getPrayerMarkersForPlannerDay
 } from './utils/prayerService';
 
 import { t, setLanguage, getLanguage, translateTaskName } from './i18n';
+import countries from './data/countries';
 
 const calculateStats = (tasks) => {
   const total = tasks.length;
@@ -291,6 +294,20 @@ function App() {
     localStorage.setItem('tarteeb_use12h', use12h);
   }, [use12h]);
 
+  // ---- Day Start Mode ----
+  const [dayStartMode, setDayStartModeState] = useState(() => {
+    const saved = localStorage.getItem('tarteeb_day_start_mode');
+    if (saved && Object.values(DAY_START_MODES).includes(saved)) return saved;
+    return DAY_START_MODES.MIDNIGHT;
+  });
+
+  useEffect(() => {
+    setDayStartMode(dayStartMode);
+    localStorage.setItem('tarteeb_day_start_mode', dayStartMode);
+    // Recompute active date when mode changes
+    setActiveDate(getLogicalPlannerDate(new Date()));
+  }, [dayStartMode]);
+
   // ---- Location Config ----
   const [locationConfig, setLocationConfig] = useState(() => {
     const saved = localStorage.getItem('tarteeb_location_config');
@@ -301,6 +318,8 @@ function App() {
   // ---- Planner Date & Data ----
   const [activeDate, setActiveDate] = useState(() => getLogicalPlannerDate(new Date()));
   const [dayData, setDayData] = useState(null);
+  const dayDataRef = useRef(dayData);
+  dayDataRef.current = dayData;
 
   // ---- Mobile sidebar ----
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -821,7 +840,7 @@ function App() {
   };
 
   const toggleTaskCompletion = (id) => {
-    const task = dayData?.tasks.find(t => t.id === id);
+    const task = dayDataRef.current?.tasks.find(t => t.id === id);
     if (!task) return;
 
     const wasCompleted = task.completed;
@@ -1156,7 +1175,7 @@ function App() {
     lines.push('');
     lines.push(`## ${t('journal.studyNotes')}`);
     lines.push('');
-    PLANNER_PERIOD_ORDER.forEach(periodKey => {
+    getPlannerPeriodOrder().forEach(periodKey => {
       const periodNotes = notes.filter(n => n.period === periodKey).sort((a, b) => (a.time || '').localeCompare(b.time || ''));
       if (periodNotes.length === 0) return;
       const periodLabel = `${t('period.' + periodKey)} — ${t('period.' + periodKey + 'Range')}`;
@@ -1376,7 +1395,7 @@ function App() {
 
     // Task breakdown by period
     if (total > 0) {
-      const periodStats = PLANNER_PERIOD_ORDER.map(pk => {
+      const periodStats = getPlannerPeriodOrder().map(pk => {
         const pt = allTasks.filter(t => t.period === pk);
         if (pt.length === 0) return null;
         const d = pt.filter(t => t.status === 'completed' || t.completed).length;
@@ -1402,7 +1421,7 @@ function App() {
       lines.push('');
       lines.push('## 📝 ' + t('journal.studyNotes'));
       lines.push('');
-      PLANNER_PERIOD_ORDER.forEach(pk => {
+      getPlannerPeriodOrder().forEach(pk => {
         const pn = notes.filter(n => n.period === pk).sort((a, b) => (a.time || '').localeCompare(b.time || ''));
         if (pn.length === 0) return;
         const meta = PERIODS_META[pk];
@@ -1642,8 +1661,8 @@ function App() {
   // ---- Rendering helpers ----
   const renderFullDayView = () => {
     const prayers = dayData.prayerTimes;
-    const dayStart = getPeriodStartMinutes('evening', prayers);
-    const dayEnd = getPeriodEndMinutes('late_afternoon', prayers);
+    const dayStart = getPlannerDayStartMinutes(prayers);
+    const dayEnd = getPlannerDayEndMinutes(prayers);
     const padTop = 15;
     const padBottom = 15;
     const visualStart = dayStart - padTop;
@@ -1655,17 +1674,13 @@ function App() {
     const nowInRange = nowMinutes >= visualStart && nowMinutes <= visualEnd;
     const nowTop = nowInRange ? toPercent(nowMinutes) : -100;
     const sortedTasks = sortTasksForPlannerDay(dayData.tasks, prayers);
-    const markers = [
-      { key: 'maghrib_start', prayer: 'Maghrib', time: prayers.maghrib, minutes: dayStart },
-      { key: 'isha', prayer: 'Isha', time: prayers.isha, minutes: getPeriodStartMinutes('night', prayers) },
-      { key: 'fajr', prayer: 'Fajr', time: prayers.fajr, minutes: getPeriodStartMinutes('morning', prayers) },
-      { key: 'dhuhr', prayer: 'Dhuhr', time: prayers.dhuhr, minutes: getPeriodStartMinutes('afternoon', prayers) },
-      { key: 'asr', prayer: 'Asr', time: prayers.asr, minutes: getPeriodStartMinutes('late_afternoon', prayers) },
-      { key: 'maghrib_end', prayer: 'Maghrib', time: prayers.maghrib, minutes: dayEnd }
-    ];
+    const markers = getPrayerMarkersForPlannerDay(prayers).map(m => ({
+      key: m.key, prayer: m.label, time: m.time, minutes: m.minutes
+    }));
+    const morningStart = getPeriodStartMinutes('morning', prayers);
     const periodBands = [
-      { key: 'night-band', label: t('band.night'), start: dayStart, end: getPeriodStartMinutes('morning', prayers) },
-      { key: 'day-band', label: t('band.day'), start: getPeriodStartMinutes('morning', prayers), end: dayEnd }
+      { key: 'night-band', label: t('band.night'), start: dayStart, end: morningStart },
+      { key: 'day-band', label: t('band.day'), start: morningStart, end: dayEnd }
     ];
     const formatTimelineTick = (minutes, exact = false) => {
       const normalized = ((minutes % 1440) + 1440) % 1440;
@@ -1845,12 +1860,14 @@ function App() {
 
     return (
       <div className="contact-page">
-        <div className="contact-header-wrap">
-          <div className="contact-header-main">
-            <Send size={28} className="contact-icon" />
-            <div>
-              <h2 className="contact-title">{t('contact.title')}</h2>
-              <p className="contact-subtitle">{t('contact.subtitle')}</p>
+        <div className="new-tasks-header-wrap">
+          <div className="new-tasks-header">
+            <div style={{display: 'flex', alignItems: 'center', gap: '16px'}}>
+              <Send size={32} className="new-tasks-title-icon" />
+              <div>
+                <h2 className="new-tasks-title">{t('contact.title')}</h2>
+                <p className="new-tasks-subtitle">{t('contact.subtitle')}</p>
+              </div>
             </div>
           </div>
         </div>
@@ -1899,12 +1916,14 @@ function App() {
     if (!dayData) {
       return (
         <div className="new-pulse-page">
-          <div className="new-pulse-header-wrap">
-            <div className="new-pulse-header-main">
-              <Activity size={28} className="new-pulse-icon" />
-              <div>
-                <h2 className="new-pulse-title">{t('pulse.title')}</h2>
-                <p className="new-pulse-subtitle">{t('pulse.subtitle')}</p>
+          <div className="new-tasks-header-wrap">
+            <div className="new-tasks-header">
+              <div style={{display: 'flex', alignItems: 'center', gap: '16px'}}>
+                <Activity size={32} className="new-tasks-title-icon" />
+                <div>
+                  <h2 className="new-tasks-title">{t('pulse.title')}</h2>
+                  <p className="new-tasks-subtitle">{t('pulse.subtitle')}</p>
+                </div>
               </div>
             </div>
           </div>
@@ -1948,7 +1967,7 @@ function App() {
     const hasNotes = notes.length > 0;
 
     const tasksByPeriod = {};
-    PLANNER_PERIOD_ORDER.forEach(pk => {
+    getPlannerPeriodOrder().forEach(pk => {
       const periodTasks = allTasks.filter(t => t.period === pk);
       if (periodTasks.length > 0) {
         const done = periodTasks.filter(t => t.status === 'completed' || t.completed).length;
@@ -2017,17 +2036,19 @@ function App() {
     return (
       <div className="new-pulse-page">
         {/* Header */}
-        <div className="new-pulse-header-wrap">
-          <div className="new-pulse-header-main">
-            <Activity size={28} className="new-pulse-icon" />
-            <div>
-              <h2 className="new-pulse-title">{t('pulse.title')}</h2>
-              <p className="new-pulse-subtitle">{t('pulse.subtitle')}</p>
+        <div className="new-tasks-header-wrap">
+          <div className="new-tasks-header">
+            <div style={{display: 'flex', alignItems: 'center', gap: '16px'}}>
+              <Activity size={32} className="new-tasks-title-icon" />
+              <div>
+                <h2 className="new-tasks-title">{t('pulse.title')}</h2>
+                <p className="new-tasks-subtitle">{t('pulse.subtitle')}</p>
+              </div>
             </div>
-          </div>
-          <div className="new-pulse-date">
-            <span className="date-gregorian">{formatHumanDate(todayStr)}</span>
-            {dayData.hijriDate && <span className="date-hijri">{dayData.hijriDate}</span>}
+            <div className="new-pulse-date">
+              <span className="date-gregorian">{formatHumanDate(todayStr)}</span>
+              {dayData.hijriDate && <span className="date-hijri">{dayData.hijriDate}</span>}
+            </div>
           </div>
         </div>
 
@@ -2118,7 +2139,7 @@ function App() {
                 </div>
               </div>
               <div className="pulse-period-breakdown new-style">
-                {PLANNER_PERIOD_ORDER.filter(pk => tasksByPeriod[pk]).map(pk => {
+                {getPlannerPeriodOrder().filter(pk => tasksByPeriod[pk]).map(pk => {
                   const block = tasksByPeriod[pk];
                   const pct = block.total > 0 ? Math.round((block.done / block.total) * 100) : 0;
                   return (
@@ -2651,7 +2672,7 @@ function App() {
                     <div className="note-composer-footer">
                     <div className="note-composer-footer-left">
                       <div className="note-period-chips">
-                        {PLANNER_PERIOD_ORDER.map(key => (
+                        {getPlannerPeriodOrder().map(key => (
                           <button
                             key={key}
                             className={`note-period-chip ${studyPeriod === key ? 'active' : ''}`}
@@ -2692,7 +2713,7 @@ function App() {
                         </div>
                       );
                     }
-                    return PLANNER_PERIOD_ORDER.map(periodKey => {
+                    return getPlannerPeriodOrder().map(periodKey => {
                       const notes = getNotesForPeriod(periodKey);
                       if (notes.length === 0) return null;
                       const isActive = activePeriod === periodKey;
@@ -2733,15 +2754,19 @@ function App() {
 
             {currentPage === 'guide' && (
               <div className="guide-page">
-                <div className="guide-hero">
-                  <div className="guide-hero-icon-wrap">
-                    <Sparkles size={32} className="guide-hero-icon" />
-                  </div>
-                  <h1 className="guide-title">{t('guide.title')}</h1>
-                  <p className="guide-subtitle">{t('guide.subtitle')}</p>
-                  <div className="guide-steps-badge">
-                    <Zap size={12} />
-                    <span>15 {t('guide.steps')}</span>
+                <div className="new-tasks-header-wrap">
+                  <div className="new-tasks-header">
+                    <div style={{display: 'flex', alignItems: 'center', gap: '16px'}}>
+                      <Sparkles size={32} className="new-tasks-title-icon" />
+                      <div>
+                        <h2 className="new-tasks-title">{t('guide.title')}</h2>
+                        <p className="new-tasks-subtitle">{t('guide.subtitle')}</p>
+                      </div>
+                    </div>
+                    <div className="guide-steps-badge">
+                      <Zap size={12} />
+                      <span>15 {t('guide.steps')}</span>
+                    </div>
                   </div>
                 </div>
 
@@ -3191,6 +3216,29 @@ function App() {
                   </div>
                 </div>
 
+                {/* Day Start Mode */}
+                <div className="settings-card">
+                  <div className="settings-card-header">
+                    <span className="settings-card-icon-wrap"><CalendarDays size={20} /></span>
+                    <div>
+                      <h3 className="settings-card-title">{t('settings.dayStart')}</h3>
+                      <p className="settings-card-desc">{t('settings.dayStartDesc')}</p>
+                    </div>
+                  </div>
+                  <div className="settings-card-body">
+                    <div className="time-format-control">
+                      <button className={`time-format-btn ${dayStartMode === DAY_START_MODES.MAGHRIB ? 'active' : ''}`} onClick={() => setDayStartModeState(DAY_START_MODES.MAGHRIB)}>
+                        <span className="time-format-sample">{t('prayer.maghrib')}</span>
+                        <span className="time-format-label">{t('settings.maghribStart')}</span>
+                      </button>
+                      <button className={`time-format-btn ${dayStartMode === DAY_START_MODES.MIDNIGHT ? 'active' : ''}`} onClick={() => setDayStartModeState(DAY_START_MODES.MIDNIGHT)}>
+                        <span className="time-format-sample">12:00 {t('time.am')}</span>
+                        <span className="time-format-label">{t('settings.midnight')}</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Time Format */}
                 <div className="settings-card">
                   <div className="settings-card-header">
@@ -3263,7 +3311,7 @@ function App() {
                 <div className="settings-section-label">{t('settings.prayerTimes')}</div>
 
                 {/* Location Settings */}
-                <div className="settings-card">
+                <div className="settings-card location-card">
                   <div className="settings-card-header">
                     <span className="settings-card-icon-wrap"><MapPin size={20} /></span>
                     <div>
@@ -3299,8 +3347,32 @@ function App() {
                           </div>
                           {settingsForm.type === 'city' ? (
                             <div className="form-row-stacked">
-                              <div className="form-group"><label className="form-label">{t('settings.cityLabel')}</label><input className="form-input" type="text" value={settingsForm.city} onChange={e => setSettingsForm(prev => ({ ...prev, city: e.target.value }))} required/></div>
-                              <div className="form-group"><label className="form-label">{t('settings.countryLabel')}</label><input className="form-input" type="text" value={settingsForm.country} onChange={e => setSettingsForm(prev => ({ ...prev, country: e.target.value }))} required/></div>
+                              <div className="form-group">
+                                <label className="form-label">{t('settings.countryLabel')}</label>
+                                <select className="form-select" value={settingsForm.country} onChange={e => {
+                                  const country = e.target.value;
+                                  const cities = countries[country] || [];
+                                  setSettingsForm(prev => ({
+                                    ...prev,
+                                    country,
+                                    city: cities.includes(prev.city) ? prev.city : cities[0] || ''
+                                  }));
+                                }} required>
+                                  <option value="">{t('settings.selectCountry')}</option>
+                                  {Object.keys(countries).sort().map(c => (
+                                    <option key={c} value={c}>{c}</option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div className="form-group">
+                                <label className="form-label">{t('settings.cityLabel')}</label>
+                                <select className="form-select" value={settingsForm.city} onChange={e => setSettingsForm(prev => ({ ...prev, city: e.target.value }))} required>
+                                  <option value="">{t('settings.selectCity')}</option>
+                                  {(countries[settingsForm.country] || []).map(c => (
+                                    <option key={c} value={c}>{c}</option>
+                                  ))}
+                                </select>
+                              </div>
                             </div>
                           ) : (
                             <div className="form-row-stacked">
@@ -3316,7 +3388,7 @@ function App() {
                 </div>
 
                 {/* Manual Overrides */}
-                <div className="settings-card">
+                <div className="settings-card manual-card">
                   <div className="settings-card-header">
                     <span className="settings-card-icon-wrap"><Clock size={20} /></span>
                     <div>
@@ -3551,7 +3623,7 @@ function App() {
                   <div className="form-group">
                     <label className="form-label">{t('modal.timeOfDay')}</label>
                     <select className="form-select" value={taskForm.period} onChange={e => handlePeriodChange(e.target.value)}>
-                      {PLANNER_PERIOD_ORDER.map(key => (
+                      {getPlannerPeriodOrder().map(key => (
                         <option key={key} value={key}>{t('period.' + key)} — {t('period.' + key + 'Range')}</option>
                       ))}
                     </select>
