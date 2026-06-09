@@ -117,6 +117,8 @@ const en = {
   /* Notifications */
   'notif.taskStart': 'Task starting now',
   'notif.taskEnd': 'Task ending now',
+  'notif.prayerStart': 'Prayer time started',
+  'notif.prayerEnd': 'Prayer time ended',
   'notif.dayEnding': 'Day Ending Soon',
   'notif.dayEndingBody': 'The current day is almost over. Download your Markdown export to save your data.',
   'notif.newDay': 'New Day Started',
@@ -602,6 +604,8 @@ const ar = {
   /* Notifications */
   'notif.taskStart': 'المهمة تبدأ الآن',
   'notif.taskEnd': 'المهمة تنتهي الآن',
+  'notif.prayerStart': 'موعد الصلاة حان',
+  'notif.prayerEnd': 'انتهى وقت الصلاة',
   'notif.dayEnding': 'اليوم على وشك الانتهاء',
   'notif.dayEndingBody': 'اليوم الحالي على وشك الانتهاء. قم بتصدير البيانات Markdown لحفظ معلوماتك.',
   'notif.newDay': 'بدأ يوم جديد',

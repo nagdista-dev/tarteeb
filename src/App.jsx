@@ -46,6 +46,7 @@ const createTaskId = () => (
 );
 
 const TASK_GAP = 5;
+const NOTIF_ICON = '/icons/icon-192.png';
 
 const getTaskStartMinutes = (task, prayers) => scheduledTimeToPlannerMinutes(
   getTaskDisplayTime(task, prayers),
@@ -682,11 +683,11 @@ function App() {
       const endKey = `${task.id}_end`;
       if (Math.abs(nowMinutes - startMinutes) <= 1 && !notifiedTasks.current.has(startKey)) {
         notifiedTasks.current.add(startKey);
-        new Notification(t('notif.taskStart'), { body: task.name });
+        new Notification(t('notif.taskStart'), { body: task.name, icon: NOTIF_ICON, tag: `task-start-${task.id}` });
       }
       if (Math.abs(nowMinutes - endMinutes) <= 1 && !notifiedTasks.current.has(endKey)) {
         notifiedTasks.current.add(endKey);
-        new Notification(t('notif.taskEnd'), { body: task.name });
+        new Notification(t('notif.taskEnd'), { body: task.name, icon: NOTIF_ICON, tag: `task-end-${task.id}` });
       }
     });
   }, [currentTime, dayData]);
@@ -703,7 +704,7 @@ function App() {
     const nowMin = getCurrentPlannerMinutes(currentTime, activeDate);
     if (nowMin >= dayEnd - 30) {
       remindedEndOfDay.current = todayKey;
-      new Notification(t('notif.dayEnding'), { body: t('notif.dayEndingBody') });
+      new Notification(t('notif.dayEnding'), { body: t('notif.dayEndingBody'), icon: NOTIF_ICON, tag: `${activeDate}_day-ending`, renotify: true });
     }
   }, [currentTime, activeDate]);
 
@@ -712,10 +713,37 @@ function App() {
     if (typeof Notification === 'undefined') return;
     if (Notification.permission !== 'granted') return;
     if (prevActiveDateRef.current && prevActiveDateRef.current !== activeDate) {
-      new Notification(t('notif.newDay'), { body: t('notif.newDayBody') });
+      new Notification(t('notif.newDay'), { body: t('notif.newDayBody'), icon: NOTIF_ICON, tag: `${activeDate}_new-day`, renotify: true });
     }
     prevActiveDateRef.current = activeDate;
   }, [activeDate]);
+
+  // ---- Prayer start/end notifications ----
+  useEffect(() => {
+    if (typeof Notification === 'undefined') return;
+    if (Notification.permission !== 'granted') return;
+    if (!activeDate) return;
+    const compiled = getCompiledPrayersForPlannerDate(activeDate);
+    const markers = getPrayerMarkersForPlannerDay(compiled);
+    const nowMin = getCurrentPlannerMinutes(currentTime, activeDate);
+    for (let i = 0; i < markers.length; i++) {
+      const m = markers[i];
+      const startMins = m.minutes;
+      const endMins = i < markers.length - 1 ? markers[i + 1].minutes : startMins + (1440 / markers.length);
+      const startKey = `${activeDate}_prayer_${m.key}_start`;
+      const endKey = `${activeDate}_prayer_${m.key}_end`;
+      if (Math.abs(nowMin - startMins) <= 1 && !notifiedPrayers.current.has(startKey)) {
+        notifiedPrayers.current.add(startKey);
+        new Notification(t('notif.prayerStart'), { body: m.label, icon: NOTIF_ICON, tag: startKey });
+        if (typeof navigator.vibrate === 'function') navigator.vibrate([200, 100, 200]);
+      }
+      if (Math.abs(nowMin - endMins) <= 1 && !notifiedPrayers.current.has(endKey)) {
+        notifiedPrayers.current.add(endKey);
+        new Notification(t('notif.prayerEnd'), { body: m.label, icon: NOTIF_ICON, tag: endKey });
+        if (typeof navigator.vibrate === 'function') navigator.vibrate([200, 100, 200]);
+      }
+    }
+  }, [currentTime, activeDate]);
 
   // ---- Scroll to top on page change ----
   useEffect(() => {
@@ -853,6 +881,14 @@ function App() {
 
       if (status.activePeriod !== 'none' && status.activePeriod !== lastActivePeriod.current && lastActivePeriod.current !== null && !prayerNotif) {
         setPrayerNotif(status.activePeriod);
+        if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+          const periodKey = status.activePeriod;
+          const periodPrayer = { morning: 'Fajr', afternoon: 'Dhuhr', late_afternoon: 'Asr', evening: 'Maghrib', night: 'Isha' }[periodKey];
+          if (periodPrayer) {
+            new Notification(t('notif.prayerStart'), { body: periodPrayer, icon: NOTIF_ICON, tag: `${activeDate}_period-${periodKey}` });
+            if (typeof navigator.vibrate === 'function') navigator.vibrate([200, 100, 200]);
+          }
+        }
       }
       if (!prayerNotif) {
         lastActivePeriod.current = status.activePeriod;
@@ -865,6 +901,7 @@ function App() {
   const notifiedTasks = useRef(new Set());
   const remindedEndOfDay = useRef(null);
   const prevActiveDateRef = useRef(activeDate);
+  const notifiedPrayers = useRef(new Set());
   useEffect(() => {
     if (currentPage !== 'home' || !dayData || hasScrolledRef.current) return;
     hasScrolledRef.current = true;
