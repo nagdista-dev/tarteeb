@@ -593,7 +593,7 @@ function App() {
         const registration = await navigator.serviceWorker.ready;
         const subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey: 'YOUR_PUBLIC_VAPID_KEY' // TODO: Replace with actual VAPID key
+          applicationServerKey: import.meta.env.VITE_APP_VAPID_PUBLIC_KEY
         });
         console.log('User subscribed:', subscription);
       } catch (e) {
