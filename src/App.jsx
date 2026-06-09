@@ -611,10 +611,13 @@ function App() {
     const notifOptions = {
       icon: NOTIF_ICON,
       badge: NOTIF_ICON,
-      vibrate: isCompletelySilent ? [] : [200, 100, 200],
       silent: true, // Suppress system sound to use custom bell sound
       ...options
     };
+
+    if (!isCompletelySilent) {
+      notifOptions.vibrate = [200, 100, 200];
+    }
 
     if (!isCompletelySilent) {
       try {
