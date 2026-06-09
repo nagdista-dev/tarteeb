@@ -5672,6 +5672,96 @@ select.form-select option {
   border-color: color-mix(in srgb, var(--color-gold) 40%, transparent);
 }
 
+.study-note-edit-area {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.note-edit-input {
+  margin: 0;
+}
+
+.study-note-edit-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.btn-sm {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 4px 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.01em;
+}
+
+.btn-sm:hover {
+  background: var(--bg-secondary);
+  border-color: var(--text-tertiary);
+}
+
+.btn-sm.btn-primary {
+  background: var(--color-emerald);
+  color: white;
+  border-color: var(--color-emerald);
+}
+
+.btn-sm.btn-primary:hover {
+  background: var(--color-emerald-dark, #059669);
+  border-color: var(--color-emerald-dark, #059669);
+}
+
+.btn-sm.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.study-note-edited-info {
+  margin-top: -2px;
+}
+
+.study-note-previous {
+  font-size: 0.82rem;
+  color: var(--text-tertiary);
+  text-decoration: line-through;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  opacity: 0.7;
+}
+
+.study-note-edited-badge {
+  display: inline-block;
+  font-size: 0.65rem;
+  color: var(--color-emerald);
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+.study-note-edited-time {
+  font-size: 0.65rem;
+  color: var(--color-emerald);
+  font-weight: 500;
+}
+
+.study-note-card .btn-task-action[aria-label="Edit"] {
+  opacity: 0.7;
+}
+
+.study-note-card:hover .btn-task-action[aria-label="Edit"] {
+  opacity: 0.7;
+}
+
 /* === Responsive === */
 @media (max-width: 600px) {
   .study-add-footer {

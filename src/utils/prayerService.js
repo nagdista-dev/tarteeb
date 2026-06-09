@@ -45,7 +45,8 @@ export function parseTimeToMinutes(timeStr) {
 }
 
 // 12h / 24h time format preference
-let _use12h = true;
+const _savedUse12h = typeof localStorage !== 'undefined' ? localStorage.getItem('tarteeb_use12h') : null;
+let _use12h = _savedUse12h === null ? true : _savedUse12h === 'true';
 
 export function setUse12h(val) {
   _use12h = val;
@@ -61,7 +62,8 @@ export const DAY_START_MODES = {
   MIDNIGHT: 'midnight'
 };
 
-let _dayStartMode = DAY_START_MODES.MIDNIGHT;
+const _savedDayStart = typeof localStorage !== 'undefined' ? localStorage.getItem('tarteeb_day_start_mode') : null;
+let _dayStartMode = _savedDayStart && Object.values(DAY_START_MODES).includes(_savedDayStart) ? _savedDayStart : DAY_START_MODES.MIDNIGHT;
 
 export function setDayStartMode(mode) {
   if (Object.values(DAY_START_MODES).includes(mode)) {

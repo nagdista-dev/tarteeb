@@ -126,6 +126,11 @@ const en = {
   'journal.period': 'Period',
   'journal.allNotes': 'All Notes',
   'journal.noNotes': 'No notes yet. Write your first note above.',
+  'journal.edit': 'Edit',
+  'journal.save': 'Save',
+  'journal.cancel': 'Cancel',
+  'journal.edited': 'edited',
+  'journal.deleteConfirm': 'Delete this note? This action cannot be undone.',
 
   /* History page */
   'history.title': 'History Log',
@@ -423,7 +428,7 @@ const en = {
   'habits.totalCompletions': 'Total Completions',
   'habits.completionRate': 'Completion Rate',
   'habits.daysTracked': 'Days Tracked',
-  'habits.stats': 'Statistics',
+  'habits.stats': 'Daily habit tracking',
   'habits.export': 'Export Habits',
   'habits.moveUp': 'Move up',
   'habits.moveDown': 'Move down',
@@ -581,6 +586,11 @@ const ar = {
   'journal.period': 'الوقت',
   'journal.allNotes': 'جميع الملاحظات',
   'journal.noNotes': 'لا توجد ملاحظات بعد. اكتب ملاحظتك الأولى أعلاه.',
+  'journal.edit': 'تعديل',
+  'journal.save': 'حفظ',
+  'journal.cancel': 'إلغاء',
+  'journal.edited': 'تم التعديل',
+  'journal.deleteConfirm': 'حذف هذه الملاحظة؟ لا يمكن التراجع عن هذا الإجراء.',
 
   /* History page */
   'history.title': 'سجل الأيام',
@@ -878,7 +888,7 @@ const ar = {
   'habits.totalCompletions': 'إجمالي الإنجازات',
   'habits.completionRate': 'معدل الإنجاز',
   'habits.daysTracked': 'الأيام المتتبعة',
-  'habits.stats': 'الإحصائيات',
+  'habits.stats': 'تتبع العادات اليومية',
   'habits.export': 'تصدير العادات',
   'habits.moveUp': 'تحريك لأعلى',
   'habits.moveDown': 'تحريك لأسفل',

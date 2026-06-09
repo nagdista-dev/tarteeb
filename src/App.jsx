@@ -339,6 +339,8 @@ function App() {
   const [diarySaved, setDiarySaved] = useState(true);
   const [studyText, setStudyText] = useState('');
   const [studyPeriod, setStudyPeriod] = useState('morning');
+  const [editingNoteId, setEditingNoteId] = useState(null);
+  const [editText, setEditText] = useState('');
   const [collapsedPeriods, setCollapsedPeriods] = useState({ evening: true, night: true, morning: true, afternoon: true, late_afternoon: true });
   const [expandedTaskId, setExpandedTaskId] = useState(null);
   const [dialog, setDialog] = useState(null);
@@ -660,15 +662,15 @@ function App() {
         }
         return;
       }
-      if (e.key === 'h') setCurrentPage('home');
-      else if (e.key === 't') setCurrentPage('tasks');
-      else if (e.key === 'j') setCurrentPage('journal');
-      else if (e.key === 'g') setCurrentPage('guide');
-      else if (e.key === 's') setCurrentPage('settings');
-      else if (e.key === 'b') setCurrentPage('habits');
-      else if (e.key === 'l') setCurrentPage('sleep');
-      else if (e.key === 'd') setCurrentPage('drinks');
-      else if (e.key === 'p') setCurrentPage('prayers');
+      if (e.key === 'h') { setCurrentPage('home'); window.scrollTo(0, 0); }
+      else if (e.key === 't') { setCurrentPage('tasks'); window.scrollTo(0, 0); }
+      else if (e.key === 'j') { setCurrentPage('journal'); window.scrollTo(0, 0); }
+      else if (e.key === 'g') { setCurrentPage('guide'); window.scrollTo(0, 0); }
+      else if (e.key === 's') { setCurrentPage('settings'); window.scrollTo(0, 0); }
+      else if (e.key === 'b') { setCurrentPage('habits'); window.scrollTo(0, 0); }
+      else if (e.key === 'l') { setCurrentPage('sleep'); window.scrollTo(0, 0); }
+      else if (e.key === 'd') { setCurrentPage('drinks'); window.scrollTo(0, 0); }
+      else if (e.key === 'p') { setCurrentPage('prayers'); window.scrollTo(0, 0); }
       else if (e.key === 'n' && (currentPage === 'home' || currentPage === 'tasks') && dayData) {
         openTaskModal('add');
       }
@@ -1127,6 +1129,8 @@ function App() {
     if (!dayData) return;
     const note = (dayData.studyNotes || []).find(n => n.id === noteId);
     if (note?.locked) return;
+    const confirmed = await showConfirm(t('journal.deleteConfirm'));
+    if (!confirmed) return;
     const updatedNotes = (dayData.studyNotes || []).filter(n => n.id !== noteId);
     updateDayData({ ...dayData, studyNotes: updatedNotes });
   };
@@ -1137,6 +1141,31 @@ function App() {
       n.id === noteId ? { ...n, locked: !n.locked } : n
     );
     updateDayData({ ...dayData, studyNotes: updatedNotes });
+  };
+
+  const startEditNote = (noteId) => {
+    const note = (dayData?.studyNotes || []).find(n => n.id === noteId);
+    if (!note) return;
+    setEditingNoteId(noteId);
+    setEditText(note.text);
+  };
+
+  const saveEditNote = () => {
+    const text = editText.trim();
+    if (!text || !dayData || !editingNoteId) return;
+    const updatedNotes = (dayData.studyNotes || []).map(n =>
+      n.id === editingNoteId
+        ? { ...n, text, previousText: n.text, editedAt: new Date().toISOString() }
+        : n
+    );
+    updateDayData({ ...dayData, studyNotes: updatedNotes });
+    setEditingNoteId(null);
+    setEditText('');
+  };
+
+  const cancelEditNote = () => {
+    setEditingNoteId(null);
+    setEditText('');
   };
 
   const getNotesForPeriod = (period) => {
@@ -2469,7 +2498,7 @@ function App() {
               <button
                 key={link.id}
                 className={`sidebar-link ${currentPage === link.id ? 'active' : ''}`}
-                onClick={() => { setCurrentPage(link.id); setSidebarOpen(false); }}
+                onClick={() => { setCurrentPage(link.id); setSidebarOpen(false); window.scrollTo(0, 0); }}
               >
                 <span className="sidebar-link-icon"><link.icon size={17} /></span>
                 <span className="sidebar-link-label">{link.label}</span>
@@ -2727,10 +2756,45 @@ function App() {
                           <div className="study-group-notes">
                             {notes.map(note => (
                               <div key={note.id} className={`study-note-card${note.locked ? ' locked' : ''}`}>
-                                <div className="study-note-text">{note.text}</div>
+                                {editingNoteId === note.id ? (
+                                  <div className="study-note-edit-area">
+                                    <textarea
+                                      className="note-composer-input note-edit-input"
+                                      value={editText}
+                                      onChange={e => setEditText(e.target.value)}
+                                      rows={3}
+                                      style={{ resize: 'none' }}
+                                      dir="auto"
+                                    />
+                                    <div className="study-note-edit-actions">
+                                      <button type="button" className="btn btn-sm" onClick={cancelEditNote}>{t('journal.cancel')}</button>
+                                      <button type="button" className="btn btn-sm btn-primary" onClick={saveEditNote} disabled={!editText.trim()}>{t('journal.save')}</button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <>
+                                    <div className="study-note-text">{note.text}</div>
+                                    {note.editedAt && (
+                                      <div className="study-note-edited-info">
+                                        {note.previousText && (
+                                          <div className="study-note-previous">{note.previousText}</div>
+                                        )}
+                                        <span className="study-note-edited-badge">{t('journal.edited')}</span>
+                                      </div>
+                                    )}
+                                  </>
+                                )}
                                 <div className="study-note-footer">
-                                  <span className="study-note-time">{note.time}</span>
+                                  <span className="study-note-time">
+                                    {note.time}
+                                    {note.editedAt && (
+                                      <span className="study-note-edited-time"> · {t('journal.edited')}</span>
+                                    )}
+                                  </span>
                                   <div className="study-note-actions">
+                                    <button type="button" className="btn-task-action" onClick={() => startEditNote(note.id)} aria-label={t('journal.edit')}>
+                                      <Edit2 size={12} />
+                                    </button>
                                     <button type="button" className={`btn-task-action${note.locked ? ' locked' : ''}`} onClick={() => toggleLockNote(note.id)} aria-label={note.locked ? 'Unlock note' : 'Lock note'}>
                                       {note.locked ? <Lock size={12} /> : <Unlock size={12} />}
                                     </button>
@@ -3227,11 +3291,11 @@ function App() {
                   </div>
                   <div className="settings-card-body">
                     <div className="time-format-control">
-                      <button className={`time-format-btn ${dayStartMode === DAY_START_MODES.MAGHRIB ? 'active' : ''}`} onClick={() => setDayStartModeState(DAY_START_MODES.MAGHRIB)}>
+                      <button className={`time-format-btn ${dayStartMode === DAY_START_MODES.MAGHRIB ? 'active' : ''}`} onClick={() => { setDayStartModeState(DAY_START_MODES.MAGHRIB); setDayStartMode(DAY_START_MODES.MAGHRIB); }}>
                         <span className="time-format-sample">{t('prayer.maghrib')}</span>
                         <span className="time-format-label">{t('settings.maghribStart')}</span>
                       </button>
-                      <button className={`time-format-btn ${dayStartMode === DAY_START_MODES.MIDNIGHT ? 'active' : ''}`} onClick={() => setDayStartModeState(DAY_START_MODES.MIDNIGHT)}>
+                      <button className={`time-format-btn ${dayStartMode === DAY_START_MODES.MIDNIGHT ? 'active' : ''}`} onClick={() => { setDayStartModeState(DAY_START_MODES.MIDNIGHT); setDayStartMode(DAY_START_MODES.MIDNIGHT); }}>
                         <span className="time-format-sample">12:00 {t('time.am')}</span>
                         <span className="time-format-label">{t('settings.midnight')}</span>
                       </button>
@@ -3250,11 +3314,11 @@ function App() {
                   </div>
                   <div className="settings-card-body">
                     <div className="time-format-control">
-                      <button className={`time-format-btn ${!use12h ? 'active' : ''}`} onClick={() => setUse12hState(false)}>
+                      <button className={`time-format-btn ${!use12h ? 'active' : ''}`} onClick={() => { setUse12hState(false); setUse12h(false); }}>
                         <span className="time-format-sample">23:59</span>
                         <span className="time-format-label">{t('settings.format24h')}</span>
                       </button>
-                      <button className={`time-format-btn ${use12h ? 'active' : ''}`} onClick={() => setUse12hState(true)}>
+                      <button className={`time-format-btn ${use12h ? 'active' : ''}`} onClick={() => { setUse12hState(true); setUse12h(true); }}>
                         <span className="time-format-sample">11:59 {t('time.pm')}</span>
                         <span className="time-format-label">{t('settings.format12h')}</span>
                       </button>
