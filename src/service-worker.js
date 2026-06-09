@@ -5,6 +5,8 @@ self.addEventListener('push', (event) => {
     body: data.body || 'New notification',
     icon: '/icons/icon-192.png',
     badge: '/icons/icon-192.png',
+    tag: data.tag || 'default', // Essential for updating existing notifications
+    renotify: true,             // Ensures the user sees the update
     data: {
       url: data.url || '/'
     }

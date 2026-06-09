@@ -729,29 +729,30 @@ function App() {
           notifiedTasks.current.add(startKey);
           
           let minutesRemaining = Number(task.duration) || 15;
+          const tag = `task-timer-${task.id}`;
+          
+          const showTimer = (remaining) => {
+            triggerNotification(`${task.name}: ${remaining} ${t('duration.mins').replace('%', '')}`, { 
+              body: t('notif.taskInProg'), 
+              tag: tag, 
+              renotify: true,
+              requireInteraction: false // Set to false to allow updating without stealing focus
+            });
+          };
+
+          showTimer(minutesRemaining);
+
           const timerInterval = setInterval(() => {
             minutesRemaining -= 1;
             if (minutesRemaining <= 0) {
               clearInterval(timerInterval);
               return;
             }
-            triggerNotification(`${task.name}: ${minutesRemaining} mins remaining`, { 
-              body: 'Task in progress', 
-              tag: `task-timer-${task.id}`, 
-              renotify: true,
-              requireInteraction: true 
-            });
+            showTimer(minutesRemaining);
           }, 60000);
-
-          triggerNotification(`${task.name}: ${minutesRemaining} mins remaining`, { 
-            body: 'Task in progress', 
-            tag: `task-timer-${task.id}`, 
-            renotify: true,
-            requireInteraction: true 
-          });
         }
       });
-    }, [currentTime, dayData]);
+    }, [currentTime, dayData, t]);
 
    // ---- End-of-day reminder (30 min before day ends) ----
    useEffect(() => {
