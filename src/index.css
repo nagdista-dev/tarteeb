@@ -3169,6 +3169,20 @@ select.form-select option {
   transform: translateY(-50%);
   z-index: 10;
   box-shadow: 0 2px 6px rgba(17, 94, 59, 0.3), 0 0 0 2px var(--bg-primary);
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.2s;
+}
+.timeline-prayer-marker:hover {
+  transform: translateY(-50%) scale(1.2);
+}
+.timeline-prayer-marker.status-completed {
+  background-color: var(--color-emerald);
+}
+.timeline-prayer-marker.status-pending {
+  background-color: var(--text-tertiary);
+}
+.timeline-prayer-marker.status-not_completed {
+  background-color: var(--color-danger);
 }
 
 
@@ -3222,11 +3236,19 @@ select.form-select option {
 
 .timeline-task-card.task-fixed {
   background: color-mix(in srgb, var(--color-emerald) 6%, var(--bg-secondary));
-  cursor: default;
 }
 
 .timeline-task-card.task-fixed:hover {
   background: color-mix(in srgb, var(--color-emerald) 12%, var(--bg-secondary));
+}
+
+.timeline-task-card.task-adhkar {
+  background: color-mix(in srgb, var(--color-gold) 8%, var(--bg-secondary));
+  border-left: 3px solid var(--color-gold);
+}
+
+.timeline-task-card.task-adhkar:hover {
+  background: color-mix(in srgb, var(--color-gold) 14%, var(--bg-secondary));
 }
 
 .timeline-task-card.task-recurring {
