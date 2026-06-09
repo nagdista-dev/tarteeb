@@ -711,29 +711,47 @@ function App() {
     }
   }, [showWelcome]);
 
-  // ---- Task Notifications ----
-  useEffect(() => {
-    if (typeof Notification === 'undefined') return;
-    if (Notification.permission !== 'granted') return;
-    if (!dayData?.tasks || !dayData?.prayerTimes) return;
-    if (dayData.date !== activeDate) return;
-    const prayers = dayData.prayerTimes;
-    const nowMinutes = getCurrentPlannerMinutes(currentTime, activeDate);
-    dayData.tasks.forEach(task => {
-      const startMinutes = getTaskPlannerMinutes(task, prayers);
-      const endMinutes = startMinutes + (Number(task.duration) || 15);
-      const startKey = `${task.id}_start`;
-      const endKey = `${task.id}_end`;
-      if (!task.completed && Math.abs(nowMinutes - startMinutes) <= 1.5 && !notifiedTasks.current.has(startKey)) {
-        notifiedTasks.current.add(startKey);
-        triggerNotification(t('notif.taskStart'), { body: task.name, tag: `task-start-${task.id}` });
-      }
-      if (!task.completed && Math.abs(nowMinutes - endMinutes) <= 1.5 && !notifiedTasks.current.has(endKey)) {
-        notifiedTasks.current.add(endKey);
-        triggerNotification(t('notif.taskEnd'), { body: task.name, tag: `task-end-${task.id}` });
-      }
-    });
-  }, [currentTime, dayData]);
+    // Task Notifications (with countdown)
+    useEffect(() => {
+      if (typeof Notification === 'undefined') return;
+      if (Notification.permission !== 'granted') return;
+      if (!dayData?.tasks || !dayData?.prayerTimes) return;
+      if (dayData.date !== activeDate) return;
+      const prayers = dayData.prayerTimes;
+      const nowMinutes = getCurrentPlannerMinutes(currentTime, activeDate);
+      dayData.tasks.forEach(task => {
+        const startMinutes = getTaskPlannerMinutes(task, prayers);
+        const endMinutes = startMinutes + (Number(task.duration) || 15);
+        const startKey = `${task.id}_start`;
+        
+        // Task start reminder
+        if (!task.completed && Math.abs(nowMinutes - startMinutes) <= 1.5 && !notifiedTasks.current.has(startKey)) {
+          notifiedTasks.current.add(startKey);
+          
+          let minutesRemaining = Number(task.duration) || 15;
+          const timerInterval = setInterval(() => {
+            minutesRemaining -= 1;
+            if (minutesRemaining <= 0) {
+              clearInterval(timerInterval);
+              return;
+            }
+            triggerNotification(`${task.name}: ${minutesRemaining} mins remaining`, { 
+              body: 'Task in progress', 
+              tag: `task-timer-${task.id}`, 
+              renotify: true,
+              requireInteraction: true 
+            });
+          }, 60000);
+
+          triggerNotification(`${task.name}: ${minutesRemaining} mins remaining`, { 
+            body: 'Task in progress', 
+            tag: `task-timer-${task.id}`, 
+            renotify: true,
+            requireInteraction: true 
+          });
+        }
+      });
+    }, [currentTime, dayData]);
 
    // ---- End-of-day reminder (30 min before day ends) ----
    useEffect(() => {
