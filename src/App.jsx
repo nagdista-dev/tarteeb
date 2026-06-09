@@ -1902,7 +1902,7 @@ function App() {
           <div className="contact-form">
             <textarea
               className="contact-textarea"
-              placeholder={t('contact.placeholder')}
+              placeholder={''}
               value={contactMessage}
               onChange={e => setContactMessage(e.target.value)}
               rows={5}
