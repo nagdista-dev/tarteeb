@@ -1882,6 +1882,34 @@ select.form-select option {
   font-weight: 500;
 }
 
+.notif-status-modal-icon {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  margin: 0 auto 4px;
+}
+
+.notif-status-modal-icon.enabled {
+  background: linear-gradient(135deg, #d3eade, rgba(17, 94, 59, 0.08));
+  color: var(--color-emerald);
+}
+
+.notif-status-modal-icon.disabled {
+  background: linear-gradient(135deg, #fee2e2, rgba(185, 28, 28, 0.08));
+  color: var(--color-danger);
+}
+
+.notif-status-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  text-align: center;
+  line-height: 1.3;
+}
+
 .dialog-actions {
   display: flex;
   justify-content: flex-end;

@@ -357,6 +357,7 @@ function App() {
   const [showWelcome, setShowWelcome] = useState(() => !localStorage.getItem('tarteeb_welcome_dismissed'));
   const [prayerNotif, setPrayerNotif] = useState(null);
   const [showNotifPrompt, setShowNotifPrompt] = useState(false);
+  const [showNotifStatus, setShowNotifStatus] = useState(false);
   const [contactMessage, setContactMessage] = useState('');
   const [contactSending, setContactSending] = useState(false);
   const lastActivePeriod = useRef(null);
@@ -3600,16 +3601,9 @@ function App() {
                     </div>
                   </div>
                   <div className="settings-card-body">
-                    {typeof Notification !== 'undefined' && Notification.permission === 'granted' ? (
-                      <div className="notif-status">
-                        <span className="notif-status-dot enabled" />
-                        <span>{t('settings.notifEnabled')}</span>
-                      </div>
-                    ) : (
-                      <button className="btn btn-primary" onClick={enableNotifications}>
-                        <Bell size={16} /> {t('settings.notifEnable')}
-                      </button>
-                    )}
+                    <button className="btn" onClick={() => setShowNotifStatus(true)}>
+                      <Bell size={16} /> {t('settings.notifCheckStatus')}
+                    </button>
                   </div>
                 </div>
 
@@ -3942,6 +3936,46 @@ function App() {
                 {t('notif.enable')}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Notification Status Modal */}
+      {showNotifStatus && (
+        <div className="dialog-overlay" onClick={() => setShowNotifStatus(false)}>
+          <div className="dialog-content" onClick={e => e.stopPropagation()}>
+            {typeof Notification !== 'undefined' && Notification.permission === 'granted' ? (
+              <>
+                <div className="notif-status-modal-icon enabled">
+                  <Bell size={28} />
+                </div>
+                <h3 className="notif-status-title">{t('settings.notifEnabledTitle')}</h3>
+                <p className="dialog-message">{t('settings.notifEnabledDesc')}</p>
+              </>
+            ) : (
+              <>
+                <div className="notif-status-modal-icon disabled">
+                  <Bell size={28} />
+                </div>
+                <h3 className="notif-status-title">{t('settings.notifDisabledTitle')}</h3>
+                <p className="dialog-message">{t('settings.notifDisabledDesc')}</p>
+                <div className="dialog-actions" style={{ marginTop: 16 }}>
+                  <button className="btn" onClick={() => setShowNotifStatus(false)}>
+                    {t('dialog.cancel')}
+                  </button>
+                  <button className="btn btn-primary" onClick={() => { enableNotifications(); setShowNotifStatus(false); }}>
+                    <Bell size={16} /> {t('settings.notifEnable')}
+                  </button>
+                </div>
+              </>
+            )}
+            {typeof Notification !== 'undefined' && Notification.permission === 'granted' && (
+              <div className="dialog-actions" style={{ marginTop: 16 }}>
+                <button className="btn btn-primary" onClick={() => setShowNotifStatus(false)}>
+                  {t('dialog.ok')}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
