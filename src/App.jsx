@@ -773,19 +773,20 @@ function App() {
               clearInterval(timerInterval);
               return;
             }
+            // Use the same title/options structure for consistent service worker behavior
             triggerNotification(`${m.label}: ${countdown} mins remaining`, { 
-              body: t('notif.prayerCountdown'), 
+              body: 'Prayer time countdown', 
               tag: startKey, 
               renotify: true,
-              requireInteraction: true // Keep it persistent
+              requireInteraction: true 
             });
-          }, 60000); // Update every minute
+          }, 60000); 
 
           triggerNotification(`${m.label}: 15 mins remaining`, { 
-            body: t('notif.prayerCountdown'), 
+            body: 'Prayer time countdown', 
             tag: startKey, 
             renotify: true,
-            requireInteraction: true // Keep it persistent
+            requireInteraction: true 
           });
           
           if (typeof navigator.vibrate === 'function') navigator.vibrate([200, 100, 200]);
