@@ -4168,6 +4168,10 @@ select.form-select option {
   font-size: 0.9rem;
 }
 
+[dir="rtl"] .contact-textarea {
+  text-align: right;
+}
+
 .contact-send-btn {
   align-self: center;
   display: inline-flex;

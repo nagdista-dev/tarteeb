@@ -1914,7 +1914,7 @@ function App() {
               value={contactMessage}
               onChange={e => setContactMessage(e.target.value)}
               rows={5}
-              dir="auto"
+              dir={getLanguage() === 'ar' ? 'rtl' : 'ltr'}
             />
             <button
               className="btn btn-primary contact-send-btn"
