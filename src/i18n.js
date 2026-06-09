@@ -117,6 +117,11 @@ const en = {
   /* Notifications */
   'notif.taskStart': 'Task starting now',
   'notif.taskEnd': 'Task ending now',
+  'notif.promptTitle': 'Enable Notifications',
+  'notif.promptDesc': 'Get notified when tasks start and end, even when the app is in the background.',
+  'notif.enable': 'Enable',
+  'notif.later': 'Later',
+  'notif.goToSettings': 'Settings',
 
   /* Previous day */
   'prevDay.title': 'Previous Day',
@@ -210,6 +215,10 @@ const en = {
   'settings.dataTypes': 'Data included',
   'settings.prayers': 'Prayers',
   'settings.tasks': 'Tasks',
+  'settings.notifTitle': 'Notifications',
+  'settings.notifDesc': 'Receive alerts for task start and end times',
+  'settings.notifEnable': 'Enable Notifications',
+  'settings.notifEnabled': 'Notifications are enabled',
   'settings.clearCacheTitle': 'Clear Cache',
   'settings.clearCacheDesc': 'Reset the app to its first-run state',
   'settings.clearCacheConfirm': 'This will delete all your data and reset the app. Are you sure?',
@@ -585,6 +594,11 @@ const ar = {
   /* Notifications */
   'notif.taskStart': 'المهمة تبدأ الآن',
   'notif.taskEnd': 'المهمة تنتهي الآن',
+  'notif.promptTitle': 'تفعيل الإشعارات',
+  'notif.promptDesc': 'احصل على إشعارات عند بدء وانتهاء المهام، حتى عندما يكون التطبيق في الخلفية.',
+  'notif.enable': 'تفعيل',
+  'notif.later': 'لاحقاً',
+  'notif.goToSettings': 'الإعدادات',
 
   /* Previous day */
   'prevDay.title': 'اليوم السابق',
@@ -678,6 +692,10 @@ const ar = {
   'settings.dataTypes': 'البيانات المضمنة',
   'settings.prayers': 'الصلاة',
   'settings.tasks': 'المهام',
+  'settings.notifTitle': 'الإشعارات',
+  'settings.notifDesc': 'تلقي تنبيهات عند بدء وانتهاء المهام',
+  'settings.notifEnable': 'تفعيل الإشعارات',
+  'settings.notifEnabled': 'الإشعارات مفعلة',
   'settings.clearCacheTitle': 'مسح الذاكرة المؤقتة',
   'settings.clearCacheDesc': 'إعادة التطبيق إلى حالة التشغيل لأول مرة',
   'settings.clearCacheConfirm': 'سيؤدي هذا إلى حذف جميع بياناتك وإعادة تعيين التطبيق. هل أنت متأكد؟',

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import {
-  Check, Plus, Minus, Edit2, Trash2, Settings, Moon, Sun,
+  Bell, Check, Plus, Minus, Edit2, Trash2, Settings, Moon, Sun,
   BookOpen, Clock, Sparkles, MapPin, X, AlertCircle,
   ChevronUp, ChevronDown, RefreshCw, Download, HelpCircle, List, Type, Menu, Target,
   Smartphone, Lock, Unlock, Upload, Search, Zap, Activity,
@@ -356,6 +356,7 @@ function App() {
   const [apiError, setApiError] = useState(null);
   const [showWelcome, setShowWelcome] = useState(() => !localStorage.getItem('tarteeb_welcome_dismissed'));
   const [prayerNotif, setPrayerNotif] = useState(null);
+  const [showNotifPrompt, setShowNotifPrompt] = useState(false);
   const [contactMessage, setContactMessage] = useState('');
   const [contactSending, setContactSending] = useState(false);
   const lastActivePeriod = useRef(null);
@@ -578,6 +579,18 @@ function App() {
     setShowWelcome(false);
   };
 
+  const enableNotifications = async () => {
+    if (typeof Notification === 'undefined') return;
+    const result = await Notification.requestPermission();
+    localStorage.setItem('tarteeb_notif_permission', result);
+    setShowNotifPrompt(false);
+  };
+
+  const dismissNotifPrompt = () => {
+    localStorage.setItem('tarteeb_notif_prompt_dismissed', 'true');
+    setShowNotifPrompt(false);
+  };
+
   const dismissPrayerNotif = () => {
     lastActivePeriod.current = prayerNotif;
     setPrayerNotif(null);
@@ -635,7 +648,7 @@ function App() {
     return () => clearInterval(interval);
   }, [activeDate]);
 
-  // ---- Notification Permission ----
+  // ---- Notification Permission & Prompt ----
   useEffect(() => {
     if (typeof Notification === 'undefined') return;
     const stored = localStorage.getItem('tarteeb_notif_permission');
@@ -645,10 +658,11 @@ function App() {
       localStorage.setItem('tarteeb_notif_permission', perm);
       return;
     }
-    Notification.requestPermission().then(result => {
-      localStorage.setItem('tarteeb_notif_permission', result);
-    });
-  }, []);
+    const dismissed = localStorage.getItem('tarteeb_notif_prompt_dismissed');
+    if (!dismissed && !showWelcome) {
+      setShowNotifPrompt(true);
+    }
+  }, [showWelcome]);
 
   // ---- Task Notifications ----
   useEffect(() => {
@@ -685,12 +699,13 @@ function App() {
   useEffect(() => {
     function handleKeyDown(e) {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
-      if (taskModal.open || habitModal.open || dialog || showWelcome || prayerNotif) {
+      if (taskModal.open || habitModal.open || dialog || showWelcome || showNotifPrompt || prayerNotif) {
         if (e.key === 'Escape') {
           if (taskModal.open) setTaskModal(prev => ({ ...prev, open: false }));
           else if (habitModal.open) setHabitModal(prev => ({ ...prev, open: false }));
           else if (dialog && dialog.type === 'alert') closeDialog();
           else if (showWelcome) dismissWelcome();
+          else if (showNotifPrompt) dismissNotifPrompt();
           else if (prayerNotif) dismissPrayerNotif();
         }
         return;
@@ -3575,6 +3590,29 @@ function App() {
                   </div>
                 </div>
 
+                {/* Notifications */}
+                <div className="settings-card">
+                  <div className="settings-card-header">
+                    <span className="settings-card-icon-wrap"><Bell size={20} /></span>
+                    <div>
+                      <h3 className="settings-card-title">{t('settings.notifTitle')}</h3>
+                      <p className="settings-card-desc">{t('settings.notifDesc')}</p>
+                    </div>
+                  </div>
+                  <div className="settings-card-body">
+                    {typeof Notification !== 'undefined' && Notification.permission === 'granted' ? (
+                      <div className="notif-status">
+                        <span className="notif-status-dot enabled" />
+                        <span>{t('settings.notifEnabled')}</span>
+                      </div>
+                    ) : (
+                      <button className="btn btn-primary" onClick={enableNotifications}>
+                        <Bell size={16} /> {t('settings.notifEnable')}
+                      </button>
+                    )}
+                  </div>
+                </div>
+
                 {/* Clear Cache */}
                 <div className="settings-card">
                   <div className="settings-card-header">
@@ -3878,6 +3916,32 @@ function App() {
             <button className="btn btn-primary welcome-modal-ok" onClick={dismissWelcome}>
               {t('welcome.ok')}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Notification Prompt */}
+      {showNotifPrompt && !showWelcome && (
+        <div className="dialog-overlay">
+          <div className="welcome-modal" onClick={e => e.stopPropagation()}>
+            <div className="welcome-modal-icon">
+              <Bell size={28} />
+            </div>
+            <h2 className="welcome-modal-title">{t('notif.promptTitle')}</h2>
+            <p className="welcome-modal-desc">{t('notif.promptDesc')}</p>
+            <div className="welcome-modal-links" style={{ marginTop: 12 }}>
+              <button className="welcome-modal-link" onClick={() => { setCurrentPage('settings'); dismissNotifPrompt(); }}>
+                <Settings size={16} /> {t('notif.goToSettings')}
+              </button>
+            </div>
+            <div className="welcome-modal-actions">
+              <button className="btn" onClick={dismissNotifPrompt} style={{ flex: 1 }}>
+                {t('notif.later')}
+              </button>
+              <button className="btn btn-primary" onClick={enableNotifications} style={{ flex: 1 }}>
+                {t('notif.enable')}
+              </button>
+            </div>
           </div>
         </div>
       )}

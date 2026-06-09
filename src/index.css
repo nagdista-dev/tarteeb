@@ -1970,6 +1970,33 @@ select.form-select option {
   background: var(--color-emerald-light);
 }
 
+.welcome-modal-actions {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.notif-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.notif-status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--text-tertiary);
+}
+
+.notif-status-dot.enabled {
+  background: #16a34a;
+}
+
 .welcome-modal-ok {
   width: 100%;
   padding: 12px 24px;
