@@ -3532,6 +3532,30 @@ function App() {
                     </div>
                   </div>
                 </div>
+
+                {/* Clear Cache */}
+                <div className="settings-card">
+                  <div className="settings-card-header">
+                    <span className="settings-card-icon-wrap"><RefreshCw size={20} /></span>
+                    <div>
+                      <h3 className="settings-card-title">{t('settings.clearCacheTitle')}</h3>
+                      <p className="settings-card-desc">{t('settings.clearCacheDesc')}</p>
+                    </div>
+                  </div>
+                  <div className="settings-card-body">
+                    <button className="btn btn-danger" onClick={async () => {
+                      const confirmed = await showConfirm(t('settings.clearCacheConfirm'));
+                      if (!confirmed) return;
+                      Object.keys(localStorage)
+                        .filter(k => k.startsWith('tarteeb_'))
+                        .forEach(k => localStorage.removeItem(k));
+                      localStorage.removeItem('tarteeb_welcome_dismissed');
+                      setShowWelcome(true);
+                    }}>
+                      <Trash2 size={16} /> {t('settings.clearCache')}
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
 

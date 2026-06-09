@@ -206,6 +206,10 @@ const en = {
   'settings.dataTypes': 'Data included',
   'settings.prayers': 'Prayers',
   'settings.tasks': 'Tasks',
+  'settings.clearCacheTitle': 'Clear Cache',
+  'settings.clearCacheDesc': 'Reset the app to its first-run state',
+  'settings.clearCacheConfirm': 'This will delete all your data and reset the app. Are you sure?',
+  'settings.clearCache': 'Clear All Data',
 
   /* Dialog */
   'dialog.cancel': 'Cancel',
@@ -666,6 +670,10 @@ const ar = {
   'settings.dataTypes': 'البيانات المضمنة',
   'settings.prayers': 'الصلاة',
   'settings.tasks': 'المهام',
+  'settings.clearCacheTitle': 'مسح الذاكرة المؤقتة',
+  'settings.clearCacheDesc': 'إعادة التطبيق إلى حالة التشغيل لأول مرة',
+  'settings.clearCacheConfirm': 'سيؤدي هذا إلى حذف جميع بياناتك وإعادة تعيين التطبيق. هل أنت متأكد؟',
+  'settings.clearCache': 'مسح جميع البيانات',
 
   /* Dialog */
   'dialog.cancel': 'إلغاء',
