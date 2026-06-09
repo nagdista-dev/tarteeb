@@ -114,6 +114,10 @@ const en = {
   'toast.undo': 'Undo',
   'toast.dismiss': 'Dismiss',
 
+  /* Notifications */
+  'notif.taskStart': 'Task starting now',
+  'notif.taskEnd': 'Task ending now',
+
   /* Previous day */
   'prevDay.title': 'Previous Day',
 
@@ -577,6 +581,10 @@ const ar = {
   'toast.taskUncompleted': 'تم إلغاء إكمال المهمة',
   'toast.undo': 'تراجع',
   'toast.dismiss': 'إغلاق',
+
+  /* Notifications */
+  'notif.taskStart': 'المهمة تبدأ الآن',
+  'notif.taskEnd': 'المهمة تنتهي الآن',
 
   /* Previous day */
   'prevDay.title': 'اليوم السابق',

@@ -15,7 +15,7 @@ import {
   calculateTimelineStatus, PERIODS_META, savePrayerCache, getPrayerCache,
   getPeriodStartMinutes, getPeriodEndMinutes, formatDurationHours,
   getPlannerPeriodOrder, getDefaultTimeForPeriod, getCurrentPlannerMinutes,
-   getTaskDisplayTime, sortTasksForPlannerDay, scheduledTimeToPlannerMinutes,
+   getTaskDisplayTime, getTaskPlannerMinutes, sortTasksForPlannerDay, scheduledTimeToPlannerMinutes,
   formatMinutesToTime, setUse12h, getUse12h, parseTimeToMinutes,
   setDayStartMode, getDayStartMode, DAY_START_MODES,
   getPlannerDayStartMinutes, getPlannerDayEndMinutes, getPrayerMarkersForPlannerDay
@@ -635,6 +635,47 @@ function App() {
     return () => clearInterval(interval);
   }, [activeDate]);
 
+  // ---- Notification Permission ----
+  useEffect(() => {
+    if (typeof Notification === 'undefined') return;
+    const stored = localStorage.getItem('tarteeb_notif_permission');
+    if (stored === 'granted' || stored === 'denied') return;
+    const perm = Notification.permission;
+    if (perm === 'granted' || perm === 'denied') {
+      localStorage.setItem('tarteeb_notif_permission', perm);
+      return;
+    }
+    Notification.requestPermission().then(result => {
+      localStorage.setItem('tarteeb_notif_permission', result);
+    });
+  }, []);
+
+  // ---- Task Notifications ----
+  useEffect(() => {
+    if (typeof Notification === 'undefined') return;
+    if (Notification.permission !== 'granted') return;
+    if (!dayData?.tasks || !dayData?.prayerTimes) return;
+    const dateStr = formatDateLocal(currentTime);
+    if (dateStr !== dayData.date) return;
+    const prayers = dayData.prayerTimes;
+    dayData.tasks.forEach(task => {
+      if (task.completed) return;
+      const startMinutes = getTaskPlannerMinutes(task, prayers);
+      const endMinutes = startMinutes + (Number(task.duration) || 15);
+      const nowMinutes = currentTime.getHours() * 60 + currentTime.getMinutes();
+      const startKey = `${task.id}_start`;
+      const endKey = `${task.id}_end`;
+      if (Math.abs(nowMinutes - startMinutes) <= 1 && !notifiedTasks.current.has(startKey)) {
+        notifiedTasks.current.add(startKey);
+        new Notification(t('notif.taskStart'), { body: task.name });
+      }
+      if (Math.abs(nowMinutes - endMinutes) <= 1 && !notifiedTasks.current.has(endKey)) {
+        notifiedTasks.current.add(endKey);
+        new Notification(t('notif.taskEnd'), { body: task.name });
+      }
+    });
+  }, [currentTime, dayData]);
+
   // ---- Scroll to top on page change ----
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -779,6 +820,7 @@ function App() {
 
   // ---- Auto-scroll to current time line (once) ----
   const hasScrolledRef = useRef(false);
+  const notifiedTasks = useRef(new Set());
   useEffect(() => {
     if (currentPage !== 'home' || !dayData || hasScrolledRef.current) return;
     hasScrolledRef.current = true;
