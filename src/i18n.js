@@ -113,6 +113,7 @@ const en = {
   'toast.taskUncompleted': 'Task uncompleted',
   'toast.undo': 'Undo',
   'toast.dismiss': 'Dismiss',
+  'notif.taskInProg': 'Task in progress',
 
   /* Notifications */
   'notif.taskStart': 'Task starting now',
@@ -600,6 +601,7 @@ const ar = {
   'toast.taskUncompleted': 'تم إلغاء إكمال المهمة',
   'toast.undo': 'تراجع',
   'toast.dismiss': 'إغلاق',
+  'notif.taskInProg': 'المهمة قيد التنفيذ',
 
   /* Notifications */
   'notif.taskStart': 'المهمة تبدأ الآن',

@@ -23,6 +23,7 @@ import {
 
 import { t, setLanguage, getLanguage, translateTaskName } from './i18n';
 import countries from './data/countries';
+import bellSound from './assets/bell.mp3';
 
 const calculateStats = (tasks) => {
   const total = tasks.length;
@@ -605,27 +606,35 @@ function App() {
   const triggerNotification = useCallback(async (title, options = {}) => {
     if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
 
+    const isCompletelySilent = options.silent === true;
+
     const notifOptions = {
       icon: NOTIF_ICON,
       badge: NOTIF_ICON,
-      vibrate: [200, 100, 200],
+      vibrate: isCompletelySilent ? [] : [200, 100, 200],
+      silent: true, // Suppress system sound to use custom bell sound
       ...options
     };
 
-    // Try service worker registration first (more reliable on mobile PWAs)
-    if ('serviceWorker' in navigator) {
+    if (!isCompletelySilent) {
       try {
-        const registration = await navigator.serviceWorker.ready;
-        if (registration && registration.showNotification) {
-          await registration.showNotification(title, notifOptions);
-          return;
-        }
+        const audio = new Audio(bellSound);
+        audio.play().catch(e => console.log('Audio playback failed or blocked:', e));
       } catch (e) {
-        console.error('ServiceWorker notification failed:', e);
+        console.error('Audio initialization failed:', e);
       }
     }
 
-    // Fallback to standard Notification (mostly for desktop)
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      if (registration && registration.showNotification) {
+        await registration.showNotification(title, notifOptions);
+        return;
+      }
+    } catch (e) {
+      console.error('ServiceWorker notification failed:', e);
+    }
+
     try {
       new Notification(title, notifOptions);
     } catch (e) {
@@ -731,14 +740,15 @@ function App() {
           let minutesRemaining = Number(task.duration) || 15;
           const tag = `task-timer-${task.id}`;
           
-          const showTimer = (remaining) => {
-            triggerNotification(`${task.name}: ${remaining} ${t('duration.mins').replace('%', '')}`, { 
-              body: t('notif.taskInProg'), 
-              tag: tag, 
-              renotify: true,
-              requireInteraction: false // Set to false to allow updating without stealing focus
-            });
-          };
+            const showTimer = (remaining) => {
+              triggerNotification(`${task.name}: ${remaining} ${t('duration.mins').replace('%', '')}`, { 
+                body: t('notif.taskInProg'), 
+                tag: tag, 
+                renotify: false,
+                silent: true,
+                requireInteraction: false // Set to false to allow updating without stealing focus
+              });
+            };
 
           showTimer(minutesRemaining);
 
@@ -809,16 +819,18 @@ function App() {
             triggerNotification(`${m.label}: ${countdown} mins remaining`, { 
               body: 'Prayer time countdown', 
               tag: startKey, 
-              renotify: true,
-              requireInteraction: true 
+              renotify: false,
+              silent: true,
+              requireInteraction: false 
             });
           }, 60000); 
 
           triggerNotification(`${m.label}: 15 mins remaining`, { 
             body: 'Prayer time countdown', 
             tag: startKey, 
-            renotify: true,
-            requireInteraction: true 
+            renotify: false,
+            silent: true,
+            requireInteraction: false 
           });
           
           if (typeof navigator.vibrate === 'function') navigator.vibrate([200, 100, 200]);
@@ -971,8 +983,7 @@ function App() {
           const periodKey = status.activePeriod;
           const periodPrayer = { morning: 'Fajr', afternoon: 'Dhuhr', late_afternoon: 'Asr', evening: 'Maghrib', night: 'Isha' }[periodKey];
           if (periodPrayer) {
-            new Notification(t('notif.prayerStart'), { body: periodPrayer, icon: NOTIF_ICON, tag: `${activeDate}_period-${periodKey}` });
-            if (typeof navigator.vibrate === 'function') navigator.vibrate([200, 100, 200]);
+            triggerNotification(t('notif.prayerStart'), { body: periodPrayer, tag: `${activeDate}_period-${periodKey}` });
           }
         }
       }
@@ -980,7 +991,7 @@ function App() {
         lastActivePeriod.current = status.activePeriod;
       }
     }
-  }, [currentTime, dayData, activeDate, prayerNotif]);
+  }, [currentTime, dayData, activeDate, prayerNotif, triggerNotification]);
 
   // ---- Auto-scroll to current time line (once) ----
   const hasScrolledRef = useRef(false);
@@ -2814,43 +2825,43 @@ function App() {
                           const taskEnd = taskStart + (Number(task.duration) || 15);
                           const currentStatus = task.status || (task.completed ? 'completed' : 'pending');
                           
-                          return (
-                            <div key={task.id} className={`t-card status-${currentStatus}`}>
-                              <span className={`t-dot ${currentStatus}`} />
-                              <div className="t-body">
-                                <div className="t-row">
-                                  <h4 className="t-title">{translateTaskName(task.name)}</h4>
-                                  <div className="t-actions">
-                                    <button
-                                      className={`t-btn ${currentStatus === 'pending' ? 'active' : ''}`}
-                                      onClick={() => setTaskStatus(task.id, 'pending')}
-                                      title={t('tasks.statusPending')}
-                                    >
-                                      <Clock size={12} />
-                                    </button>
-                                    <button
-                                      className={`t-btn ${currentStatus === 'completed' ? 'active' : ''}`}
-                                      onClick={() => setTaskStatus(task.id, 'completed')}
-                                      title={t('tasks.statusCompleted')}
-                                    >
-                                      <Check size={12} />
-                                    </button>
-                                    <button
-                                      className={`t-btn ${currentStatus === 'not_completed' ? 'active' : ''}`}
-                                      onClick={() => setTaskStatus(task.id, 'not_completed')}
-                                      title={t('tasks.statusNotCompleted')}
-                                    >
-                                      <X size={12} />
-                                    </button>
+                            return (
+                              <div key={task.id} className={`t-card status-${currentStatus}`} onClick={() => toggleTaskCompletion(task.id)}>
+                                <span className={`t-dot ${currentStatus}`} />
+                                <div className="t-body">
+                                  <div className="t-row">
+                                    <h4 className="t-title">{translateTaskName(task.name)}</h4>
+                                    <div className="t-actions">
+                                      <button
+                                        className={`t-btn ${currentStatus === 'pending' ? 'active' : ''}`}
+                                        onClick={(e) => { e.stopPropagation(); setTaskStatus(task.id, 'pending'); }}
+                                        title={t('tasks.statusPending')}
+                                      >
+                                        <Clock size={12} />
+                                      </button>
+                                      <button
+                                        className={`t-btn ${currentStatus === 'completed' ? 'active' : ''}`}
+                                        onClick={(e) => { e.stopPropagation(); setTaskStatus(task.id, 'completed'); }}
+                                        title={t('tasks.statusCompleted')}
+                                      >
+                                        <Check size={12} />
+                                      </button>
+                                      <button
+                                        className={`t-btn ${currentStatus === 'not_completed' ? 'active' : ''}`}
+                                        onClick={(e) => { e.stopPropagation(); setTaskStatus(task.id, 'not_completed'); }}
+                                        title={t('tasks.statusNotCompleted')}
+                                      >
+                                        <X size={12} />
+                                      </button>
+                                    </div>
                                   </div>
+                                  {task.details && (
+                                    <p className="t-desc">{task.details}</p>
+                                  )}
+                                  <span className="t-meta">{translateDuration(Number(task.duration) || 15)}</span>
                                 </div>
-                                {task.details && (
-                                  <p className="t-desc">{task.details}</p>
-                                )}
-                                <span className="t-meta">{translateDuration(Number(task.duration) || 15)}</span>
                               </div>
-                            </div>
-                          );
+                            );
                         });
                       })()}
                     </div>
