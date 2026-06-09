@@ -3562,7 +3562,7 @@ function App() {
           </main>
 
         {/* Floating Action Button */}
-        {dayData && (
+        {currentPage === 'home' && dayData && (
           <button className="fab-add-task" onClick={() => openTaskModal('add')} title={t('task.add')}>
             <Plus size={22} />
           </button>
