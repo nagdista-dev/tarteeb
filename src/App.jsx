@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Bell, Check, Plus, Minus, Edit2, Trash2, Settings, Moon, Sun,
   BookOpen, Clock, Sparkles, MapPin, X, AlertCircle,
@@ -589,6 +589,37 @@ function App() {
     setShowNotifPrompt(false);
   };
 
+  const triggerNotification = useCallback(async (title, options = {}) => {
+    if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+
+    const notifOptions = {
+      icon: NOTIF_ICON,
+      badge: NOTIF_ICON,
+      vibrate: [200, 100, 200],
+      ...options
+    };
+
+    // Try service worker registration first (more reliable on mobile PWAs)
+    if ('serviceWorker' in navigator) {
+      try {
+        const registration = await navigator.serviceWorker.ready;
+        if (registration && registration.showNotification) {
+          await registration.showNotification(title, notifOptions);
+          return;
+        }
+      } catch (e) {
+        console.error('ServiceWorker notification failed:', e);
+      }
+    }
+
+    // Fallback to standard Notification (mostly for desktop)
+    try {
+      new Notification(title, notifOptions);
+    } catch (e) {
+      console.error('Standard notification failed:', e);
+    }
+  }, []);
+
   const dismissNotifPrompt = () => {
     localStorage.setItem('tarteeb_notif_prompt_dismissed', 'true');
     setShowNotifPrompt(false);
@@ -682,67 +713,90 @@ function App() {
       const endKey = `${task.id}_end`;
       if (!task.completed && Math.abs(nowMinutes - startMinutes) <= 1.5 && !notifiedTasks.current.has(startKey)) {
         notifiedTasks.current.add(startKey);
-        new Notification(t('notif.taskStart'), { body: task.name, icon: NOTIF_ICON, tag: `task-start-${task.id}` });
+        triggerNotification(t('notif.taskStart'), { body: task.name, tag: `task-start-${task.id}` });
       }
       if (!task.completed && Math.abs(nowMinutes - endMinutes) <= 1.5 && !notifiedTasks.current.has(endKey)) {
         notifiedTasks.current.add(endKey);
-        new Notification(t('notif.taskEnd'), { body: task.name, icon: NOTIF_ICON, tag: `task-end-${task.id}` });
+        triggerNotification(t('notif.taskEnd'), { body: task.name, tag: `task-end-${task.id}` });
       }
     });
   }, [currentTime, dayData]);
 
-  // ---- End-of-day reminder (30 min before day ends) ----
-  useEffect(() => {
-    if (typeof Notification === 'undefined') return;
-    if (Notification.permission !== 'granted') return;
-    if (!activeDate) return;
-    const todayKey = activeDate;
-    if (remindedEndOfDay.current === todayKey) return;
-    const compiled = getCompiledPrayersForPlannerDate(activeDate);
-    const dayEnd = getPlannerDayEndMinutes(compiled);
-    const nowMin = getCurrentPlannerMinutes(currentTime, activeDate);
-    if (nowMin >= dayEnd - 30) {
-      remindedEndOfDay.current = todayKey;
-      new Notification(t('notif.dayEnding'), { body: t('notif.dayEndingBody'), icon: NOTIF_ICON, tag: `${activeDate}_day-ending`, renotify: true });
-    }
-  }, [currentTime, activeDate]);
+   // ---- End-of-day reminder (30 min before day ends) ----
+   useEffect(() => {
+     if (typeof Notification === 'undefined') return;
+     if (Notification.permission !== 'granted') return;
+     if (!activeDate) return;
+     const todayKey = activeDate;
+     if (remindedEndOfDay.current === todayKey) return;
+     const compiled = getCompiledPrayersForPlannerDate(activeDate);
+     const dayEnd = getPlannerDayEndMinutes(compiled);
+     const nowMin = getCurrentPlannerMinutes(currentTime, activeDate);
+     if (nowMin >= dayEnd - 30) {
+       remindedEndOfDay.current = todayKey;
+       triggerNotification(t('notif.dayEnding'), { body: t('notif.dayEndingBody'), tag: `${activeDate}_day-ending`, renotify: true });
+     }
+   }, [currentTime, activeDate, triggerNotification, t]);
 
-  // ---- New day notification ----
-  useEffect(() => {
-    if (typeof Notification === 'undefined') return;
-    if (Notification.permission !== 'granted') return;
-    if (prevActiveDateRef.current && prevActiveDateRef.current !== activeDate) {
-      new Notification(t('notif.newDay'), { body: t('notif.newDayBody'), icon: NOTIF_ICON, tag: `${activeDate}_new-day`, renotify: true });
-    }
-    prevActiveDateRef.current = activeDate;
-  }, [activeDate]);
+   // ---- New day notification ----
+   useEffect(() => {
+     if (typeof Notification === 'undefined') return;
+     if (Notification.permission !== 'granted') return;
+     if (prevActiveDateRef.current && prevActiveDateRef.current !== activeDate) {
+       triggerNotification(t('notif.newDay'), { body: t('notif.newDayBody'), tag: `${activeDate}_new-day`, renotify: true });
+     }
+     prevActiveDateRef.current = activeDate;
+   }, [activeDate, triggerNotification, t]);
 
-  // ---- Prayer start/end notifications ----
-  useEffect(() => {
-    if (typeof Notification === 'undefined') return;
-    if (Notification.permission !== 'granted') return;
-    if (!activeDate) return;
-    const compiled = getCompiledPrayersForPlannerDate(activeDate);
-    const markers = getPrayerMarkersForPlannerDay(compiled);
-    const nowMin = getCurrentPlannerMinutes(currentTime, activeDate);
-    for (let i = 0; i < markers.length; i++) {
-      const m = markers[i];
-      const startMins = m.minutes;
-      const endMins = i < markers.length - 1 ? markers[i + 1].minutes : startMins + (1440 / markers.length);
-      const startKey = `${activeDate}_prayer_${m.key}_start`;
-      const endKey = `${activeDate}_prayer_${m.key}_end`;
-      if (Math.abs(nowMin - startMins) <= 1 && !notifiedPrayers.current.has(startKey)) {
-        notifiedPrayers.current.add(startKey);
-        new Notification(t('notif.prayerStart'), { body: m.label, icon: NOTIF_ICON, tag: startKey });
-        if (typeof navigator.vibrate === 'function') navigator.vibrate([200, 100, 200]);
-      }
-      if (Math.abs(nowMin - endMins) <= 1 && !notifiedPrayers.current.has(endKey)) {
-        notifiedPrayers.current.add(endKey);
-        new Notification(t('notif.prayerEnd'), { body: m.label, icon: NOTIF_ICON, tag: endKey });
-        if (typeof navigator.vibrate === 'function') navigator.vibrate([200, 100, 200]);
-      }
-    }
-  }, [currentTime, activeDate]);
+   // ---- Prayer start/end notifications ----
+   useEffect(() => {
+     if (typeof Notification === 'undefined') return;
+     if (Notification.permission !== 'granted') return;
+     if (!activeDate) return;
+     const compiled = getCompiledPrayersForPlannerDate(activeDate);
+     const markers = getPrayerMarkersForPlannerDay(compiled);
+     const nowMin = getCurrentPlannerMinutes(currentTime, activeDate);
+     for (let i = 0; i < markers.length; i++) {
+       const m = markers[i];
+       const startMins = m.minutes;
+       const endMins = i < markers.length - 1 ? markers[i + 1].minutes : startMins + (1440 / markers.length);
+       const startKey = `${activeDate}_prayer_${m.key}_start`;
+       const endKey = `${activeDate}_prayer_${m.key}_end`;
+        if (Math.abs(nowMin - startMins) <= 1 && !notifiedPrayers.current.has(startKey)) {
+          notifiedPrayers.current.add(startKey);
+          
+          // Persistent Timer Notification: 15 minutes countdown
+          let countdown = 15;
+          const timerInterval = setInterval(() => {
+            countdown -= 1;
+            if (countdown <= 0) {
+              clearInterval(timerInterval);
+              return;
+            }
+            triggerNotification(`${m.label}: ${countdown} mins remaining`, { 
+              body: t('notif.prayerCountdown'), 
+              tag: startKey, 
+              renotify: true,
+              requireInteraction: true // Keep it persistent
+            });
+          }, 60000); // Update every minute
+
+          triggerNotification(`${m.label}: 15 mins remaining`, { 
+            body: t('notif.prayerCountdown'), 
+            tag: startKey, 
+            renotify: true,
+            requireInteraction: true // Keep it persistent
+          });
+          
+          if (typeof navigator.vibrate === 'function') navigator.vibrate([200, 100, 200]);
+        }
+       if (Math.abs(nowMin - endMins) <= 1 && !notifiedPrayers.current.has(endKey)) {
+         notifiedPrayers.current.add(endKey);
+         triggerNotification(t('notif.prayerEnd'), { body: m.label, tag: endKey, vibrate: [200, 100, 200] });
+         if (typeof navigator.vibrate === 'function') navigator.vibrate([200, 100, 200]);
+       }
+     }
+   }, [currentTime, activeDate, triggerNotification, t]);
 
   // ---- Scroll to top on page change ----
   useEffect(() => {
