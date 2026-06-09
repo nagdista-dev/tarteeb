@@ -691,6 +691,32 @@ function App() {
     });
   }, [currentTime, dayData]);
 
+  // ---- End-of-day reminder (30 min before day ends) ----
+  useEffect(() => {
+    if (typeof Notification === 'undefined') return;
+    if (Notification.permission !== 'granted') return;
+    if (!activeDate) return;
+    const todayKey = activeDate;
+    if (remindedEndOfDay.current === todayKey) return;
+    const compiled = getCompiledPrayersForPlannerDate(activeDate);
+    const dayEnd = getPlannerDayEndMinutes(compiled);
+    const nowMin = getCurrentPlannerMinutes(currentTime, activeDate);
+    if (nowMin >= dayEnd - 30) {
+      remindedEndOfDay.current = todayKey;
+      new Notification(t('notif.dayEnding'), { body: t('notif.dayEndingBody') });
+    }
+  }, [currentTime, activeDate]);
+
+  // ---- New day notification ----
+  useEffect(() => {
+    if (typeof Notification === 'undefined') return;
+    if (Notification.permission !== 'granted') return;
+    if (prevActiveDateRef.current && prevActiveDateRef.current !== activeDate) {
+      new Notification(t('notif.newDay'), { body: t('notif.newDayBody') });
+    }
+    prevActiveDateRef.current = activeDate;
+  }, [activeDate]);
+
   // ---- Scroll to top on page change ----
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -837,6 +863,8 @@ function App() {
   // ---- Auto-scroll to current time line (once) ----
   const hasScrolledRef = useRef(false);
   const notifiedTasks = useRef(new Set());
+  const remindedEndOfDay = useRef(null);
+  const prevActiveDateRef = useRef(activeDate);
   useEffect(() => {
     if (currentPage !== 'home' || !dayData || hasScrolledRef.current) return;
     hasScrolledRef.current = true;

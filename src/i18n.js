@@ -117,6 +117,10 @@ const en = {
   /* Notifications */
   'notif.taskStart': 'Task starting now',
   'notif.taskEnd': 'Task ending now',
+  'notif.dayEnding': 'Day Ending Soon',
+  'notif.dayEndingBody': 'The current day is almost over. Download your Markdown export to save your data.',
+  'notif.newDay': 'New Day Started',
+  'notif.newDayBody': 'A new planner day has begun. Start planning your tasks!',
   'notif.promptTitle': 'Enable Notifications',
   'notif.promptDesc': 'Get notified when tasks start and end, even when the app is in the background.',
   'notif.enable': 'Enable',
@@ -598,6 +602,10 @@ const ar = {
   /* Notifications */
   'notif.taskStart': 'المهمة تبدأ الآن',
   'notif.taskEnd': 'المهمة تنتهي الآن',
+  'notif.dayEnding': 'اليوم على وشك الانتهاء',
+  'notif.dayEndingBody': 'اليوم الحالي على وشك الانتهاء. قم بتصدير البيانات Markdown لحفظ معلوماتك.',
+  'notif.newDay': 'بدأ يوم جديد',
+  'notif.newDayBody': 'بدأ يوم مخطط جديد. ابدأ في تخطيط مهامك!',
   'notif.promptTitle': 'تفعيل الإشعارات',
   'notif.promptDesc': 'احصل على إشعارات عند بدء وانتهاء المهام، حتى عندما يكون التطبيق في الخلفية.',
   'notif.enable': 'تفعيل',
