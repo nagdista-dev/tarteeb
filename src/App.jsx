@@ -676,16 +676,15 @@ function App() {
     const prayers = dayData.prayerTimes;
     const nowMinutes = getCurrentPlannerMinutes(currentTime, activeDate);
     dayData.tasks.forEach(task => {
-      if (task.completed) return;
       const startMinutes = getTaskPlannerMinutes(task, prayers);
       const endMinutes = startMinutes + (Number(task.duration) || 15);
       const startKey = `${task.id}_start`;
       const endKey = `${task.id}_end`;
-      if (Math.abs(nowMinutes - startMinutes) <= 1 && !notifiedTasks.current.has(startKey)) {
+      if (!task.completed && Math.abs(nowMinutes - startMinutes) <= 1.5 && !notifiedTasks.current.has(startKey)) {
         notifiedTasks.current.add(startKey);
         new Notification(t('notif.taskStart'), { body: task.name, icon: NOTIF_ICON, tag: `task-start-${task.id}` });
       }
-      if (Math.abs(nowMinutes - endMinutes) <= 1 && !notifiedTasks.current.has(endKey)) {
+      if (!task.completed && Math.abs(nowMinutes - endMinutes) <= 1.5 && !notifiedTasks.current.has(endKey)) {
         notifiedTasks.current.add(endKey);
         new Notification(t('notif.taskEnd'), { body: task.name, icon: NOTIF_ICON, tag: `task-end-${task.id}` });
       }
