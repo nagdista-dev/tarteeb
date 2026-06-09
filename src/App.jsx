@@ -448,19 +448,11 @@ function App() {
 
   // ---- Toast notifications ----
   const [toast, setToast] = useState(null);
-  const toastTimer = useRef(null);
-  const showToast = (message, action = null, duration = 4000) => {
-    if (toastTimer.current) clearTimeout(toastTimer.current);
+  const showToast = (message, action = null) => {
     setToast({ message, action, key: Date.now() });
-    toastTimer.current = setTimeout(() => {
-      setToast(null);
-      toastTimer.current = null;
-    }, duration);
   };
   const dismissToast = () => {
-    if (toastTimer.current) clearTimeout(toastTimer.current);
     setToast(null);
-    toastTimer.current = null;
   };
 
   // ---- Sleep hours calculator ----
