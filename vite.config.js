@@ -7,6 +7,9 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'service-worker.js',
       includeAssets: ['favicon.svg', 'icons.svg'],
       manifest: {
         name: 'Tarteeb',

@@ -587,6 +587,19 @@ function App() {
     const result = await Notification.requestPermission();
     localStorage.setItem('tarteeb_notif_permission', result);
     setShowNotifPrompt(false);
+
+    if (result === 'granted' && 'serviceWorker' in navigator) {
+      try {
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: 'YOUR_PUBLIC_VAPID_KEY' // TODO: Replace with actual VAPID key
+        });
+        console.log('User subscribed:', subscription);
+      } catch (e) {
+        console.error('Subscription failed:', e);
+      }
+    }
   };
 
   const triggerNotification = useCallback(async (title, options = {}) => {
