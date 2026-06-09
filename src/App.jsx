@@ -554,18 +554,19 @@ function App() {
     return saved ? JSON.parse(saved) : null;
   });
 
-  // ---- Auto-cleanup old data (older than previous day) ----
+  // ---- Auto-cleanup old data (keep at least 2 days) ----
   useEffect(() => {
-    const today = formatDateLocal(new Date());
-    const yesterday = formatDateLocal(addDays(new Date(), -1));
-    const keepKeys = new Set([`tarteeb_day_${today}`, `tarteeb_day_${yesterday}`]);
+    const current = activeDate || formatDateLocal(new Date());
+    const keepDates = [current, formatDateLocal(addDays(new Date(current), -1)), formatDateLocal(addDays(new Date(current), -2))];
+    const keepKeys = new Set(keepDates.map(d => `tarteeb_day_${d}`));
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
       if (key && key.startsWith('tarteeb_day_') && /^\d{4}-\d{2}-\d{2}$/.test(key.slice('tarteeb_day_'.length)) && !keepKeys.has(key)) {
         localStorage.removeItem(key);
       }
     }
-    const saved = localStorage.getItem(`tarteeb_day_${yesterday}`);
+    const prevDate = formatDateLocal(addDays(new Date(current), -1));
+    const saved = localStorage.getItem(`tarteeb_day_${prevDate}`);
     if (saved) {
       const parsed = JSON.parse(saved);
       setPrevDayData(prev => {
@@ -573,7 +574,7 @@ function App() {
         return parsed;
       });
     }
-  }, []);
+  }, [activeDate]);
 
 
   const dismissWelcome = () => {
@@ -671,14 +672,13 @@ function App() {
     if (typeof Notification === 'undefined') return;
     if (Notification.permission !== 'granted') return;
     if (!dayData?.tasks || !dayData?.prayerTimes) return;
-    const dateStr = formatDateLocal(currentTime);
-    if (dateStr !== dayData.date) return;
+    if (dayData.date !== activeDate) return;
     const prayers = dayData.prayerTimes;
+    const nowMinutes = getCurrentPlannerMinutes(currentTime, activeDate);
     dayData.tasks.forEach(task => {
       if (task.completed) return;
       const startMinutes = getTaskPlannerMinutes(task, prayers);
       const endMinutes = startMinutes + (Number(task.duration) || 15);
-      const nowMinutes = currentTime.getHours() * 60 + currentTime.getMinutes();
       const startKey = `${task.id}_start`;
       const endKey = `${task.id}_end`;
       if (Math.abs(nowMinutes - startMinutes) <= 1 && !notifiedTasks.current.has(startKey)) {
