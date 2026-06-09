@@ -558,7 +558,7 @@ function App() {
     const keepKeys = new Set([`tarteeb_day_${today}`, `tarteeb_day_${yesterday}`]);
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key && key.startsWith('tarteeb_day_') && !keepKeys.has(key)) {
+      if (key && key.startsWith('tarteeb_day_') && /^\d{4}-\d{2}-\d{2}$/.test(key.slice('tarteeb_day_'.length)) && !keepKeys.has(key)) {
         localStorage.removeItem(key);
       }
     }
@@ -2680,7 +2680,6 @@ function App() {
                   <div className="note-composer-body">
                     <textarea
                       className="note-composer-input"
-                      placeholder={t('journal.studyPlaceholder')}
                       value={studyText}
                       onChange={e => setStudyText(e.target.value)}
                       onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); addStudyNote(); } }}
