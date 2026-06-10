@@ -183,7 +183,7 @@ const getOccupiedSlots = (period, tasks, prayers, excludeTaskId = null) => {
     .filter(task => task.period === period && task.id !== excludeTaskId)
     .map(task => {
       const start = getTaskStartMinutes(task, prayers);
-      return { start, end: start + (Number(task.duration) || 15) };
+      return { start, end: start + (Number(task.duration) || 15) + TASK_GAP };
     })
     .sort((a, b) => a.start - b.start);
 };
@@ -4115,7 +4115,7 @@ function App() {
 
       {/* Task Action Popup */}
       {taskActionPopup.open && taskActionPopup.task && (
-        <div className="modal-overlay" onClick={() => setTaskActionPopup({ open: false, task: null })}>
+        <div className="modal-overlay tap-overlay" onClick={() => setTaskActionPopup({ open: false, task: null })}>
           <div className="tap-modal" onClick={e => e.stopPropagation()}>
             <div className="tap-accent" />
             <div className="tap-header">

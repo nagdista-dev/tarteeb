@@ -6089,6 +6089,11 @@ select.form-select option {
   }
 }
 
+.tap-overlay {
+  align-items: center;
+  padding: 16px;
+}
+
 /* ===== Empty State Styles ===== */
 .empty-state {
   display: flex;
