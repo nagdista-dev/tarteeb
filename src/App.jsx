@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Bell, Check, Plus, Minus, Edit2, Trash2, Settings, Moon, Sun,
   BookOpen, Clock, Sparkles, MapPin, X, AlertCircle,
-  ChevronUp, ChevronDown, RefreshCw, Download, HelpCircle, List, Type, Menu, Target,
+  ChevronUp, ChevronDown, RefreshCw, RotateCcw, Download, HelpCircle, List, Type, Menu, Target,
   Smartphone, Lock, Unlock, Upload, Search, Zap, Activity,
   TrendingUp, BarChart3, Flame, CalendarDays, PenLine, Heart, Coffee, Award, Send,
   Maximize, Minimize
@@ -23,7 +23,7 @@ import {
 
 import { t, setLanguage, getLanguage, translateTaskName } from './i18n';
 import countries from './data/countries';
-import bellSound from './assets/bell.mp3';
+import bellSound from '/bell.mp3';
 
 const calculateStats = (tasks) => {
   const total = tasks.length;
@@ -332,6 +332,7 @@ function App() {
 
   // ---- Modals & Forms ----
   const [taskModal, setTaskModal] = useState({ open: false, mode: 'add', task: null });
+  const [taskActionPopup, setTaskActionPopup] = useState({ open: false, task: null });
   const [taskForm, setTaskForm] = useState({
     name: '', details: '', duration: 15, period: 'evening', scheduledTime: '19:00', endTime: '19:15', isRecurring: false
   });
@@ -449,6 +450,26 @@ function App() {
 
   // ---- Task search ----
   const [taskSearch, setTaskSearch] = useState('');
+
+  // ---- Toast notifications ----
+  // ---- Notification preferences (persisted) ----
+  const [notifSoundEnabled, setNotifSoundEnabled] = useState(() => {
+    const stored = localStorage.getItem('tarteeb_notif_sound');
+    return stored !== null ? stored === 'true' : true;
+  });
+  const [notifVibrateEnabled, setNotifVibrateEnabled] = useState(() => {
+    const stored = localStorage.getItem('tarteeb_notif_vibrate');
+    return stored !== null ? stored === 'true' : true;
+  });
+
+  const persistNotifSound = (val) => {
+    setNotifSoundEnabled(val);
+    localStorage.setItem('tarteeb_notif_sound', String(val));
+  };
+  const persistNotifVibrate = (val) => {
+    setNotifVibrateEnabled(val);
+    localStorage.setItem('tarteeb_notif_vibrate', String(val));
+  };
 
   // ---- Toast notifications ----
   const [toast, setToast] = useState(null);
@@ -590,15 +611,18 @@ function App() {
     setShowNotifPrompt(false);
 
     if (result === 'granted' && 'serviceWorker' in navigator) {
-      try {
-        const registration = await navigator.serviceWorker.ready;
-        const subscription = await registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: import.meta.env.VITE_APP_VAPID_PUBLIC_KEY
-        });
-        console.log('User subscribed:', subscription);
-      } catch (e) {
-        console.error('Subscription failed:', e);
+      const vapidKey = import.meta.env.VITE_APP_VAPID_PUBLIC_KEY;
+      if (vapidKey && vapidKey !== 'YOUR_PUBLIC_KEY_HERE') {
+        try {
+          const registration = await navigator.serviceWorker.ready;
+          const subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: vapidKey
+          });
+          console.log('User subscribed:', subscription);
+        } catch (e) {
+          // Push subscription failed - push notifications not available
+        }
       }
     }
   };
@@ -611,20 +635,28 @@ function App() {
     const notifOptions = {
       icon: NOTIF_ICON,
       badge: NOTIF_ICON,
-      silent: true, // Suppress system sound to use custom bell sound
+      silent: true,
       ...options
     };
 
-    if (!isCompletelySilent) {
+    if (!isCompletelySilent && notifVibrateEnabled) {
       notifOptions.vibrate = [200, 100, 200];
+      if (typeof navigator.vibrate === 'function') {
+        navigator.vibrate([200, 100, 200]);
+      }
     }
 
-    if (!isCompletelySilent) {
+    if (!isCompletelySilent && notifSoundEnabled) {
       try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') {
+          await audioCtx.resume();
+        }
         const audio = new Audio(bellSound);
-        audio.play().catch(e => console.log('Audio playback failed or blocked:', e));
+        audio.volume = 0.7;
+        await audio.play();
       } catch (e) {
-        console.error('Audio initialization failed:', e);
+        // Audio playback may be blocked by browser autoplay policy - this is expected
       }
     }
 
@@ -635,15 +667,15 @@ function App() {
         return;
       }
     } catch (e) {
-      console.error('ServiceWorker notification failed:', e);
+      // SW notification failed silently - fall through to standard API
     }
 
     try {
       new Notification(title, notifOptions);
     } catch (e) {
-      console.error('Standard notification failed:', e);
+      // Standard notification failed silently
     }
-  }, []);
+  }, [notifSoundEnabled, notifVibrateEnabled]);
 
   const dismissNotifPrompt = () => {
     localStorage.setItem('tarteeb_notif_prompt_dismissed', 'true');
@@ -722,6 +754,22 @@ function App() {
       setShowNotifPrompt(true);
     }
   }, [showWelcome]);
+
+  // Listen for notification permission changes at runtime
+  useEffect(() => {
+    if (typeof Notification === 'undefined' || typeof Notification.permission !== 'string') return;
+    const handler = () => {
+      localStorage.setItem('tarteeb_notif_permission', Notification.permission);
+    };
+    if ('onchange' in Notification) {
+      Notification.onchange = handler;
+    }
+    return () => {
+      if ('onchange' in Notification) {
+        Notification.onchange = null;
+      }
+    };
+  }, []);
 
     // Task Notifications (with countdown)
     useEffect(() => {
@@ -835,13 +883,10 @@ function App() {
             silent: true,
             requireInteraction: false 
           });
-          
-          if (typeof navigator.vibrate === 'function') navigator.vibrate([200, 100, 200]);
         }
        if (Math.abs(nowMin - endMins) <= 1 && !notifiedPrayers.current.has(endKey)) {
          notifiedPrayers.current.add(endKey);
-         triggerNotification(t('notif.prayerEnd'), { body: m.label, tag: endKey, vibrate: [200, 100, 200] });
-         if (typeof navigator.vibrate === 'function') navigator.vibrate([200, 100, 200]);
+         triggerNotification(t('notif.prayerEnd'), { body: m.label, tag: endKey });
        }
      }
    }, [currentTime, activeDate, triggerNotification, t]);
@@ -2024,12 +2069,11 @@ function App() {
                 const isAdhkar = task.name.includes('Adhkar');
                 const taskEnd = taskStart + duration;
                 return (
-                    <div
+                  <div
                     key={task.id}
                     className={`timeline-task-card task-${task.type}${isAdhkar ? ' task-adhkar' : ''} ${task.completed ? 'completed' : ''}`}
                     style={{ top: `${top}%`, height: `${heightPct}%` }}
-                    onClick={() => toggleTaskCompletion(task.id)}
-                    onContextMenu={e => { e.preventDefault(); if (task.type !== 'fixed') openTaskModal('edit', task); }}
+                    onClick={() => setTaskActionPopup({ open: true, task })}
                   >
                     <div className="timeline-task-bar" />
                     <div className="timeline-task-body">
@@ -2037,30 +2081,9 @@ function App() {
                         {getTaskDisplayTime(task, prayers)}–{formatMinutesToTime(taskEnd)}
                         <span className="timeline-task-duration-badge">{translateDuration(duration)}</span>
                       </span>
-                      <span
-                        className="timeline-task-name"
-                        onClick={e => { e.stopPropagation(); if (task.type !== 'fixed') openTaskModal('edit', task); }}
-                      >
+                      <span className="timeline-task-name">
                         {translateTaskName(task.name)}
                       </span>
-                      {task.type !== 'fixed' && (
-                        <div className="timeline-task-actions">
-                          <button
-                            className="timeline-task-btn edit"
-                            onClick={e => { e.stopPropagation(); openTaskModal('edit', task); }}
-                            title={t('task.edit')}
-                          >
-                            <Edit2 size={11} />
-                          </button>
-                          <button
-                            className="timeline-task-btn delete"
-                            onClick={e => { e.stopPropagation(); deleteTask(task.id); }}
-                            title={t('task.deleteAria')}
-                          >
-                            <Trash2 size={11} />
-                          </button>
-                        </div>
-                      )}
                     </div>
                   </div>
                 );
@@ -2129,7 +2152,7 @@ function App() {
               value={contactMessage}
               onChange={e => setContactMessage(e.target.value)}
               rows={5}
-              dir={getLanguage() === 'ar' ? 'rtl' : 'ltr'}
+              dir="auto"
             />
             <button
               className="btn btn-primary contact-send-btn"
@@ -2805,6 +2828,7 @@ function App() {
                     placeholder={t('tasks.searchPlaceholder')}
                     value={taskSearch}
                     onChange={e => setTaskSearch(e.target.value)}
+                    dir="auto"
                   />
                   {taskSearch && (
                     <button className="tasks-search-clear" onClick={() => setTaskSearch('')}>
@@ -3389,6 +3413,7 @@ function App() {
                               value={drink.name}
                               onChange={e => updateDrink(drink.id, 'name', e.target.value)}
                               placeholder={t('drinks.name')}
+                              dir="auto"
                             />
                           </div>
                           <div className="d-card-actions">
@@ -3680,7 +3705,7 @@ function App() {
                         {['fajr','dhuhr','asr','maghrib','isha'].map(p => (
                           <div key={p} className="form-group">
                             <label className="form-label">{t('settings.' + p)}</label>
-                            <input className="form-input" type="text" value={manualTimesForm[p]} onChange={e => setManualTimesForm(prev => ({ ...prev, [p]: e.target.value }))} required />
+                            <input className="form-input" type="text" value={manualTimesForm[p]} onChange={e => setManualTimesForm(prev => ({ ...prev, [p]: e.target.value }))} required dir="auto" />
                             <span className="manual-time-hint">{t('prayer.' + p)}</span>
                           </div>
                         ))}
@@ -3766,9 +3791,25 @@ function App() {
                     </div>
                   </div>
                   <div className="settings-card-body">
-                    <button className="btn" onClick={() => setShowNotifStatus(true)}>
-                      <Bell size={16} /> {t('settings.notifCheckStatus')}
-                    </button>
+                    <label className="settings-toggle">
+                      <input type="checkbox" checked={notifSoundEnabled} onChange={e => persistNotifSound(e.target.checked)} />
+                      <span className="settings-toggle-label">
+                        <span className="settings-toggle-title">{t('settings.notifSound')}</span>
+                        <span className="settings-toggle-desc">{t('settings.notifSoundDesc')}</span>
+                      </span>
+                    </label>
+                    <label className="settings-toggle">
+                      <input type="checkbox" checked={notifVibrateEnabled} onChange={e => persistNotifVibrate(e.target.checked)} />
+                      <span className="settings-toggle-label">
+                        <span className="settings-toggle-title">{t('settings.notifVibrate')}</span>
+                        <span className="settings-toggle-desc">{t('settings.notifVibrateDesc')}</span>
+                      </span>
+                    </label>
+                    <div style={{ marginTop: 12 }}>
+                      <button className="btn" onClick={() => setShowNotifStatus(true)}>
+                        <Bell size={16} /> {t('settings.notifCheckStatus')}
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -3811,15 +3852,18 @@ function App() {
       {/* Toast notifications */}
       {toast && (
         <div className="toast-overlay" key={toast.key}>
-          <div className="toast-bar">
-            <span className="toast-message">{toast.message}</span>
+          <div className="toast-modal">
+            <div className="toast-icon-wrap">
+              <Check size={22} />
+            </div>
+            <p className="toast-message">{toast.message}</p>
             <div className="toast-actions">
               {toast.action && (
-                <button className="btn btn-toast" onClick={() => { dismissToast(); toast.action.action(); }}>
+                <button className="toast-btn toast-btn-action" onClick={() => { dismissToast(); toast.action.action(); }}>
                   {toast.action.label}
                 </button>
               )}
-              <button className="btn btn-toast btn-toast-dismiss" onClick={dismissToast}>
+              <button className="toast-btn toast-btn-dismiss" onClick={dismissToast}>
                 <X size={14} />
               </button>
             </div>
@@ -4025,6 +4069,93 @@ function App() {
         );
       })()}
 
+      {/* Task Action Popup */}
+      {taskActionPopup.open && taskActionPopup.task && (
+        <div className="modal-overlay" onClick={() => setTaskActionPopup({ open: false, task: null })}>
+          <div className="tap-modal" onClick={e => e.stopPropagation()}>
+            <div className="tap-accent" />
+            <div className="tap-header">
+              <div className="tap-title-row">
+                <div className={`tap-title-icon ${taskActionPopup.task.completed ? 'is-done' : ''}`}>
+                  {taskActionPopup.task.type === 'fixed' ? <Bell size={14} /> : <Target size={14} />}
+                </div>
+                <span className="tap-title">{translateTaskName(taskActionPopup.task.name)}</span>
+                <div className={`tap-status-dot ${taskActionPopup.task.completed ? 'completed' : 'pending'}`} />
+                <button className="tap-close" onClick={() => setTaskActionPopup({ open: false, task: null })}>
+                  <X size={16} />
+                </button>
+              </div>
+              {taskActionPopup.task.details && (
+                <p className="tap-desc">{taskActionPopup.task.details}</p>
+              )}
+            </div>
+
+            <div className="tap-info">
+              <div className="tap-info-row">
+                <Clock size={13} />
+                <span className="tap-info-period">{t('period.' + taskActionPopup.task.period)}</span>
+              </div>
+              {dayData?.prayerTimes && (() => {
+                const task = taskActionPopup.task;
+                const startMin = getTaskStartMinutes(task, dayData.prayerTimes);
+                const endMin = startMin + (Number(task.duration) || 15);
+                return (
+                  <div className="tap-info-row tap-info-row-time">
+                    <span className="tap-time-range">
+                      {formatMinutesToTime(startMin)} – {formatMinutesToTime(endMin)}
+                    </span>
+                    <span className="tap-duration">{translateDuration(Number(task.duration) || 15)}</span>
+                  </div>
+                );
+              })()}
+            </div>
+
+            <div className="tap-divider" />
+
+            <div className="tap-actions">
+              <button
+                className={`tap-btn ${taskActionPopup.task.completed ? 'tap-btn-secondary' : 'tap-btn-primary'}`}
+                onClick={() => {
+                  toggleTaskCompletion(taskActionPopup.task.id);
+                  setTaskActionPopup({ open: false, task: null });
+                }}
+              >
+                {taskActionPopup.task.completed ? <RotateCcw size={15} /> : <Check size={15} />}
+                <span>{taskActionPopup.task.completed ? t('task.markIncomplete') : t('task.markComplete')}</span>
+              </button>
+
+              {taskActionPopup.task.type !== 'fixed' && (
+                <>
+                  <button
+                    className="tap-btn"
+                    onClick={() => {
+                      const task = taskActionPopup.task;
+                      setTaskActionPopup({ open: false, task: null });
+                      openTaskModal('edit', task);
+                    }}
+                  >
+                    <Edit2 size={15} />
+                    <span>{t('task.edit')}</span>
+                  </button>
+
+                  <button
+                    className="tap-btn tap-btn-danger"
+                    onClick={() => {
+                      const task = taskActionPopup.task;
+                      setTaskActionPopup({ open: false, task: null });
+                      deleteTask(task.id);
+                    }}
+                  >
+                    <Trash2 size={15} />
+                    <span>{t('task.deleteAria')}</span>
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Habit Modal */}
       {habitModal.open && (
         <div className="modal-overlay">
@@ -4043,7 +4174,7 @@ function App() {
               <div className="modal-body">
                 <div className="form-group">
                   <label className="form-label">{t('habits.name')}</label>
-                  <input className="form-input" type="text" value={habitForm.name} onChange={e => setHabitForm(prev => ({ ...prev, name: e.target.value }))} required autoFocus />
+                  <input className="form-input" type="text" value={habitForm.name} onChange={e => setHabitForm(prev => ({ ...prev, name: e.target.value }))} required autoFocus dir="auto" />
                 </div>
               </div>
               <div className="modal-footer">
