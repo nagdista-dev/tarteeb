@@ -15,8 +15,8 @@ export default defineConfig({
         name: 'Tarteeb',
         short_name: 'Tarteeb',
         description: 'Plan your day around Islamic prayer times with a beautiful vertical timeline, task management, and daily diary.',
-        theme_color: '#ffffff',
-        background_color: '#f5f4ee',
+        theme_color: '#115e3b',
+        background_color: '#115e3b',
         display: 'standalone',
         orientation: 'portrait',
         scope: '/',
@@ -27,7 +27,8 @@ export default defineConfig({
           {
             src: 'icons/icon-192.png',
             sizes: '192x192',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any maskable'
           },
           {
             src: 'icons/icon-512.png',
