@@ -131,6 +131,8 @@ const en = {
   'notif.enable': 'Enable',
   'notif.later': 'Later',
   'notif.goToSettings': 'Settings',
+  'notif.blocked': 'Notifications are blocked. Enable them in your browser settings.',
+  'notif.gotIt': 'Got it',
 
   /* Previous day */
   'prevDay.title': 'Previous Day',
@@ -626,6 +628,8 @@ const ar = {
   'notif.enable': 'تفعيل',
   'notif.later': 'لاحقاً',
   'notif.goToSettings': 'الإعدادات',
+  'notif.blocked': 'الإشعارات محظورة. قم بتفعيلها من إعدادات المتصفح.',
+  'notif.gotIt': 'حسناً',
 
   /* Previous day */
   'prevDay.title': 'اليوم السابق',

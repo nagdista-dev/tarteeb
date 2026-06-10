@@ -675,7 +675,6 @@ function App() {
   }, [notifSoundEnabled, notifVibrateEnabled]);
 
   const dismissNotifPrompt = () => {
-    localStorage.setItem('tarteeb_notif_prompt_dismissed', 'true');
     setShowNotifPrompt(false);
   };
 
@@ -739,18 +738,10 @@ function App() {
   // ---- Notification Permission & Prompt ----
   useEffect(() => {
     if (typeof Notification === 'undefined') return;
-    const stored = localStorage.getItem('tarteeb_notif_permission');
-    if (stored === 'granted' || stored === 'denied') return;
-    const perm = Notification.permission;
-    if (perm === 'granted' || perm === 'denied') {
-      localStorage.setItem('tarteeb_notif_permission', perm);
-      return;
-    }
-    const dismissed = localStorage.getItem('tarteeb_notif_prompt_dismissed');
-    if (!dismissed && !showWelcome) {
+    if (Notification.permission !== 'granted') {
       setShowNotifPrompt(true);
     }
-  }, [showWelcome]);
+  }, []);
 
   // Listen for notification permission changes at runtime
   useEffect(() => {
@@ -4277,7 +4268,7 @@ function App() {
       )}
 
       {/* Notification Prompt */}
-      {showNotifPrompt && !showWelcome && (
+      {showNotifPrompt && (
         <div className="dialog-overlay">
           <div className="welcome-modal" onClick={e => e.stopPropagation()}>
             <div className="welcome-modal-icon">
@@ -4285,18 +4276,21 @@ function App() {
             </div>
             <h2 className="welcome-modal-title">{t('notif.promptTitle')}</h2>
             <p className="welcome-modal-desc">{t('notif.promptDesc')}</p>
-            <div className="welcome-modal-links" style={{ marginTop: 12 }}>
-              <button className="welcome-modal-link" onClick={() => { setCurrentPage('settings'); dismissNotifPrompt(); }}>
-                <Settings size={16} /> {t('notif.goToSettings')}
-              </button>
-            </div>
-            <div className="welcome-modal-actions">
-              <button className="btn" onClick={dismissNotifPrompt} style={{ flex: 1 }}>
-                {t('notif.later')}
-              </button>
-              <button className="btn btn-primary" onClick={enableNotifications} style={{ flex: 1 }}>
-                {t('notif.enable')}
-              </button>
+            <div className="welcome-modal-actions" style={{ marginTop: 16, flexDirection: 'column', gap: 10 }}>
+              {typeof Notification !== 'undefined' && Notification.permission === 'denied' ? (
+                <>
+                  <p style={{ color: 'var(--color-danger)', fontSize: '0.85rem', textAlign: 'center', margin: 0 }}>
+                    {t('notif.blocked')}
+                  </p>
+                  <button className="btn" onClick={dismissNotifPrompt} style={{ width: '100%' }}>
+                    {t('notif.gotIt')}
+                  </button>
+                </>
+              ) : (
+                <button className="btn btn-primary" onClick={enableNotifications} style={{ width: '100%' }}>
+                  {t('notif.enable')}
+                </button>
+              )}
             </div>
           </div>
         </div>
