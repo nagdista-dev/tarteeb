@@ -769,9 +769,17 @@ function App() {
         Notification.onchange = null;
       }
     };
-  }, []);
+    }, []);
 
-    // Task Notifications (with countdown)
+    // ---- Cleanup task timer intervals on unmount ----
+    useEffect(() => {
+      return () => {
+        taskTimerIntervals.current.forEach(interval => clearInterval(interval));
+        taskTimerIntervals.current.clear();
+      };
+    }, []);
+
+    // Task Notifications (start, countdown, end)
     useEffect(() => {
       if (typeof Notification === 'undefined') return;
       if (Notification.permission !== 'granted') return;
@@ -780,37 +788,71 @@ function App() {
       const prayers = dayData.prayerTimes;
       const nowMinutes = getCurrentPlannerMinutes(currentTime, activeDate);
       dayData.tasks.forEach(task => {
+        if (task.completed) return;
         const startMinutes = getTaskPlannerMinutes(task, prayers);
         const endMinutes = startMinutes + (Number(task.duration) || 15);
         const startKey = `${task.id}_start`;
-        
-        // Task start reminder
-        if (!task.completed && Math.abs(nowMinutes - startMinutes) <= 1.5 && !notifiedTasks.current.has(startKey)) {
-          notifiedTasks.current.add(startKey);
-          
-          let minutesRemaining = Number(task.duration) || 15;
-          const tag = `task-timer-${task.id}`;
-          
-            const showTimer = (remaining) => {
-              triggerNotification(`${task.name}: ${remaining} ${t('duration.mins').replace('%', '')}`, { 
-                body: t('notif.taskInProg'), 
-                tag: tag, 
-                renotify: false,
-                silent: true,
-                requireInteraction: false // Set to false to allow updating without stealing focus
-              });
-            };
+        const endKey = `${task.id}_end`;
+        const tag = `task-timer-${task.id}`;
 
+        // Task start notification (with sound)
+        if (Math.abs(nowMinutes - startMinutes) <= 1.5 && !notifiedTasks.current.has(startKey)) {
+          notifiedTasks.current.add(startKey);
+
+          const startTime = formatMinutesToTime(startMinutes);
+          const endTime = formatMinutesToTime(endMinutes);
+          triggerNotification(task.name, {
+            body: `${startTime} – ${endTime}`,
+            tag: `${tag}_start`,
+            renotify: false,
+            requireInteraction: false
+          });
+
+          // Start silent countdown
+          let minutesRemaining = Number(task.duration) || 15;
+          const showTimer = (remaining) => {
+            triggerNotification(`${task.name}: ${remaining} ${t('duration.mins').replace('%', '')}`, {
+              body: t('notif.taskInProg'),
+              tag: tag,
+              renotify: true,
+              silent: true,
+              requireInteraction: false
+            });
+          };
           showTimer(minutesRemaining);
 
+          if (taskTimerIntervals.current.has(task.id)) {
+            clearInterval(taskTimerIntervals.current.get(task.id));
+          }
           const timerInterval = setInterval(() => {
             minutesRemaining -= 1;
             if (minutesRemaining <= 0) {
               clearInterval(timerInterval);
+              taskTimerIntervals.current.delete(task.id);
               return;
             }
             showTimer(minutesRemaining);
           }, 60000);
+          taskTimerIntervals.current.set(task.id, timerInterval);
+        }
+
+        // Task end notification (with sound)
+        if (nowMinutes >= endMinutes && !notifiedTaskEnds.current.has(endKey)) {
+          notifiedTaskEnds.current.add(endKey);
+
+          if (taskTimerIntervals.current.has(task.id)) {
+            clearInterval(taskTimerIntervals.current.get(task.id));
+            taskTimerIntervals.current.delete(task.id);
+          }
+
+          const startTime = formatMinutesToTime(startMinutes);
+          const endTime = formatMinutesToTime(endMinutes);
+          triggerNotification(task.name, {
+            body: `${t('notif.taskEnd')} — ${startTime} – ${endTime}`,
+            tag: `${tag}_end`,
+            renotify: false,
+            requireInteraction: false
+          });
         }
       });
     }, [currentTime, dayData, t]);
@@ -1044,6 +1086,8 @@ function App() {
   // ---- Auto-scroll to current time line (once) ----
   const hasScrolledRef = useRef(false);
   const notifiedTasks = useRef(new Set());
+  const notifiedTaskEnds = useRef(new Set());
+  const taskTimerIntervals = useRef(new Map());
   const remindedEndOfDay = useRef(null);
   const prevActiveDateRef = useRef(activeDate);
   const notifiedPrayers = useRef(new Set());
