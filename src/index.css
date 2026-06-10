@@ -1677,6 +1677,23 @@ select.form-select option {
   font-weight: 500;
 }
 
+.settings-error-close {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--color-danger);
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+}
+.settings-error-close:hover {
+  opacity: 1;
+}
+
 /* Manual times grid */
 .settings-times-grid {
   display: grid;
@@ -5012,8 +5029,6 @@ select.form-select option {
   padding: 1px 8px;
 }
 
-/* ===== Mobile Sidebar ===== */
-@media (max-width: 768px) {
 .btn-danger {
   background-color: var(--color-danger);
   color: #ffffff;
@@ -5029,6 +5044,8 @@ select.form-select option {
   transform: translateY(-1px);
 }
 
+/* ===== Mobile Sidebar ===== */
+@media (max-width: 768px) {
 .btn-menu-mobile {
     display: inline-flex;
   }

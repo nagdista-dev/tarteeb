@@ -314,7 +314,7 @@ function App() {
   const [locationConfig, setLocationConfig] = useState(() => {
     const saved = localStorage.getItem('tarteeb_location_config');
     const defaults = { enabled: true, type: 'city', city: 'Cairo', country: 'Egypt', latitude: '30.0444', longitude: '31.2357' };
-    return saved ? { ...defaults, ...JSON.parse(saved), enabled: true } : defaults;
+    return saved ? { ...defaults, ...JSON.parse(saved) } : defaults;
   });
 
   // ---- Planner Date & Data ----
@@ -1934,6 +1934,12 @@ function App() {
 
   const handleManualTimesSubmit = (e) => {
     e.preventDefault();
+    const timeRegex = /^([01]\d|2[0-3]):[0-5]\d$/;
+    const invalid = Object.entries(manualTimesForm).find(([, v]) => !timeRegex.test(v));
+    if (invalid) {
+      showAlert(t('alert.invalidTimeFormat') || 'Invalid time format. Use HH:MM (e.g. 05:30).');
+      return;
+    }
     const cache = getPrayerCache();
     cache[activeDate] = { ...manualTimesForm, hijriDate: getPrayerTimesForDate(activeDate).hijriDate || '' };
     savePrayerCache(cache);
@@ -3673,6 +3679,7 @@ function App() {
                   {apiError && (
                     <div className="settings-error">
                       <AlertCircle size={14} /> {apiError}
+                      <button className="settings-error-close" onClick={() => setApiError(null)} aria-label="Dismiss"><X size={14} /></button>
                     </div>
                   )}
                   <div className="settings-card-body">
@@ -3753,7 +3760,7 @@ function App() {
                         {['fajr','dhuhr','asr','maghrib','isha'].map(p => (
                           <div key={p} className="form-group">
                             <label className="form-label">{t('settings.' + p)}</label>
-                            <input className="form-input" type="text" value={manualTimesForm[p]} onChange={e => setManualTimesForm(prev => ({ ...prev, [p]: e.target.value }))} required dir="auto" />
+                            <input className="form-input" type="text" value={manualTimesForm[p]} onChange={e => setManualTimesForm(prev => ({ ...prev, [p]: e.target.value }))} required dir="auto" pattern="^([01]\d|2[0-3]):[0-5]\d$" title="HH:MM (e.g. 05:30)" />
                             <span className="manual-time-hint">{t('prayer.' + p)}</span>
                           </div>
                         ))}
