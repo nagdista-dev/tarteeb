@@ -64,6 +64,8 @@ const en = {
   'modal.cancel': 'Cancel',
   'modal.create': 'Create',
   'modal.save': 'Save',
+  'modal.noSlots': 'No available times',
+  'modal.noSlotsPast': 'All times in this period have passed',
 
   /* Period names (from PERIODS_META) */
   'period.evening': 'Evening',
@@ -556,6 +558,8 @@ const ar = {
   'modal.cancel': 'إلغاء',
   'modal.create': 'إنشاء',
   'modal.save': 'حفظ',
+  'modal.noSlots': 'لا توجد أوقات متاحة',
+  'modal.noSlotsPast': 'جميع الأوقات في هذه الفترة قد مضت',
 
   /* Period names */
   'period.evening': 'المغرب',

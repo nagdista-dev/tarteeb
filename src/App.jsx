@@ -1311,6 +1311,9 @@ function App() {
       return;
     }
 
+    const nowMinutes = getCurrentPlannerMinutes(currentTime, activeDate);
+    const isPast = endMin < nowMinutes;
+
     let newTasks;
     if (taskModal.mode === 'add') {
       const newTask = {
@@ -1322,7 +1325,8 @@ function App() {
         scheduledTime: taskForm.scheduledTime,
         type: taskForm.isRecurring ? 'user' : 'personal',
         isRecurring: taskForm.isRecurring,
-        completed: false
+        completed: false,
+        status: isPast ? 'not_completed' : 'pending'
       };
       newTasks = [...dayData.tasks, newTask];
     } else {
@@ -3937,6 +3941,10 @@ function App() {
         const startSlots = getStartSlots();
         const endSlots = getEndSlots(taskForm.scheduledTime);
 
+        const isPeriodPast = prayers && taskModal.mode === 'add'
+          ? getPeriodEndMinutes(taskForm.period, prayers) < getCurrentPlannerMinutes(currentTime, activeDate)
+          : false;
+
         // Unique sorted hours from slots
         const startHours = [...new Set(startSlots.map(m => Math.floor(m / 60)))].sort((a, b) => a - b);
         const endHours = [...new Set(endSlots.map(m => Math.floor(m / 60)))].sort((a, b) => a - b);
@@ -4041,7 +4049,7 @@ function App() {
                     <div className="form-group">
                       <label className="form-label">{t('modal.startTime')}</label>
                       {startSlots.length === 0 ? (
-                        <div className="form-input tm-disabled">{t('modal.noSlots') || 'No slots'}</div>
+                        <div className="form-input tm-disabled">{isPeriodPast ? t('modal.noSlotsPast') : t('modal.noSlots')}</div>
                       ) : (
                         <div className="tm-picker">
                           <select className="tm-select" value={selStartH} onChange={e => handleStartHourChange(Number(e.target.value))}>
@@ -4064,7 +4072,7 @@ function App() {
                     <div className="form-group">
                       <label className="form-label">{t('modal.endTime')}</label>
                       {endSlots.length === 0 ? (
-                        <div className="form-input tm-disabled">{t('modal.noSlots') || 'No slots'}</div>
+                        <div className="form-input tm-disabled">{isPeriodPast ? t('modal.noSlotsPast') : t('modal.noSlots')}</div>
                       ) : (
                         <div className="tm-picker">
                           <select className="tm-select" value={selEndH} onChange={e => handleEndHourChange(Number(e.target.value))}>
