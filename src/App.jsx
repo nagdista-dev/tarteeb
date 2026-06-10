@@ -781,6 +781,7 @@ function App() {
 
     // Task Notifications (start, countdown, end)
     useEffect(() => {
+      if (!appReadyRef.current) return;
       if (typeof Notification === 'undefined') return;
       if (Notification.permission !== 'granted') return;
       if (!dayData?.tasks || !dayData?.prayerTimes) return;
@@ -858,12 +859,13 @@ function App() {
     }, [currentTime, dayData, t]);
 
    // ---- End-of-day reminder (30 min before day ends) ----
-   useEffect(() => {
-     if (typeof Notification === 'undefined') return;
-     if (Notification.permission !== 'granted') return;
-     if (!activeDate) return;
-     const todayKey = activeDate;
-     if (remindedEndOfDay.current === todayKey) return;
+    useEffect(() => {
+      if (!appReadyRef.current) return;
+      if (typeof Notification === 'undefined') return;
+      if (Notification.permission !== 'granted') return;
+      if (!activeDate) return;
+      const todayKey = activeDate;
+      if (remindedEndOfDay.current === todayKey) return;
      const compiled = getCompiledPrayersForPlannerDate(activeDate);
      const dayEnd = getPlannerDayEndMinutes(compiled);
      const nowMin = getCurrentPlannerMinutes(currentTime, activeDate);
@@ -884,11 +886,13 @@ function App() {
    }, [activeDate, triggerNotification, t]);
 
    // ---- Prayer start/end notifications ----
-   useEffect(() => {
-     if (typeof Notification === 'undefined') return;
-     if (Notification.permission !== 'granted') return;
-     if (!activeDate) return;
-     const compiled = getCompiledPrayersForPlannerDate(activeDate);
+    useEffect(() => {
+      if (!appReadyRef.current) return;
+      if (typeof Notification === 'undefined') return;
+      if (Notification.permission !== 'granted') return;
+      if (!activeDate) return;
+      if (!dayData?.prayerTimes) return;
+      const compiled = getCompiledPrayersForPlannerDate(activeDate);
      const markers = getPrayerMarkersForPlannerDay(compiled);
      const nowMin = getCurrentPlannerMinutes(currentTime, activeDate);
      for (let i = 0; i < markers.length; i++) {
@@ -1063,6 +1067,7 @@ function App() {
 
   // ---- Timeline status (next prayer etc.) ----
   useEffect(() => {
+    if (!appReadyRef.current) return;
     if (dayData?.prayerTimes) {
       const status = calculateTimelineStatus(currentTime, dayData.prayerTimes, activeDate);
       setTimelineStatus(status);
@@ -1091,6 +1096,11 @@ function App() {
   const remindedEndOfDay = useRef(null);
   const prevActiveDateRef = useRef(activeDate);
   const notifiedPrayers = useRef(new Set());
+  const appReadyRef = useRef(false);
+  useEffect(() => {
+    const t = setTimeout(() => { appReadyRef.current = true; }, 3000);
+    return () => clearTimeout(t);
+  }, []);
   useEffect(() => {
     if (currentPage !== 'home' || !dayData || hasScrolledRef.current) return;
     hasScrolledRef.current = true;

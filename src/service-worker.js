@@ -1,3 +1,5 @@
+self.__WB_MANIFEST;
+
 self.addEventListener('push', (event) => {
   const data = event.data ? event.data.json() : {};
   const title = data.title || 'Tarteeb';

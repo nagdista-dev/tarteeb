@@ -1,18 +1,19 @@
-/* Tarteeb — Modern Islamic Daily Planner CSS */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Tajawal:wght@300;400;500;700;800&display=swap');
+@import "tailwindcss"; 
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Tajawal:wght@300;400;500;700;800&display=swap");
 
 :root {
   /* Typography */
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-arabic: 'Tajawal', sans-serif;
-  --font-mono: 'SF Mono', 'Fira Code', 'Fira Mono', 'Roboto Mono', monospace;
+  --font-sans:
+    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-arabic: "Tajawal", sans-serif;
+  --font-mono: "SF Mono", "Fira Code", "Fira Mono", "Roboto Mono", monospace;
 
   /* Theme Colors (Light Mode) */
   --bg-primary: #f5f4ee;
   --bg-secondary: #ffffff;
   --bg-tertiary: #ebe8dc;
   --border-color: #dbd8cb;
-  
+
   --text-primary: #19201d;
   --text-secondary: #535d59;
   --text-tertiary: #84938e;
@@ -21,11 +22,11 @@
   --color-emerald: #115e3b; /* Primary Islamic Green */
   --color-emerald-light: #d3eade;
   --color-emerald-hover: #15803d;
-  
+
   --color-gold: #b25e00; /* Muted Gold / Amber */
   --color-gold-bg: #fcf4dd;
   --color-gold-border: #f3dfb1;
-  
+
   --color-teal: #0f766e; /* Personal Tasks Accent */
   --color-teal-bg: #e6f6f4;
   --color-teal-border: #bfebe6;
@@ -34,9 +35,11 @@
   --color-danger-bg: #fee2e2;
 
   --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
-  
+  --shadow-md:
+    0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  --shadow-lg:
+    0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
@@ -73,8 +76,10 @@
   --color-danger-bg: #450a0a;
 
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.4);
+  --shadow-md:
+    0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --shadow-lg:
+    0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.4);
 }
 
 /* Reset & Base Styles */
@@ -88,7 +93,9 @@ body {
   font-family: var(--font-sans), var(--font-arabic);
   background-color: var(--bg-primary);
   color: var(--text-primary);
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -101,7 +108,10 @@ body {
   flex-direction: column;
 }
 
-button, input, textarea, select {
+button,
+input,
+textarea,
+select {
   font-family: inherit;
   color: inherit;
 }
@@ -139,7 +149,8 @@ a {
   justify-content: space-between;
   align-items: center;
   padding: 8px 0 10px;
-  border-bottom: 2px solid color-mix(in srgb, var(--color-emerald) 40%, var(--border-color));
+  border-bottom: 2px solid
+    color-mix(in srgb, var(--color-emerald) 40%, var(--border-color));
   background: var(--bg-primary);
   position: relative;
 }
@@ -325,7 +336,7 @@ a {
   background-color: var(--bg-primary);
   border-color: var(--text-tertiary);
   color: var(--text-primary);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
 .btn-primary {
@@ -383,7 +394,8 @@ a {
   background: var(--color-emerald);
   color: #ffffff;
   border-color: var(--color-emerald);
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-emerald) 40%, transparent);
+  box-shadow: 0 4px 12px
+    color-mix(in srgb, var(--color-emerald) 40%, transparent);
   transform: translateY(-1px);
 }
 
@@ -409,7 +421,8 @@ a {
   background: var(--color-emerald);
   color: #ffffff;
   border-color: var(--color-emerald);
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-emerald) 40%, transparent);
+  box-shadow: 0 4px 12px
+    color-mix(in srgb, var(--color-emerald) 40%, transparent);
   transform: translateY(-1px);
 }
 
@@ -482,7 +495,9 @@ a {
 
 .period-block-card.active-period {
   border-color: var(--color-emerald);
-  box-shadow: var(--shadow-md), 0 0 0 2px rgba(17, 94, 59, 0.05);
+  box-shadow:
+    var(--shadow-md),
+    0 0 0 2px rgba(17, 94, 59, 0.05);
 }
 
 /* Period Block Header */
@@ -1060,12 +1075,16 @@ a {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   overflow: hidden;
-  transition: box-shadow 0.25s ease, border-color 0.25s ease;
+  transition:
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
 }
 
 .journal-card:focus-within {
   border-color: var(--color-emerald);
-  box-shadow: 0 0 0 3px rgba(17, 94, 59, 0.06), var(--shadow-md);
+  box-shadow:
+    0 0 0 3px rgba(17, 94, 59, 0.06),
+    var(--shadow-md);
 }
 
 .journal-header {
@@ -1110,8 +1129,6 @@ a {
   margin-top: 1px;
 }
 
-
-
 /* Modals */
 .modal-overlay {
   position: fixed;
@@ -1127,8 +1144,12 @@ a {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .modal-content {
@@ -1145,8 +1166,14 @@ a {
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .modal-header {
@@ -1208,7 +1235,8 @@ a {
 
 .tm-picker:focus-within {
   border-color: var(--color-emerald);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-emerald) 15%, transparent);
+  box-shadow: 0 0 0 2px
+    color-mix(in srgb, var(--color-emerald) 15%, transparent);
 }
 
 .tm-select {
@@ -1302,8 +1330,6 @@ a {
   cursor: pointer;
 }
 
-
-
 /* Error Modal */
 .error-modal {
   max-width: 560px;
@@ -1393,7 +1419,9 @@ a {
   margin-top: -2px;
 }
 
-.form-input, .form-select, .form-textarea {
+.form-input,
+.form-select,
+.form-textarea {
   padding: 11px 14px;
   border-radius: 10px;
   border: 1.5px solid var(--border-color);
@@ -1405,7 +1433,9 @@ a {
   color: var(--text-primary);
 }
 
-.form-input:focus, .form-select:focus, .form-textarea:focus {
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
   border-color: var(--color-emerald);
   box-shadow: 0 0 0 3px rgba(17, 94, 59, 0.1);
   background-color: var(--bg-secondary);
@@ -1496,7 +1526,7 @@ select.form-select option {
 }
 
 .settings-section-label::before {
-  content: '';
+  content: "";
   width: 3px;
   height: 16px;
   background: var(--color-emerald);
@@ -1543,7 +1573,11 @@ select.form-select option {
   align-items: center;
   justify-content: center;
   border-radius: 14px;
-  background: linear-gradient(135deg, var(--color-emerald-light), rgba(17, 94, 59, 0.06));
+  background: linear-gradient(
+    135deg,
+    var(--color-emerald-light),
+    rgba(17, 94, 59, 0.06)
+  );
   color: var(--color-emerald);
   margin-top: 2px;
 }
@@ -1978,7 +2012,11 @@ select.form-select option {
   align-items: center;
   justify-content: center;
   border-radius: 16px;
-  background: linear-gradient(135deg, var(--color-emerald-light), rgba(17, 94, 59, 0.08));
+  background: linear-gradient(
+    135deg,
+    var(--color-emerald-light),
+    rgba(17, 94, 59, 0.08)
+  );
   color: var(--color-emerald);
   margin-bottom: 4px;
 }
@@ -2112,8 +2150,6 @@ select.form-select option {
   margin-top: 8px;
 }
 
-
-
 /* Pulsing dot animation */
 @keyframes pulse {
   0% {
@@ -2166,7 +2202,11 @@ select.form-select option {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(180deg, var(--bg-secondary) 0%, color-mix(in srgb, var(--color-emerald) 2%, var(--bg-secondary)) 100%);
+  background: linear-gradient(
+    180deg,
+    var(--bg-secondary) 0%,
+    color-mix(in srgb, var(--color-emerald) 2%, var(--bg-secondary)) 100%
+  );
   border-right: 1px solid var(--border-color);
   overflow-y: auto;
   scrollbar-width: none;
@@ -2227,9 +2267,14 @@ select.form-select option {
   gap: 6px;
   padding: 14px 16px;
   margin: 0 10px 10px;
-  background: linear-gradient(135deg, color-mix(in srgb, var(--color-emerald) 4%, var(--bg-primary)), var(--bg-primary));
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-emerald) 4%, var(--bg-primary)),
+    var(--bg-primary)
+  );
   border-radius: 12px;
-  border: 1px solid color-mix(in srgb, var(--color-emerald) 15%, var(--border-color));
+  border: 1px solid
+    color-mix(in srgb, var(--color-emerald) 15%, var(--border-color));
 }
 
 .sidebar-info-row {
@@ -2280,7 +2325,11 @@ select.form-select option {
   gap: 6px;
   margin: 0 10px 10px;
   padding: 9px 12px;
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(217, 119, 6, 0.05));
+  background: linear-gradient(
+    135deg,
+    rgba(245, 158, 11, 0.1),
+    rgba(217, 119, 6, 0.05)
+  );
   border: 1px solid rgba(245, 158, 11, 0.18);
   border-radius: var(--radius-md);
 }
@@ -2440,7 +2489,11 @@ select.form-select option {
 }
 
 .sidebar-action-reload:hover {
-  background: color-mix(in srgb, var(--color-emerald) 10%, var(--bg-primary)) !important;
+  background: color-mix(
+    in srgb,
+    var(--color-emerald) 10%,
+    var(--bg-primary)
+  ) !important;
   color: var(--color-emerald) !important;
 }
 
@@ -2526,8 +2579,12 @@ select.form-select option {
 }
 
 @keyframes overlayFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* ----- Sidebar Close Button ----- */
@@ -2549,8 +2606,11 @@ select.form-select option {
   align-items: center;
   gap: 8px;
   padding: 16px 24px 14px;
-  background:
-    linear-gradient(135deg, var(--color-gold-bg), var(--bg-secondary) 80%);
+  background: linear-gradient(
+    135deg,
+    var(--color-gold-bg),
+    var(--bg-secondary) 80%
+  );
   border-top: 1px solid var(--border-color);
 }
 
@@ -2681,7 +2741,7 @@ select.form-select option {
 }
 
 .cycle-node::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0 auto 0 0;
   width: 4px;
@@ -2916,8 +2976,8 @@ select.form-select option {
   border-left: 4px solid var(--color-teal);
   border-radius: var(--radius-md);
   box-shadow:
-    0 1px 3px rgba(0,0,0,0.06),
-    0 4px 12px rgba(0,0,0,0.04);
+    0 1px 3px rgba(0, 0, 0, 0.06),
+    0 4px 12px rgba(0, 0, 0, 0.04);
   animation: taskRise 0.28s ease both;
   transition:
     border-color 0.2s,
@@ -2928,8 +2988,8 @@ select.form-select option {
 .block-task-card:hover {
   border-color: var(--text-secondary);
   box-shadow:
-    0 2px 6px rgba(0,0,0,0.08),
-    0 8px 24px rgba(0,0,0,0.06);
+    0 2px 6px rgba(0, 0, 0, 0.08),
+    0 8px 24px rgba(0, 0, 0, 0.06);
   transform: translateY(-2px);
   z-index: 8;
 }
@@ -2956,11 +3016,19 @@ select.form-select option {
 
 .block-task-card.task-fixed {
   border-left-color: var(--color-emerald);
-  border-color: color-mix(in srgb, var(--color-emerald) 20%, var(--border-color));
+  border-color: color-mix(
+    in srgb,
+    var(--color-emerald) 20%,
+    var(--border-color)
+  );
 }
 
 .block-task-card.task-fixed:hover {
-  border-color: color-mix(in srgb, var(--color-emerald) 40%, var(--border-color));
+  border-color: color-mix(
+    in srgb,
+    var(--color-emerald) 40%,
+    var(--border-color)
+  );
 }
 
 .block-task-card.task-recurring,
@@ -3197,14 +3265,13 @@ select.form-select option {
 .timeline-board {
   position: relative;
   min-height: var(--timeline-height);
-  background:
-    repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 39px,
-      rgba(132, 147, 142, 0.03) 39px,
-      rgba(132, 147, 142, 0.03) 40px
-    );
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 39px,
+    rgba(132, 147, 142, 0.03) 39px,
+    rgba(132, 147, 142, 0.03) 40px
+  );
 }
 
 .timeline-period-band {
@@ -3216,11 +3283,19 @@ select.form-select option {
 }
 
 .night-band {
-  background: linear-gradient(90deg, rgba(132, 147, 142, 0.04), transparent 50%);
+  background: linear-gradient(
+    90deg,
+    rgba(132, 147, 142, 0.04),
+    transparent 50%
+  );
 }
 
 .day-band {
-  background: linear-gradient(90deg, rgba(132, 147, 142, 0.03), transparent 50%);
+  background: linear-gradient(
+    90deg,
+    rgba(132, 147, 142, 0.03),
+    transparent 50%
+  );
 }
 
 .timeline-period-band span {
@@ -3233,7 +3308,11 @@ select.form-select option {
   right: 0;
   height: 1px;
   transform: translateY(-50%);
-  background: linear-gradient(90deg, rgba(132, 147, 142, 0.05), transparent 60%);
+  background: linear-gradient(
+    90deg,
+    rgba(132, 147, 142, 0.05),
+    transparent 60%
+  );
   z-index: 1;
 }
 
@@ -3253,9 +3332,13 @@ select.form-select option {
   justify-content: center;
   transform: translateY(-50%);
   z-index: 10;
-  box-shadow: 0 2px 6px rgba(17, 94, 59, 0.3), 0 0 0 2px var(--bg-primary);
+  box-shadow:
+    0 2px 6px rgba(17, 94, 59, 0.3),
+    0 0 0 2px var(--bg-primary);
   cursor: pointer;
-  transition: background-color 0.2s, transform 0.2s;
+  transition:
+    background-color 0.2s,
+    transform 0.2s;
 }
 .timeline-prayer-marker:hover {
   transform: translateY(-50%) scale(1.2);
@@ -3270,8 +3353,6 @@ select.form-select option {
   background-color: var(--color-danger);
 }
 
-
-
 .timeline-now-line {
   position: absolute;
   left: 0;
@@ -3285,7 +3366,7 @@ select.form-select option {
 }
 
 .timeline-now-line::before {
-  content: '';
+  content: "";
   position: absolute;
   left: -5px;
   top: 50%;
@@ -3307,15 +3388,18 @@ select.form-select option {
   background: color-mix(in srgb, var(--color-teal) 6%, var(--bg-secondary));
   border-radius: 4px;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-  transition: opacity 0.15s, background 0.15s, box-shadow 0.15s;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transition:
+    opacity 0.15s,
+    background 0.15s,
+    box-shadow 0.15s;
   overflow: hidden;
   animation: taskRise 0.28s ease both;
 }
 
 .timeline-task-card:hover {
   background: color-mix(in srgb, var(--color-teal) 12%, var(--bg-secondary));
-  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
   z-index: 8;
 }
 
@@ -3473,8 +3557,14 @@ select.form-select option {
   position: relative;
 }
 @keyframes tapIn {
-  from { opacity: 0; transform: translateY(16px) scale(0.96); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .tap-accent {
@@ -3535,7 +3625,8 @@ select.form-select option {
 }
 .tap-status-dot.completed {
   background: var(--color-emerald);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-emerald) 25%, transparent);
+  box-shadow: 0 0 0 2px
+    color-mix(in srgb, var(--color-emerald) 25%, transparent);
 }
 .tap-close {
   flex-shrink: 0;
@@ -3655,7 +3746,11 @@ select.form-select option {
   color: var(--color-danger);
 }
 .tap-btn-danger:hover {
-  background: color-mix(in srgb, var(--color-danger) 10%, transparent) !important;
+  background: color-mix(
+    in srgb,
+    var(--color-danger) 10%,
+    transparent
+  ) !important;
   color: var(--color-danger);
 }
 
@@ -3675,7 +3770,11 @@ select.form-select option {
   align-items: flex-start;
   gap: 16px;
   padding: 20px 24px;
-  background: linear-gradient(135deg, var(--color-gold-bg) 0%, var(--bg-primary) 55%);
+  background: linear-gradient(
+    135deg,
+    var(--color-gold-bg) 0%,
+    var(--bg-primary) 55%
+  );
   border-bottom: 1px solid var(--border-color);
 }
 
@@ -4100,8 +4199,13 @@ select.form-select option {
   gap: 6px;
   margin-top: 18px;
   padding: 6px 18px;
-  background: linear-gradient(135deg, color-mix(in srgb, var(--color-emerald) 8%, var(--bg-secondary)), color-mix(in srgb, var(--color-teal) 6%, var(--bg-secondary)));
-  border: 1px solid color-mix(in srgb, var(--color-emerald) 18%, var(--border-color));
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-emerald) 8%, var(--bg-secondary)),
+    color-mix(in srgb, var(--color-teal) 6%, var(--bg-secondary))
+  );
+  border: 1px solid
+    color-mix(in srgb, var(--color-emerald) 18%, var(--border-color));
   border-radius: 24px;
   font-size: 0.72rem;
   font-weight: 700;
@@ -4128,18 +4232,23 @@ select.form-select option {
   padding: 26px 28px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border-left: 4px solid var(--card-accent, var(--color-emerald));
-  box-shadow: 0 2px 8px rgba(0,0,0,0.015);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.015);
   overflow: hidden;
 }
 
 .guide-card::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, var(--card-accent, var(--color-emerald)), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--card-accent, var(--color-emerald)),
+    transparent
+  );
   opacity: 0;
   transition: opacity 0.3s ease;
 }
@@ -4155,7 +4264,11 @@ select.form-select option {
 }
 
 .guide-card-tips {
-  background: linear-gradient(135deg, color-mix(in srgb, var(--color-gold) 4%, var(--bg-secondary)), var(--bg-secondary));
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-gold) 4%, var(--bg-secondary)),
+    var(--bg-secondary)
+  );
   border-color: color-mix(in srgb, var(--color-gold) 15%, var(--border-color));
 }
 
@@ -4182,8 +4295,21 @@ select.form-select option {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, color-mix(in srgb, var(--card-accent, var(--color-emerald)) 10%, var(--bg-primary)), var(--bg-primary));
-  border: 1px solid color-mix(in srgb, var(--card-accent, var(--color-emerald)) 20%, var(--border-color));
+  background: linear-gradient(
+    135deg,
+    color-mix(
+      in srgb,
+      var(--card-accent, var(--color-emerald)) 10%,
+      var(--bg-primary)
+    ),
+    var(--bg-primary)
+  );
+  border: 1px solid
+    color-mix(
+      in srgb,
+      var(--card-accent, var(--color-emerald)) 20%,
+      var(--border-color)
+    );
   border-radius: 14px;
   color: var(--card-accent, var(--color-emerald));
   transition: all 0.3s ease;
@@ -4191,11 +4317,20 @@ select.form-select option {
 }
 
 .guide-card:hover .guide-card-icon-wrap {
-  background: linear-gradient(135deg, var(--card-accent, var(--color-emerald)), color-mix(in srgb, var(--card-accent, var(--color-emerald)) 70%, #fff));
+  background: linear-gradient(
+    135deg,
+    var(--card-accent, var(--color-emerald)),
+    color-mix(in srgb, var(--card-accent, var(--color-emerald)) 70%, #fff)
+  );
   color: #fff;
   border-color: var(--card-accent, var(--color-emerald));
   transform: scale(1.05) rotate(-3deg);
-  box-shadow: 0 4px 16px color-mix(in srgb, var(--card-accent, var(--color-emerald)) 30%, transparent);
+  box-shadow: 0 4px 16px
+    color-mix(
+      in srgb,
+      var(--card-accent, var(--color-emerald)) 30%,
+      transparent
+    );
 }
 
 .guide-card-content {
@@ -4213,7 +4348,7 @@ select.form-select option {
 }
 
 .guide-card-title::before {
-  content: '';
+  content: "";
   display: inline-block;
   width: 4px;
   height: 20px;
@@ -4345,7 +4480,7 @@ select.form-select option {
   border: 1px solid var(--border-color);
   border-radius: 20px;
   padding: 32px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.04);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -4356,13 +4491,17 @@ select.form-select option {
   align-items: flex-start;
   gap: 14px;
   padding: 18px 20px;
-  background: linear-gradient(135deg, color-mix(in srgb, #25D366 8%, var(--bg-primary)), var(--bg-primary));
-  border: 1px solid color-mix(in srgb, #25D366 15%, var(--border-color));
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, #25d366 8%, var(--bg-primary)),
+    var(--bg-primary)
+  );
+  border: 1px solid color-mix(in srgb, #25d366 15%, var(--border-color));
   border-radius: 16px;
 }
 
 .contact-intro-icon {
-  color: #25D366;
+  color: #25d366;
   flex-shrink: 0;
   margin-top: 3px;
 }
@@ -4393,13 +4532,15 @@ select.form-select option {
   line-height: 1.8;
   resize: vertical;
   text-align: start;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
   box-sizing: border-box;
 }
 .contact-textarea:focus {
   outline: none;
-  border-color: #25D366;
-  box-shadow: 0 0 0 4px color-mix(in srgb, #25D366 18%, transparent);
+  border-color: #25d366;
+  box-shadow: 0 0 0 4px color-mix(in srgb, #25d366 18%, transparent);
 }
 .contact-textarea::placeholder {
   color: var(--text-tertiary);
@@ -4416,7 +4557,7 @@ select.form-select option {
   align-items: center;
   gap: 8px;
   padding: 12px 28px;
-  background: linear-gradient(135deg, #25D366, #1da851) !important;
+  background: linear-gradient(135deg, #25d366, #1da851) !important;
   border: none !important;
   border-radius: 14px !important;
   font-size: 0.95rem;
@@ -4427,7 +4568,7 @@ select.form-select option {
 }
 .contact-send-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px color-mix(in srgb, #25D366 30%, transparent);
+  box-shadow: 0 8px 24px color-mix(in srgb, #25d366 30%, transparent);
 }
 .contact-send-btn:disabled {
   opacity: 0.7;
@@ -4465,7 +4606,11 @@ select.form-select option {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: linear-gradient(135deg, var(--color-emerald) 0%, var(--color-teal) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-emerald) 0%,
+    var(--color-teal) 100%
+  );
   border-radius: 16px;
   padding: 24px 32px;
   color: white;
@@ -4511,12 +4656,15 @@ select.form-select option {
   background-color: var(--bg-primary);
   color: var(--text-primary);
   outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
 }
 
 .new-search-wrap .tasks-search-input:focus {
   border-color: var(--color-emerald);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-emerald) 15%, transparent);
+  box-shadow: 0 0 0 3px
+    color-mix(in srgb, var(--color-emerald) 15%, transparent);
 }
 
 .tasks-search-clear {
@@ -4629,7 +4777,7 @@ select.form-select option {
 }
 .t-card:hover {
   border-color: var(--text-tertiary);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
 }
 .t-card.status-completed {
   opacity: 0.65;
@@ -4643,9 +4791,15 @@ select.form-select option {
   margin-top: 5px;
   transition: background 0.2s ease;
 }
-.t-dot.pending { background: var(--color-gold); }
-.t-dot.completed { background: var(--color-emerald); }
-.t-dot.not_completed { background: var(--color-danger); }
+.t-dot.pending {
+  background: var(--color-gold);
+}
+.t-dot.completed {
+  background: var(--color-emerald);
+}
+.t-dot.not_completed {
+  background: var(--color-danger);
+}
 
 .t-body {
   flex: 1;
@@ -4844,8 +4998,14 @@ select.form-select option {
   animation: toastIn 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 @keyframes toastIn {
-  from { opacity: 0; transform: translateY(20px) scale(0.94); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 .toast-icon-wrap {
   width: 48px;
@@ -4889,7 +5049,8 @@ select.form-select option {
 .toast-btn:hover {
   opacity: 0.88;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-emerald) 30%, transparent);
+  box-shadow: 0 4px 12px
+    color-mix(in srgb, var(--color-emerald) 30%, transparent);
 }
 .toast-btn-dismiss {
   background: var(--bg-secondary);
@@ -5046,7 +5207,7 @@ select.form-select option {
 
 /* ===== Mobile Sidebar ===== */
 @media (max-width: 768px) {
-.btn-menu-mobile {
+  .btn-menu-mobile {
     display: inline-flex;
   }
 
@@ -5240,8 +5401,6 @@ select.form-select option {
   color: var(--text-primary);
 }
 
-
-
 /* Habit Modal */
 .habit-modal-name {
   font-size: 1rem;
@@ -5336,7 +5495,11 @@ select.form-select option {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: linear-gradient(135deg, var(--color-emerald) 0%, var(--color-teal) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-emerald) 0%,
+    var(--color-teal) 100%
+  );
   border-radius: var(--radius-md);
   padding: 16px 20px;
   color: white;
@@ -5523,12 +5686,16 @@ select.form-select option {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   overflow: hidden;
-  transition: box-shadow 0.25s ease, border-color 0.25s ease;
+  transition:
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
 }
 
 .journal-add-card:focus-within {
   border-color: var(--color-emerald);
-  box-shadow: 0 0 0 3px rgba(17, 94, 59, 0.06), var(--shadow-md);
+  box-shadow:
+    0 0 0 3px rgba(17, 94, 59, 0.06),
+    var(--shadow-md);
 }
 
 /* === Note Composer (redesigned add-note section) === */
@@ -5536,15 +5703,20 @@ select.form-select option {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: 18px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06), 0 1px 4px rgba(0, 0, 0, 0.04);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.06),
+    0 1px 4px rgba(0, 0, 0, 0.04);
   overflow: hidden;
-  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+  transition:
+    box-shadow 0.3s ease,
+    border-color 0.3s ease;
 }
 
 .note-composer-card:focus-within {
   border-color: var(--color-emerald);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-emerald) 12%, transparent),
-              0 8px 32px rgba(0, 0, 0, 0.10);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--color-emerald) 12%, transparent),
+    0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 /* Top bar: icon + title + date */
@@ -5655,20 +5827,22 @@ select.form-select option {
   font-family: inherit;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 .note-period-chip:hover {
   border-color: var(--color-emerald);
   color: var(--color-emerald);
   background: color-mix(in srgb, var(--color-emerald) 8%, var(--bg-primary));
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-emerald) 15%, transparent);
+  box-shadow: 0 4px 12px
+    color-mix(in srgb, var(--color-emerald) 15%, transparent);
 }
 .note-period-chip.active {
   border-color: var(--color-emerald);
   background: var(--color-emerald);
   color: #fff;
-  box-shadow: 0 4px 14px color-mix(in srgb, var(--color-emerald) 35%, transparent);
+  box-shadow: 0 4px 14px
+    color-mix(in srgb, var(--color-emerald) 35%, transparent);
   transform: translateY(-1px);
 }
 
@@ -5695,14 +5869,19 @@ select.form-select option {
   padding: 0 20px;
   border-radius: 100px;
   border: none;
-  background: linear-gradient(135deg, var(--color-emerald), color-mix(in srgb, var(--color-emerald) 80%, var(--color-teal)));
+  background: linear-gradient(
+    135deg,
+    var(--color-emerald),
+    color-mix(in srgb, var(--color-emerald) 80%, var(--color-teal))
+  );
   color: #ffffff;
   font-weight: 700;
   font-size: 0.85rem;
   cursor: pointer;
   flex-shrink: 0;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 16px color-mix(in srgb, var(--color-emerald) 30%, transparent);
+  box-shadow: 0 4px 16px
+    color-mix(in srgb, var(--color-emerald) 30%, transparent);
   font-family: inherit;
   white-space: nowrap;
 }
@@ -5710,7 +5889,8 @@ select.form-select option {
 .note-composer-submit:hover:not(:disabled) {
   filter: brightness(1.08);
   transform: translateY(-1px);
-  box-shadow: 0 8px 24px color-mix(in srgb, var(--color-emerald) 40%, transparent);
+  box-shadow: 0 8px 24px
+    color-mix(in srgb, var(--color-emerald) 40%, transparent);
 }
 
 .note-composer-submit:active:not(:disabled) {
@@ -5741,7 +5921,7 @@ select.form-select option {
 
 .journal-section-divider::before,
 .journal-section-divider::after {
-  content: '';
+  content: "";
   flex: 1;
   height: 1px;
   background: var(--border-color);
@@ -5850,7 +6030,8 @@ select.form-select option {
 .study-note-card:hover {
   border-color: var(--color-emerald);
   border-left-color: var(--color-emerald);
-  box-shadow: 0 2px 12px color-mix(in srgb, var(--color-emerald) 8%, transparent);
+  box-shadow: 0 2px 12px
+    color-mix(in srgb, var(--color-emerald) 8%, transparent);
 }
 
 .study-note-card.locked {
@@ -5906,7 +6087,7 @@ select.form-select option {
 }
 
 .study-note-time::before {
-  content: '';
+  content: "";
   width: 4px;
   height: 4px;
   border-radius: 50%;
@@ -5916,7 +6097,9 @@ select.form-select option {
 
 .study-note-footer .btn-task-action {
   opacity: 0;
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
   transform: scale(0.8);
 }
 
@@ -6068,13 +6251,23 @@ select.form-select option {
 }
 
 @keyframes overlayIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes modalIn {
-  from { opacity: 0; transform: translateY(16px) scale(0.97); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .dialog-overlay {
@@ -6101,8 +6294,12 @@ select.form-select option {
   }
 
   @keyframes modalSlideUp {
-    from { transform: translateY(100%); }
-    to { transform: translateY(0); }
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
   }
 }
 
@@ -6489,7 +6686,6 @@ select.form-select option {
     padding: 10px 34px;
     font-size: 0.85rem;
   }
-
 }
 
 /* === Tablet refinements === */
@@ -6534,7 +6730,7 @@ select.form-select option {
 .new-tasks-header .new-pulse-date .date-hijri {
   font-size: 0.85rem;
   font-weight: 600;
-  color: rgba(255,255,255,0.85);
+  color: rgba(255, 255, 255, 0.85);
 }
 
 [dir="rtl"] .new-pulse-date {
@@ -6553,13 +6749,13 @@ select.form-select option {
   border: 1px solid var(--border-color);
   border-radius: 18px;
   padding: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.015);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.015);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
 }
 .new-pulse-card::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -6571,27 +6767,50 @@ select.form-select option {
 }
 .new-pulse-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.07);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07);
   border-color: transparent;
 }
 .new-pulse-card:hover::before {
   opacity: 1;
 }
 
-.overview-tasks::before { background: linear-gradient(180deg, var(--color-teal), #0d9488); }
-.overview-habits::before { background: linear-gradient(180deg, #3b82f6, #2563eb); }
-.overview-prayers::before { background: linear-gradient(180deg, var(--color-emerald), #15803d); }
-.overview-streak::before { background: linear-gradient(180deg, var(--color-gold), #d97706); }
+.overview-tasks::before {
+  background: linear-gradient(180deg, var(--color-teal), #0d9488);
+}
+.overview-habits::before {
+  background: linear-gradient(180deg, #3b82f6, #2563eb);
+}
+.overview-prayers::before {
+  background: linear-gradient(180deg, var(--color-emerald), #15803d);
+}
+.overview-streak::before {
+  background: linear-gradient(180deg, var(--color-gold), #d97706);
+}
 
-.overview-tasks:hover { border-color: color-mix(in srgb, var(--color-teal) 30%, transparent); box-shadow: 0 8px 24px color-mix(in srgb, var(--color-teal) 12%, transparent); }
-.overview-habits:hover { border-color: color-mix(in srgb, #3b82f6 30%, transparent); box-shadow: 0 8px 24px color-mix(in srgb, #3b82f6 12%, transparent); }
-.overview-prayers:hover { border-color: color-mix(in srgb, var(--color-emerald) 30%, transparent); box-shadow: 0 8px 24px color-mix(in srgb, var(--color-emerald) 12%, transparent); }
-.overview-streak:hover { border-color: color-mix(in srgb, var(--color-gold) 30%, transparent); box-shadow: 0 8px 24px color-mix(in srgb, var(--color-gold) 12%, transparent); }
+.overview-tasks:hover {
+  border-color: color-mix(in srgb, var(--color-teal) 30%, transparent);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--color-teal) 12%, transparent);
+}
+.overview-habits:hover {
+  border-color: color-mix(in srgb, #3b82f6 30%, transparent);
+  box-shadow: 0 8px 24px color-mix(in srgb, #3b82f6 12%, transparent);
+}
+.overview-prayers:hover {
+  border-color: color-mix(in srgb, var(--color-emerald) 30%, transparent);
+  box-shadow: 0 8px 24px
+    color-mix(in srgb, var(--color-emerald) 12%, transparent);
+}
+.overview-streak:hover {
+  border-color: color-mix(in srgb, var(--color-gold) 30%, transparent);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--color-gold) 12%, transparent);
+}
 
 .new-pulse-card .overview-icon {
   margin-bottom: 16px;
   color: var(--text-secondary);
-  transition: transform 0.3s ease, color 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    color 0.3s ease;
 }
 .new-pulse-card:hover .overview-icon {
   transform: scale(1.1);
@@ -6675,9 +6894,21 @@ select.form-select option {
   transform: translateY(-1px);
 }
 
-.sub-tag.tag-pending { color: var(--color-gold); border-color: color-mix(in srgb, var(--color-gold) 30%, transparent); background: color-mix(in srgb, var(--color-gold) 8%, transparent); }
-.sub-tag.tag-missed { color: var(--color-danger); border-color: color-mix(in srgb, var(--color-danger) 30%, transparent); background: color-mix(in srgb, var(--color-danger) 8%, transparent); }
-.sub-tag.tag-streak { color: var(--color-emerald); border-color: color-mix(in srgb, var(--color-emerald) 30%, transparent); background: color-mix(in srgb, var(--color-emerald) 8%, transparent); }
+.sub-tag.tag-pending {
+  color: var(--color-gold);
+  border-color: color-mix(in srgb, var(--color-gold) 30%, transparent);
+  background: color-mix(in srgb, var(--color-gold) 8%, transparent);
+}
+.sub-tag.tag-missed {
+  color: var(--color-danger);
+  border-color: color-mix(in srgb, var(--color-danger) 30%, transparent);
+  background: color-mix(in srgb, var(--color-danger) 8%, transparent);
+}
+.sub-tag.tag-streak {
+  color: var(--color-emerald);
+  border-color: color-mix(in srgb, var(--color-emerald) 30%, transparent);
+  background: color-mix(in srgb, var(--color-emerald) 8%, transparent);
+}
 
 .pulse-metric-dots {
   display: flex;
@@ -6690,7 +6921,9 @@ select.form-select option {
   height: 12px;
   border-radius: 50%;
   flex-shrink: 0;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 .pulse-dot:hover {
   transform: scale(1.3);
@@ -6716,7 +6949,8 @@ select.form-select option {
   gap: 10px;
   margin-bottom: 20px;
   padding-bottom: 12px;
-  border-bottom: 2px solid color-mix(in srgb, var(--color-emerald) 20%, var(--border-color));
+  border-bottom: 2px solid
+    color-mix(in srgb, var(--color-emerald) 20%, var(--border-color));
   color: var(--text-secondary);
 }
 
@@ -6727,10 +6961,18 @@ select.form-select option {
   color: var(--text-primary);
 }
 
-.detail-tasks .new-pulse-card-header svg { color: var(--color-teal); }
-.detail-habits .new-pulse-card-header svg { color: #3b82f6; }
-.detail-prayers .new-pulse-card-header svg { color: var(--color-emerald); }
-.detail-notes .new-pulse-card-header svg { color: var(--color-gold); }
+.detail-tasks .new-pulse-card-header svg {
+  color: var(--color-teal);
+}
+.detail-habits .new-pulse-card-header svg {
+  color: #3b82f6;
+}
+.detail-prayers .new-pulse-card-header svg {
+  color: var(--color-emerald);
+}
+.detail-notes .new-pulse-card-header svg {
+  color: var(--color-gold);
+}
 
 /* Tasks Detail */
 .task-status-bars {
@@ -6765,7 +7007,7 @@ select.form-select option {
   background: var(--bg-primary);
   border-radius: 5px;
   overflow: hidden;
-  box-shadow: inset 0 1px 2px rgba(0,0,0,0.06);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 
 .status-fill {
@@ -6773,9 +7015,15 @@ select.form-select option {
   border-radius: 5px;
   transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.status-fill.completed { background: linear-gradient(90deg, var(--color-emerald), #22c55e); }
-.status-fill.pending { background: linear-gradient(90deg, var(--color-gold), #f59e0b); }
-.status-fill.not-completed { background: linear-gradient(90deg, var(--color-danger), #ef4444); }
+.status-fill.completed {
+  background: linear-gradient(90deg, var(--color-emerald), #22c55e);
+}
+.status-fill.pending {
+  background: linear-gradient(90deg, var(--color-gold), #f59e0b);
+}
+.status-fill.not-completed {
+  background: linear-gradient(90deg, var(--color-danger), #ef4444);
+}
 
 .status-count {
   width: 30px;
@@ -6786,10 +7034,15 @@ select.form-select option {
 }
 
 .pulse-period-breakdown.new-style {
-  background: linear-gradient(135deg, var(--bg-primary), color-mix(in srgb, var(--color-emerald) 3%, var(--bg-primary)));
+  background: linear-gradient(
+    135deg,
+    var(--bg-primary),
+    color-mix(in srgb, var(--color-emerald) 3%, var(--bg-primary))
+  );
   padding: 18px;
   border-radius: 14px;
-  border: 1px solid color-mix(in srgb, var(--color-emerald) 12%, var(--border-color));
+  border: 1px solid
+    color-mix(in srgb, var(--color-emerald) 12%, var(--border-color));
 }
 
 .pulse-period-row {
@@ -6798,7 +7051,9 @@ select.form-select option {
   gap: 6px;
   margin-bottom: 14px;
 }
-.pulse-period-row:last-child { margin-bottom: 0; }
+.pulse-period-row:last-child {
+  margin-bottom: 0;
+}
 
 .pulse-period-info {
   display: flex;
@@ -6814,7 +7069,7 @@ select.form-select option {
   gap: 6px;
 }
 .pulse-period-name::before {
-  content: '';
+  content: "";
   width: 6px;
   height: 6px;
   border-radius: 50%;
@@ -6827,7 +7082,7 @@ select.form-select option {
   background: var(--bg-secondary);
   border-radius: 4px;
   overflow: hidden;
-  box-shadow: inset 0 1px 2px rgba(0,0,0,0.04);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 .pulse-period-bar {
@@ -6865,8 +7120,12 @@ select.form-select option {
   border-color: color-mix(in srgb, var(--color-emerald) 25%, transparent);
   background: color-mix(in srgb, var(--color-emerald) 4%, var(--bg-primary));
 }
-.new-pulse-habit-item.done .icon-done { color: var(--color-emerald); }
-.new-pulse-habit-item.pending .icon-pending { color: var(--text-tertiary); }
+.new-pulse-habit-item.done .icon-done {
+  color: var(--color-emerald);
+}
+.new-pulse-habit-item.pending .icon-pending {
+  color: var(--text-tertiary);
+}
 
 .pulse-empty-habits {
   font-size: 0.85rem;
@@ -6939,18 +7198,26 @@ select.form-select option {
   border-color: color-mix(in srgb, var(--color-emerald) 30%, transparent);
   background: color-mix(in srgb, var(--color-emerald) 4%, var(--bg-primary));
 }
-.status-onTime .prayer-status-text { color: var(--color-emerald); }
+.status-onTime .prayer-status-text {
+  color: var(--color-emerald);
+}
 .status-late {
   border-color: color-mix(in srgb, var(--color-gold) 30%, transparent);
   background: color-mix(in srgb, var(--color-gold) 4%, var(--bg-primary));
 }
-.status-late .prayer-status-text { color: var(--color-gold); }
+.status-late .prayer-status-text {
+  color: var(--color-gold);
+}
 .status-missed {
   border-color: color-mix(in srgb, var(--color-danger) 30%, transparent);
   background: color-mix(in srgb, var(--color-danger) 4%, var(--bg-primary));
 }
-.status-missed .prayer-status-text { color: var(--color-danger); }
-.status-pending .prayer-status-text { color: var(--text-tertiary); }
+.status-missed .prayer-status-text {
+  color: var(--color-danger);
+}
+.status-pending .prayer-status-text {
+  color: var(--text-tertiary);
+}
 
 /* Notes */
 .pulse-notes-list.new-style {
@@ -6960,8 +7227,13 @@ select.form-select option {
 }
 
 .pulse-note-item.new-style {
-  background: linear-gradient(135deg, var(--bg-primary), color-mix(in srgb, var(--color-gold) 4%, var(--bg-primary)));
-  border: 1px solid color-mix(in srgb, var(--color-gold) 15%, var(--border-color));
+  background: linear-gradient(
+    135deg,
+    var(--bg-primary),
+    color-mix(in srgb, var(--color-gold) 4%, var(--bg-primary))
+  );
+  border: 1px solid
+    color-mix(in srgb, var(--color-gold) 15%, var(--border-color));
   padding: 14px 16px;
   border-radius: 14px;
   transition: all 0.2s ease;
@@ -7025,7 +7297,9 @@ select.form-select option {
 }
 
 /* Comparison Card */
-.detail-comparison .new-pulse-card-header svg { color: var(--color-gold); }
+.detail-comparison .new-pulse-card-header svg {
+  color: var(--color-gold);
+}
 
 .pulse-comparison-content {
   display: flex;
@@ -7098,7 +7372,8 @@ select.form-select option {
   gap: 8px;
   padding: 12px 14px;
   background: color-mix(in srgb, var(--color-gold) 4%, var(--bg-primary));
-  border: 1px solid color-mix(in srgb, var(--color-gold) 12%, var(--border-color));
+  border: 1px solid
+    color-mix(in srgb, var(--color-gold) 12%, var(--border-color));
   border-radius: 12px;
 }
 
@@ -7139,7 +7414,9 @@ select.form-select option {
 }
 
 /* Score Card */
-.detail-score .new-pulse-card-header svg { color: var(--color-gold); }
+.detail-score .new-pulse-card-header svg {
+  color: var(--color-gold);
+}
 
 .pulse-score-main {
   display: flex;
@@ -7343,5 +7620,3 @@ select.form-select option {
     grid-template-columns: 1fr;
   }
 }
-
-
