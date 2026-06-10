@@ -222,9 +222,6 @@ const translateDuration = (minutes) => {
   if (mins === 0) {
     return hours === 1 ? t('duration.hour') : t('duration.hours').replace('%', hours);
   }
-  if (hours === 0) {
-    return t('duration.mins').replace('%', mins);
-  }
   return t('duration.hm').replace('%h', hours).replace('%m', mins);
 };
 
@@ -812,7 +809,7 @@ function App() {
           // Start silent countdown
           let minutesRemaining = Number(task.duration) || 15;
           const showTimer = (remaining) => {
-            triggerNotification(`${task.name}: ${remaining} ${t('duration.mins').replace('%', '')}`, {
+            triggerNotification(`${task.name}: ${translateDuration(remaining)}`, {
               body: t('notif.taskInProg'),
               tag: tag,
               renotify: true,
