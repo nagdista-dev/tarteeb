@@ -633,6 +633,7 @@ function App() {
       icon: NOTIF_ICON,
       badge: NOTIF_ICON,
       silent: true,
+      dir: getLanguage() === 'ar' ? 'rtl' : 'ltr',
       ...options
     };
 
@@ -1256,16 +1257,11 @@ function App() {
     });
   };
 
-  const getDefaultPeriod = () => {
-    const active = timelineStatus?.activePeriod;
-    return active && active !== 'none' ? active : 'evening';
-  };
-
   const openTaskModal = (mode, task = null, periodOverride = null) => {
     const prayers = dayData?.prayerTimes;
     if (mode === 'edit' && task?.type === 'fixed') return;
     if (mode === 'add' && prayers) {
-      const period = periodOverride || getDefaultPeriod();
+      const period = periodOverride || 'evening';
       const nowMin = getCurrentPlannerMinutes(currentTime, activeDate);
       const startTime = getFirstAvailableTimeForPeriod(period, dayData.tasks, prayers, 15, null, nowMin);
       const startMin = scheduledTimeToPlannerMinutes(startTime, period, prayers);

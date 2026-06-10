@@ -329,7 +329,7 @@ const en = {
   'duration.hour': '1 hour',
   'duration.hours': '% hours',
   'duration.mins': '% mins',
-  'duration.hm': '%h %m',
+  'duration.hm': '%h hours %m minutes',
 
   /* Guide page */
   'guide.steps': 'Steps',
@@ -826,7 +826,7 @@ const ar = {
   'duration.hour': 'ساعة واحدة',
   'duration.hours': '% ساعات',
   'duration.mins': '% دقيقة',
-  'duration.hm': '%hس %mد',
+  'duration.hm': '%h ساعة %m دقيقة',
 
   /* Guide page */
   'guide.steps': 'خطوات',
