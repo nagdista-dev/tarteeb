@@ -24,6 +24,13 @@ import {
 import { t, setLanguage, getLanguage, translateTaskName } from './i18n';
 import countries from './data/countries';
 import bellSound from '/bell.mp3';
+import {
+  requestPermission as pushRequestPermission,
+  subscribeToPush,
+  unsubscribeFromPush,
+  isPushSupported,
+  getExistingSubscription,
+} from './utils/notificationManager';
 
 const calculateStats = (tasks) => {
   const total = tasks.length;
@@ -448,6 +455,21 @@ function App() {
   // ---- Task search ----
   const [taskSearch, setTaskSearch] = useState('');
 
+  // ---- Push Notification Subscription ----
+  const [pushSupported, setPushSupported] = useState(false);
+  const [pushSubscribed, setPushSubscribed] = useState(false);
+
+  useEffect(() => {
+    isPushSupported().then(setPushSupported);
+  }, []);
+
+  useEffect(() => {
+    if (typeof Notification === 'undefined') return;
+    if (Notification.permission === 'granted') {
+      getExistingSubscription().then(sub => setPushSubscribed(!!sub));
+    }
+  }, []);
+
   // ---- Toast notifications ----
   // ---- Notification preferences (persisted) ----
   const [notifSoundEnabled, setNotifSoundEnabled] = useState(() => {
@@ -603,24 +625,16 @@ function App() {
 
   const enableNotifications = async () => {
     if (typeof Notification === 'undefined') return;
-    const result = await Notification.requestPermission();
-    localStorage.setItem('tarteeb_notif_permission', result);
+    const result = await pushRequestPermission();
     setShowNotifPrompt(false);
 
-    if (result === 'granted' && 'serviceWorker' in navigator) {
-      const vapidKey = import.meta.env.VITE_APP_VAPID_PUBLIC_KEY;
-      if (vapidKey && vapidKey !== 'YOUR_PUBLIC_KEY_HERE') {
-        try {
-          const registration = await navigator.serviceWorker.ready;
-          const subscription = await registration.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: vapidKey
-          });
-          console.log('User subscribed:', subscription);
-        } catch (e) {
-          // Push subscription failed - push notifications not available
-        }
-      }
+    if (result === 'granted') {
+      await subscribeToPush({
+        city: locationConfig.city,
+        country: locationConfig.country,
+        latitude: locationConfig.latitude,
+        longitude: locationConfig.longitude,
+      });
     }
   };
 
@@ -3854,6 +3868,30 @@ function App() {
                         <span className="settings-toggle-desc">{t('settings.notifVibrateDesc')}</span>
                       </span>
                     </label>
+                    {pushSupported && (
+                      <label className="settings-toggle" style={{ marginTop: 8 }}>
+                        <input
+                          type="checkbox"
+                          checked={pushSubscribed}
+                          onChange={async (e) => {
+                            if (e.target.checked) {
+                              const res = await subscribeToPush({
+                                city: locationConfig.city,
+                                country: locationConfig.country,
+                              });
+                              if (res.success) setPushSubscribed(true);
+                            } else {
+                              await unsubscribeFromPush();
+                              setPushSubscribed(false);
+                            }
+                          }}
+                        />
+                        <span className="settings-toggle-label">
+                          <span className="settings-toggle-title">{t('settings.pushNotif') || 'Background Notifications'}</span>
+                          <span className="settings-toggle-desc">{t('settings.pushNotifDesc') || 'Receive notifications even when the app is closed'}</span>
+                        </span>
+                      </label>
+                    )}
                     <div style={{ marginTop: 12 }}>
                       <button className="btn" onClick={() => setShowNotifStatus(true)}>
                         <Bell size={16} /> {t('settings.notifCheckStatus')}
@@ -4303,6 +4341,13 @@ function App() {
                 </div>
                 <h3 className="notif-status-title">{t('settings.notifEnabledTitle')}</h3>
                 <p className="dialog-message">{t('settings.notifEnabledDesc')}</p>
+                {pushSupported && (
+                  <p className="dialog-message" style={{ marginTop: 8, fontSize: '0.85rem' }}>
+                    {pushSubscribed
+                      ? (t('settings.pushActive') || 'Background notifications: Active')
+                      : (t('settings.pushInactive') || 'Background notifications: Inactive')}
+                  </p>
+                )}
               </>
             ) : (
               <>

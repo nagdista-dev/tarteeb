@@ -1,0 +1,17 @@
+name: Prayer Notification Cron
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger notification check
+        run: |
+          curl -s -X POST "${{ vars.NETLIFY_SITE_URL || 'https://tarteeb.netlify.app' }}/.netlify/functions/notify" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json" \
+            -d '{}'
