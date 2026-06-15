@@ -7620,3 +7620,101 @@ select.form-select option {
     grid-template-columns: 1fr;
   }
 }
+
+/* ===== Alternative Plan ===== */
+.alt-plan-page {
+  max-width: 780px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.alt-plan-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 4px 12px;
+  border-radius: 100px;
+  background: color-mix(in srgb, var(--color-teal) 12%, var(--bg-secondary));
+  border: 1px solid color-mix(in srgb, var(--color-teal) 25%, transparent);
+  color: var(--color-teal);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.alt-plan-view-tabs {
+  display: flex;
+  gap: 6px;
+}
+
+.alt-view-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 14px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border-color);
+  background: var(--bg-primary);
+  color: var(--text-tertiary);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.alt-view-btn:hover {
+  border-color: var(--color-teal);
+  color: var(--color-teal);
+}
+
+.alt-view-btn.active {
+  border-color: var(--color-teal);
+  background: color-mix(in srgb, var(--color-teal) 10%, var(--bg-secondary));
+  color: var(--color-teal);
+}
+
+.alt-plan-icon {
+  color: var(--color-teal) !important;
+}
+
+.alt-plan-card {
+  border-color: var(--color-teal-border) !important;
+}
+
+.alt-task-card {
+  border-left: 4px solid var(--color-teal) !important;
+}
+
+.alt-t-card {
+  border-left: 3px solid var(--color-teal) !important;
+}
+
+.alt-empty-timeline-message {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--text-tertiary);
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.fab-alt {
+  background: var(--color-teal) !important;
+  box-shadow: 0 4px 16px rgba(15, 118, 110, 0.35) !important;
+}
+
+.fab-alt:hover {
+  background: #0d5f58 !important;
+  box-shadow: 0 6px 24px rgba(15, 118, 110, 0.45) !important;
+}
+
+.empty-state-desc {
+  font-size: 0.82rem;
+  color: var(--text-tertiary);
+  max-width: 300px;
+  text-align: center;
+  line-height: 1.5;
+}

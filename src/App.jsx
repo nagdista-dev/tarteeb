@@ -327,6 +327,12 @@ function App() {
   const dayDataRef = useRef(dayData);
   dayDataRef.current = dayData;
 
+  // ---- Alternative Plan Data ----
+  const [alternativeDayData, setAlternativeDayData] = useState(null);
+  const [altPageView, setAltPageView] = useState('home'); // 'home' | 'tasks'
+  const altDayDataRef = useRef(alternativeDayData);
+  altDayDataRef.current = alternativeDayData;
+
   // ---- Mobile sidebar ----
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -782,6 +788,52 @@ function App() {
       };
     }, []);
 
+  // ---- Notification deduplication state ----
+  const notifiedTasks = useRef(new Set());
+  const notifiedTaskEnds = useRef(new Set());
+  const taskTimerIntervals = useRef(new Map());
+  const remindedEndOfDay = useRef(null);
+  const prevActiveDateRef = useRef(activeDate);
+  const notifiedPrayers = useRef(new Set());
+  const appReadyRef = useRef(false);
+  const startupCompleteRef = useRef(false);
+
+  // ---- Pre-populate notification dedup sets on initial load ----
+  useEffect(() => {
+    if (!dayData?.prayerTimes || startupCompleteRef.current) return;
+    const prayers = dayData.prayerTimes;
+    const nowMinutes = getCurrentPlannerMinutes(currentTime, activeDate);
+    const compiled = getCompiledPrayersForPlannerDate(activeDate);
+
+    dayData.tasks.forEach(task => {
+      if (task.completed) return;
+      const startMinutes = getTaskPlannerMinutes(task, prayers);
+      const endMinutes = startMinutes + (Number(task.duration) || 15);
+      const startKey = `${task.id}_start`;
+      const endKey = `${task.id}_end`;
+      if (nowMinutes >= startMinutes) notifiedTasks.current.add(startKey);
+      if (nowMinutes >= endMinutes) notifiedTaskEnds.current.add(endKey);
+    });
+
+    const markers = getPrayerMarkersForPlannerDay(compiled);
+    for (let i = 0; i < markers.length; i++) {
+      const m = markers[i];
+      const startMins = m.minutes;
+      const endMins = i < markers.length - 1 ? markers[i + 1].minutes : startMins + (1440 / markers.length);
+      const startKey = `${activeDate}_prayer_${m.key}_start`;
+      const endKey = `${activeDate}_prayer_${m.key}_end`;
+      if (nowMinutes >= startMins - 1) notifiedPrayers.current.add(startKey);
+      if (nowMinutes >= endMins - 1) notifiedPrayers.current.add(endKey);
+    }
+
+    const dayEnd = getPlannerDayEndMinutes(compiled);
+    if (nowMinutes >= dayEnd - 30) remindedEndOfDay.current = activeDate;
+
+    prevActiveDateRef.current = activeDate;
+    appReadyRef.current = true;
+    startupCompleteRef.current = true;
+  }, [dayData, currentTime, activeDate]);
+
     // Task Notifications (start, countdown, end)
     useEffect(() => {
       if (!appReadyRef.current) return;
@@ -878,11 +930,12 @@ function App() {
      }
    }, [currentTime, activeDate, triggerNotification, t]);
 
-   // ---- New day notification ----
-   useEffect(() => {
-     if (typeof Notification === 'undefined') return;
-     if (Notification.permission !== 'granted') return;
-     if (prevActiveDateRef.current && prevActiveDateRef.current !== activeDate) {
+    // ---- New day notification ----
+    useEffect(() => {
+      if (!appReadyRef.current) return;
+      if (typeof Notification === 'undefined') return;
+      if (Notification.permission !== 'granted') return;
+      if (prevActiveDateRef.current && prevActiveDateRef.current !== activeDate) {
        triggerNotification(t('notif.newDay'), { body: t('notif.newDayBody'), tag: `${activeDate}_new-day`, renotify: true });
      }
      prevActiveDateRef.current = activeDate;
@@ -942,7 +995,8 @@ function App() {
 
   // ---- Scroll to top on page change ----
   useEffect(() => {
-    window.scrollTo(0, 0);
+    const container = document.querySelector('.content-area');
+    if (container) container.scrollTo(0, 0);
   }, [currentPage]);
 
   // ---- Keyboard Shortcuts ----
@@ -960,17 +1014,21 @@ function App() {
         }
         return;
       }
-      if (e.key === 'h') { setCurrentPage('home'); window.scrollTo(0, 0); }
-      else if (e.key === 't') { setCurrentPage('tasks'); window.scrollTo(0, 0); }
-      else if (e.key === 'j') { setCurrentPage('journal'); window.scrollTo(0, 0); }
-      else if (e.key === 'g') { setCurrentPage('guide'); window.scrollTo(0, 0); }
-      else if (e.key === 's') { setCurrentPage('settings'); window.scrollTo(0, 0); }
-      else if (e.key === 'b') { setCurrentPage('habits'); window.scrollTo(0, 0); }
-      else if (e.key === 'l') { setCurrentPage('sleep'); window.scrollTo(0, 0); }
-      else if (e.key === 'd') { setCurrentPage('drinks'); window.scrollTo(0, 0); }
-      else if (e.key === 'p') { setCurrentPage('prayers'); window.scrollTo(0, 0); }
+      if (e.key === 'h') { setCurrentPage('home'); }
+      else if (e.key === 't') { setCurrentPage('tasks'); }
+      else if (e.key === 'j') { setCurrentPage('journal'); }
+      else if (e.key === 'g') { setCurrentPage('guide'); }
+      else if (e.key === 's') { setCurrentPage('settings'); }
+      else if (e.key === 'b') { setCurrentPage('habits'); }
+      else if (e.key === 'l') { setCurrentPage('sleep'); }
+      else if (e.key === 'd') { setCurrentPage('drinks'); }
+      else if (e.key === 'p') { setCurrentPage('prayers'); }
+      else if (e.key === 'a') { setCurrentPage('alternative'); setAltPageView('home'); }
       else if (e.key === 'n' && (currentPage === 'home' || currentPage === 'tasks') && dayData) {
         openTaskModal('add');
+      }
+      else if (e.key === 'n' && currentPage === 'alternative' && altDayDataRef.current) {
+        openAltTaskModal('add');
       }
     }
     window.addEventListener('keydown', handleKeyDown);
@@ -1068,6 +1126,35 @@ function App() {
     return () => { active = false; };
   }, [activeDate, locationConfig]);
 
+  // ---- Load / Init alternative plan data ----
+  useEffect(() => {
+    if (!dayData?.prayerTimes) return;
+    const storageKey = `tarteeb_alternative_day_${activeDate}`;
+    const saved = localStorage.getItem(storageKey);
+
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        parsed.prayerTimes = dayData.prayerTimes;
+        parsed.tasks = normalizeTasksForPrayerBlocks(parsed.tasks || [], parsed.prayerTimes);
+        localStorage.setItem(storageKey, JSON.stringify(parsed));
+        setAlternativeDayData(parsed);
+      } catch {
+        setAlternativeDayData(null);
+      }
+    } else {
+      const newAltDay = {
+        date: activeDate,
+        hijriDate: dayData.hijriDate,
+        prayerTimes: dayData.prayerTimes,
+        tasks: [],
+        stats: calculateStats([])
+      };
+      localStorage.setItem(storageKey, JSON.stringify(newAltDay));
+      setAlternativeDayData(newAltDay);
+    }
+  }, [activeDate, dayData?.prayerTimes]);
+
   // ---- Timeline status (next prayer etc.) ----
   useEffect(() => {
     if (!appReadyRef.current) return;
@@ -1093,17 +1180,6 @@ function App() {
 
   // ---- Auto-scroll to current time line (once) ----
   const hasScrolledRef = useRef(false);
-  const notifiedTasks = useRef(new Set());
-  const notifiedTaskEnds = useRef(new Set());
-  const taskTimerIntervals = useRef(new Map());
-  const remindedEndOfDay = useRef(null);
-  const prevActiveDateRef = useRef(activeDate);
-  const notifiedPrayers = useRef(new Set());
-  const appReadyRef = useRef(false);
-  useEffect(() => {
-    const t = setTimeout(() => { appReadyRef.current = true; }, 3000);
-    return () => clearTimeout(t);
-  }, []);
   useEffect(() => {
     if (currentPage !== 'home' || !dayData || hasScrolledRef.current) return;
     hasScrolledRef.current = true;
@@ -1165,6 +1241,81 @@ function App() {
     updated.stats = calculateStats(updated.tasks);
     localStorage.setItem(`tarteeb_day_${updated.date}`, JSON.stringify(updated));
     setDayData(updated);
+  };
+
+  const updateAltDayData = (updated) => {
+    updated.stats = calculateStats(updated.tasks);
+    localStorage.setItem(`tarteeb_alternative_day_${updated.date}`, JSON.stringify(updated));
+    setAlternativeDayData(updated);
+  };
+
+  const toggleAltTaskCompletion = (id) => {
+    const data = altDayDataRef.current;
+    if (!data) return;
+    const task = data.tasks.find(t => t.id === id);
+    if (!task) return;
+    const wasCompleted = task.completed;
+    if (!wasCompleted) {
+      confetti({
+        particleCount: 120, spread: 80, origin: { x: 0.5, y: 0.5 },
+        colors: ['#0f766e', '#14b8a6', '#f59e0b', '#8b5cf6', '#10b981']
+      });
+    }
+    const updTasks = data.tasks.map(t => t.id === id ? { ...t, completed: !wasCompleted, status: !wasCompleted ? 'completed' : 'pending' } : t);
+    updateAltDayData({ ...data, tasks: updTasks });
+  };
+
+  const setAltTaskStatus = (id, newStatus) => {
+    const data = altDayDataRef.current;
+    if (!data) return;
+    const task = data.tasks.find(t => t.id === id);
+    if (!task) return;
+    if (newStatus === 'completed' && task.status !== 'completed' && !task.completed) {
+      confetti({
+        particleCount: 120, spread: 80, origin: { x: 0.5, y: 0.5 },
+        colors: ['#0f766e', '#14b8a6', '#f59e0b', '#8b5cf6', '#10b981']
+      });
+    }
+    const updTasks = data.tasks.map(t => t.id === id ? { ...t, status: newStatus, completed: newStatus === 'completed' } : t);
+    updateAltDayData({ ...data, tasks: updTasks });
+  };
+
+  const deleteAltTask = async (id) => {
+    const data = altDayDataRef.current;
+    if (!data) return;
+    const confirmed = await showConfirm(t('confirm.deleteTask'));
+    if (confirmed) {
+      const newTasks = data.tasks.filter(t => t.id !== id);
+      updateAltDayData({ ...data, tasks: newTasks });
+    }
+  };
+
+  const openAltTaskModal = (mode, task = null, periodOverride = null) => {
+    const data = altDayDataRef.current;
+    const prayers = data?.prayerTimes;
+    if (mode === 'edit' && task?.type === 'fixed') return;
+    if (mode === 'add' && prayers) {
+      const period = periodOverride || 'evening';
+      const nowMin = getCurrentPlannerMinutes(currentTime, activeDate);
+      const startTime = getFirstAvailableTimeForPeriod(period, data.tasks, prayers, 15, null, nowMin);
+      const startMin = scheduledTimeToPlannerMinutes(startTime, period, prayers);
+      const endSlots = getAvailableEndSlots(period, data.tasks, prayers, startMin);
+      const endTime = endSlots.length > 0 ? formatMinutesToTime(endSlots[0]) : formatMinutesToTime(startMin + 15);
+      const duration = endSlots.length > 0 ? endSlots[0] - startMin : 15;
+      setTaskForm({
+        name: '', details: '', duration, period,
+        scheduledTime: startTime, endTime, isRecurring: false
+      });
+      setTaskModal({ open: true, mode: 'add', task: null, isAlternative: true });
+    } else if (task && prayers) {
+      const taskEnd = getTaskStartMinutes(task, prayers) + (Number(task.duration) || 15);
+      setTaskForm({
+        name: task.name, details: task.details || '', duration: task.duration,
+        period: task.period, scheduledTime: getTaskDisplayTime(task, prayers),
+        endTime: formatMinutesToTime(taskEnd), isRecurring: task.isRecurring || false
+      });
+      setTaskModal({ open: true, mode: 'edit', task, isAlternative: true });
+    }
   };
 
   const toggleTaskCompletion = (id) => {
@@ -1307,13 +1458,17 @@ function App() {
     if (!taskForm.name.trim()) return;
     if (taskModal.mode === 'edit' && taskModal.task?.type === 'fixed') return;
 
-    const prayers = dayData.prayerTimes;
+    const isAlt = taskModal.isAlternative;
+    const targetData = isAlt ? altDayDataRef.current : dayData;
+    if (!targetData) return;
+
+    const prayers = targetData.prayerTimes;
     const startMin = scheduledTimeToPlannerMinutes(taskForm.scheduledTime, taskForm.period, prayers);
     const endMin = scheduledTimeToPlannerMinutes(taskForm.endTime, taskForm.period, prayers);
     const duration = endMin - startMin;
 
     const formWithDuration = { ...taskForm, duration };
-    const validationError = validateTaskForm(formWithDuration, dayData.tasks, taskModal.task?.id);
+    const validationError = validateTaskForm(formWithDuration, targetData.tasks, taskModal.task?.id);
     if (validationError) {
       showAlert(validationError);
       return;
@@ -1336,9 +1491,9 @@ function App() {
         completed: false,
         status: isPast ? 'not_completed' : 'pending'
       };
-      newTasks = [...dayData.tasks, newTask];
+      newTasks = [...targetData.tasks, newTask];
     } else {
-      newTasks = dayData.tasks.map(t => t.id === taskModal.task.id ? {
+      newTasks = targetData.tasks.map(t => t.id === taskModal.task.id ? {
         ...t,
         name: taskForm.name,
         details: taskForm.details,
@@ -1349,7 +1504,11 @@ function App() {
         type: taskForm.isRecurring ? 'user' : (t.type === 'fixed' ? 'fixed' : 'personal')
       } : t);
     }
-    updateDayData({ ...dayData, tasks: newTasks });
+    if (isAlt) {
+      updateAltDayData({ ...targetData, tasks: newTasks });
+    } else {
+      updateDayData({ ...targetData, tasks: newTasks });
+    }
     setTaskModal({ open: false, mode: 'add', task: null });
   };
 
@@ -2237,6 +2396,307 @@ function App() {
     );
   };
 
+  // ---- Alternative Plan Views ----
+  const renderAlternativeHeader = (view) => (
+    <div className="new-tasks-header-wrap">
+      <div className="new-tasks-header">
+        <div style={{display: 'flex', alignItems: 'center', gap: '16px'}}>
+          <RefreshCw size={32} className="new-tasks-title-icon alt-plan-icon" />
+          <div>
+            <h2 className="new-tasks-title">{t('alternative.title')}</h2>
+            <p className="new-tasks-subtitle">{t('alternative.subtitle')}</p>
+          </div>
+        </div>
+        <div className="alt-plan-view-tabs">
+          <button
+            className={`alt-view-btn ${view === 'home' ? 'active' : ''}`}
+            onClick={() => setAltPageView('home')}
+          >
+            <Clock size={14} /> {t('nav.home')}
+          </button>
+          <button
+            className={`alt-view-btn ${view === 'tasks' ? 'active' : ''}`}
+            onClick={() => setAltPageView('tasks')}
+          >
+            <List size={14} /> {t('nav.tasks')}
+          </button>
+        </div>
+      </div>
+      <div className="alt-plan-badge">
+        <RefreshCw size={12} />
+        <span>{t('alternative.usingAlt')}</span>
+      </div>
+    </div>
+  );
+
+  const renderAlternativeDayView = () => {
+    const data = altDayDataRef.current;
+    if (!data?.prayerTimes) {
+      return (
+        <div className="alt-plan-page">
+          {renderAlternativeHeader('home')}
+          <div className="empty-state">
+            <RefreshCw size={24} />
+            <span className="empty-state-title">{t('alternative.empty')}</span>
+            <p className="empty-state-desc">{t('alternative.emptyHint')}</p>
+          </div>
+        </div>
+      );
+    }
+    const { prayerTimes: prayers, tasks } = data;
+    const dayStart = getPlannerDayStartMinutes(prayers);
+    const dayEnd = getPlannerDayEndMinutes(prayers);
+    const padTop = 15;
+    const padBottom = 15;
+    const visualStart = dayStart - padTop;
+    const visualEnd = dayEnd + padBottom;
+    const visualDuration = visualEnd - visualStart;
+    const timelineHeight = Math.max(2800, Math.min(8000, visualDuration * 4));
+    const toPercent = (minutes) => ((minutes - visualStart) / visualDuration) * 100;
+    const nowMinutes = getCurrentPlannerMinutes(currentTime, activeDate);
+    const nowInRange = nowMinutes >= visualStart && nowMinutes <= visualEnd;
+    const nowTop = nowInRange ? toPercent(nowMinutes) : -100;
+    const sortedTasks = sortTasksForPlannerDay(tasks, prayers);
+    const markers = getPrayerMarkersForPlannerDay(prayers).map(m => ({
+      key: m.key, prayer: m.label, time: m.time, minutes: m.minutes
+    }));
+    const morningStart = getPeriodStartMinutes('morning', prayers);
+    const periodBands = [
+      { key: 'night-band', label: t('band.night'), start: dayStart, end: morningStart },
+      { key: 'day-band', label: t('band.day'), start: morningStart, end: dayEnd }
+    ];
+    const formatTimelineTick = (minutes, exact = false) => {
+      const normalized = ((minutes % 1440) + 1440) % 1440;
+      const hour = Math.floor(normalized / 60);
+      const minute = normalized % 60;
+      if (getUse12h()) {
+        const period = hour < 12 ? t('time.am') : t('time.pm');
+        const h12 = hour % 12 || 12;
+        const time = exact || minute !== 0 ? `${h12}:${String(minute).padStart(2, '0')}` : `${h12}`;
+        return { time, period };
+      }
+      return { time: exact || minute !== 0 ? `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}` : `${hour}`, period: '' };
+    };
+    const hourTicks = [
+      { key: 'start', ...formatTimelineTick(dayStart, true), minutes: dayStart },
+      ...Array.from(
+        { length: Math.max(0, Math.floor(dayEnd / 60) - Math.ceil(dayStart / 60) + 1) },
+        (_, index) => {
+          const minutes = (Math.ceil(dayStart / 60) + index) * 60;
+          return { key: `hour-${minutes}`, ...formatTimelineTick(minutes), minutes };
+        }
+      ).filter(tick => tick.minutes > dayStart && tick.minutes < dayEnd),
+      { key: 'end', ...formatTimelineTick(dayEnd, true), minutes: dayEnd }
+    ];
+
+    return (
+      <div className="alt-plan-page">
+        {renderAlternativeHeader('home')}
+        <section className="full-day-view">
+          <article className="continuous-day-card alt-plan-card">
+            <div className="continuous-timeline" style={{ '--timeline-height': `${timelineHeight}px` }}>
+              <div className="timeline-time-column">
+                {hourTicks.map(tick => (
+                  <span key={tick.key} className="timeline-tick" style={{ top: `${toPercent(tick.minutes)}%` }}>
+                    <span className="timeline-tick-time">{tick.time}</span>
+                    {tick.period && <span className="timeline-tick-period">{tick.period}</span>}
+                  </span>
+                ))}
+              </div>
+
+              <div className="timeline-board">
+                {nowInRange && (
+                  <div className="timeline-now-line" style={{ top: `${nowTop}%` }} />
+                )}
+                {periodBands.map(band => (
+                  <div
+                    key={band.key}
+                    className={`timeline-period-band ${band.key}`}
+                    style={{
+                      top: `${toPercent(band.start)}%`,
+                      height: `${toPercent(band.end) - toPercent(band.start)}%`
+                    }}
+                  >
+                    <span>{band.label}</span>
+                  </div>
+                ))}
+
+                {hourTicks.map(tick => (
+                  <div key={tick.key} className="timeline-hour-line" style={{ top: `${toPercent(tick.minutes)}%` }} />
+                ))}
+
+                {markers.map(marker => {
+                  const pk = marker.prayer.toLowerCase();
+                  return (
+                    <div
+                      key={marker.key}
+                      className="timeline-prayer-marker"
+                      style={{ top: `${toPercent(marker.minutes)}%` }}
+                      title={t('prayer.' + pk)}
+                    >
+                      {marker.prayer.charAt(0)}
+                    </div>
+                  );
+                })}
+
+                {sortedTasks.map((task) => {
+                  const taskStart = getTaskStartMinutes(task, prayers);
+                  const blockEnd = getPeriodEndMinutes(task.period, prayers);
+                  const duration = Math.max(5, Math.min(Number(task.duration) || 15, blockEnd - taskStart));
+                  const top = toPercent(taskStart);
+                  const heightPct = (duration / visualDuration) * 100;
+                  const isAdhkar = task.name.includes('Adhkar');
+                  const taskEnd = taskStart + duration;
+                  return (
+                    <div
+                      key={task.id}
+                      className={`timeline-task-card task-${task.type}${isAdhkar ? ' task-adhkar' : ''} ${task.completed ? 'completed' : ''} alt-task-card`}
+                      style={{ top: `${top}%`, height: `${heightPct}%` }}
+                      onClick={() => setTaskActionPopup({ open: true, task, isAlternative: true })}
+                    >
+                      <div className="timeline-task-bar" />
+                      <div className="timeline-task-body">
+                        <span className="timeline-task-time">
+                          {getTaskDisplayTime(task, prayers)}–{formatMinutesToTime(taskEnd)}
+                          <span className="timeline-task-duration-badge">{translateDuration(duration)}</span>
+                        </span>
+                        <span className="timeline-task-name">
+                          {translateTaskName(task.name)}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {sortedTasks.length === 0 && (
+                  <div className="alt-empty-timeline-message">
+                    <span>{t('alternative.noTasks')}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </article>
+        </section>
+      </div>
+    );
+  };
+
+  const renderAlternativeTasksView = () => {
+    const data = altDayDataRef.current;
+    if (!data) {
+      return (
+        <div className="alt-plan-page">
+          {renderAlternativeHeader('tasks')}
+          <div className="empty-state">
+            <RefreshCw size={24} />
+            <span className="empty-state-title">{t('alternative.empty')}</span>
+          </div>
+        </div>
+      );
+    }
+
+    const allTasks = data.tasks || [];
+
+    return (
+      <div className="alt-plan-page">
+        {renderAlternativeHeader('tasks')}
+        <div className="tasks-page new-tasks-page alt-tasks-page">
+          <div className="tasks-search-wrap new-search-wrap">
+            <Search size={16} className="tasks-search-icon" />
+            <input
+              className="tasks-search-input"
+              type="text"
+              placeholder={t('tasks.searchPlaceholder')}
+              value={taskSearch}
+              onChange={e => setTaskSearch(e.target.value)}
+              dir="auto"
+            />
+            {taskSearch && (
+              <button className="tasks-search-clear" onClick={() => setTaskSearch('')}>
+                <X size={16} />
+              </button>
+            )}
+          </div>
+
+          <div className="new-tasks-sections">
+            <div className="new-period-section">
+              <div className="new-period-task-list">
+                {(() => {
+                  const filtered = taskSearch
+                    ? allTasks.filter(t =>
+                        t.name.toLowerCase().includes(taskSearch.toLowerCase()) ||
+                        (t.details || '').toLowerCase().includes(taskSearch.toLowerCase())
+                      )
+                    : allTasks;
+                  return filtered.map(task => {
+                    const taskStart = getTaskStartMinutes(task, data.prayerTimes);
+                    const taskEnd = taskStart + (Number(task.duration) || 15);
+                    const currentStatus = task.status || (task.completed ? 'completed' : 'pending');
+                    return (
+                      <div key={task.id} className={`t-card status-${currentStatus} alt-t-card`} onClick={() => toggleAltTaskCompletion(task.id)}>
+                        <span className={`t-dot ${currentStatus}`} />
+                        <div className="t-body">
+                          <div className="t-row">
+                            <h4 className="t-title">{translateTaskName(task.name)}</h4>
+                            <div className="t-actions">
+                              <button
+                                className={`t-btn ${currentStatus === 'pending' ? 'active' : ''}`}
+                                onClick={(e) => { e.stopPropagation(); setAltTaskStatus(task.id, 'pending'); }}
+                                title={t('tasks.statusPending')}
+                              >
+                                <Clock size={12} />
+                              </button>
+                              <button
+                                className={`t-btn ${currentStatus === 'completed' ? 'active' : ''}`}
+                                onClick={(e) => { e.stopPropagation(); setAltTaskStatus(task.id, 'completed'); }}
+                                title={t('tasks.statusCompleted')}
+                              >
+                                <Check size={12} />
+                              </button>
+                              <button
+                                className={`t-btn ${currentStatus === 'not_completed' ? 'active' : ''}`}
+                                onClick={(e) => { e.stopPropagation(); setAltTaskStatus(task.id, 'not_completed'); }}
+                                title={t('tasks.statusNotCompleted')}
+                              >
+                                <X size={12} />
+                              </button>
+                            </div>
+                          </div>
+                          {task.details && (
+                            <p className="t-desc">{task.details}</p>
+                          )}
+                          <span className="t-meta">{translateDuration(Number(task.duration) || 15)}</span>
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
+            </div>
+          </div>
+
+          {taskSearch && allTasks.filter(t =>
+            t.name.toLowerCase().includes(taskSearch.toLowerCase()) ||
+            (t.details || '').toLowerCase().includes(taskSearch.toLowerCase())
+          ).length === 0 && (
+            <div className="tasks-empty-search">
+              <Search size={24} />
+              <span>{t('tasks.noTasksMatch')}</span>
+            </div>
+          )}
+
+          {allTasks.length === 0 && !taskSearch && (
+            <div className="empty-state">
+              <RefreshCw size={24} />
+              <span className="empty-state-title">{t('alternative.noTasks')}</span>
+              <p className="empty-state-desc">{t('alternative.emptyHint')}</p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   // ---- Pulse Dashboard (Professional Resume-Style) ----
   const renderPulseDashboard = () => {
     const todayStr = activeDate;
@@ -2692,6 +3152,7 @@ function App() {
   // ---- Sidebar navigation links ----
   const sidebarLinks = [
     { id: 'home', label: t('nav.home'), icon: Sparkles },
+    { id: 'alternative', label: t('nav.alternative'), icon: RefreshCw },
     { id: 'journal', label: t('nav.journal'), icon: BookOpen },
     { id: 'tasks', label: t('nav.tasks'), icon: List },
     { id: 'habits', label: t('nav.habits'), icon: Target },
@@ -2867,6 +3328,9 @@ function App() {
             {/* Conditional Pages */}
             {currentPage === 'home' && dayData && renderFullDayView()}
 
+            {currentPage === 'alternative' && (
+              altPageView === 'home' ? renderAlternativeDayView() : renderAlternativeTasksView()
+            )}
 
             {currentPage === 'tasks' && dayData && (
               <div className="tasks-page new-tasks-page">
@@ -3934,6 +4398,11 @@ function App() {
             <Plus size={22} />
           </button>
         )}
+        {currentPage === 'alternative' && altDayDataRef.current && (
+          <button className="fab-add-task fab-alt" onClick={() => openAltTaskModal('add')} title={t('alternative.fabHint')}>
+            <Plus size={22} />
+          </button>
+        )}
         </div>
 
       {/* Toast notifications */}
@@ -4207,7 +4676,12 @@ function App() {
               <button
                 className={`tap-btn ${taskActionPopup.task.completed ? 'tap-btn-secondary' : 'tap-btn-primary'}`}
                 onClick={() => {
-                  toggleTaskCompletion(taskActionPopup.task.id);
+                  const task = taskActionPopup.task;
+                  if (taskActionPopup.isAlternative) {
+                    toggleAltTaskCompletion(task.id);
+                  } else {
+                    toggleTaskCompletion(task.id);
+                  }
                   setTaskActionPopup({ open: false, task: null });
                 }}
               >
@@ -4222,7 +4696,11 @@ function App() {
                     onClick={() => {
                       const task = taskActionPopup.task;
                       setTaskActionPopup({ open: false, task: null });
-                      openTaskModal('edit', task);
+                      if (taskActionPopup.isAlternative) {
+                        openAltTaskModal('edit', task);
+                      } else {
+                        openTaskModal('edit', task);
+                      }
                     }}
                   >
                     <Edit2 size={15} />
@@ -4234,7 +4712,11 @@ function App() {
                     onClick={() => {
                       const task = taskActionPopup.task;
                       setTaskActionPopup({ open: false, task: null });
-                      deleteTask(task.id);
+                      if (taskActionPopup.isAlternative) {
+                        deleteAltTask(task.id);
+                      } else {
+                        deleteTask(task.id);
+                      }
                     }}
                   >
                     <Trash2 size={15} />
