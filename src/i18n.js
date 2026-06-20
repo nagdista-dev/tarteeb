@@ -372,16 +372,6 @@ const en = {
   'guide.tips': 'Pro Tips',
   'guide.tipsDesc': 'Start your day by planning tasks for each prayer period on the Home page. Use recurring tasks for daily habits like reading Quran or morning adhkar. Check the Statistics page mid-day to see your progress. Export your day as Markdown before Fajr the next day to keep a complete record. Use dark mode at night for eye comfort. The app works offline — all data is stored locally in your browser.',
 
-  /* Alternative Plan */
-  'nav.alternative': 'Alternative Plan',
-  'alternative.title': 'Alternative Plan',
-  'alternative.subtitle': 'Your backup plan for unexpected days',
-  'alternative.noTasks': 'No tasks in the alternative plan yet.',
-  'alternative.empty': 'Your alternative plan is empty.',
-  'alternative.emptyHint': 'Add tasks that you can fall back to when the main plan becomes unrealistic.',
-  'alternative.switchToMain': 'Switch to Main Plan',
-  'alternative.usingAlt': 'You are viewing the Alternative Plan',
-  'alternative.fabHint': 'Add alternative task',
 
   /* Contact */
   'contact.title': 'Contact Developer',
@@ -884,16 +874,6 @@ const ar = {
   'guide.tips': 'نصائح احترافية',
   'guide.tipsDesc': 'ابدأ يومك بتخطيط المهام لكل حزمة صلاة على الصفحة الرئيسية. استخدم المهام المتكررة للعادات اليومية مثل قراءة القرآن أو أذكار الصباح. تفقد صفحة الإحصائيات في منتصف اليوم لترى تقدمك. صدر يومك كماركداون قبل فجر اليوم التالي للحصول على سجل كامل. استخدم الوضع الداكن ليلاً لراحة العين. التطبيق يعمل بدون إنترنت — جميع البيانات مخزنة محلياً في متصفحك.',
 
-  /* Alternative Plan */
-  'nav.alternative': 'الخطة البديلة',
-  'alternative.title': 'الخطة البديلة',
-  'alternative.subtitle': 'خطتك الاحتياطية للأيام غير المتوقعة',
-  'alternative.noTasks': 'لا توجد مهام في الخطة البديلة بعد.',
-  'alternative.empty': 'خطتك البديلة فارغة.',
-  'alternative.emptyHint': 'أضف مهام يمكنك الرجوع إليها عندما تصبح الخطة الرئيسية غير واقعية.',
-  'alternative.switchToMain': 'العودة للخطة الرئيسية',
-  'alternative.usingAlt': 'أنت تستعرض الخطة البديلة',
-  'alternative.fabHint': 'إضافة مهمة بديلة',
 
   /* Contact */
   'contact.title': 'تواصل مع المطور',

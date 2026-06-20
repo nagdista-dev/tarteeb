@@ -327,12 +327,6 @@ function App() {
   const dayDataRef = useRef(dayData);
   dayDataRef.current = dayData;
 
-  // ---- Alternative Plan Data ----
-  const [alternativeDayData, setAlternativeDayData] = useState(null);
-  const [altPageView, setAltPageView] = useState('home'); // 'home' | 'tasks'
-  const altDayDataRef = useRef(alternativeDayData);
-  altDayDataRef.current = alternativeDayData;
-
   // ---- Mobile sidebar ----
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -1023,12 +1017,8 @@ function App() {
       else if (e.key === 'l') { setCurrentPage('sleep'); }
       else if (e.key === 'd') { setCurrentPage('drinks'); }
       else if (e.key === 'p') { setCurrentPage('prayers'); }
-      else if (e.key === 'a') { setCurrentPage('alternative'); setAltPageView('home'); }
       else if (e.key === 'n' && (currentPage === 'home' || currentPage === 'tasks') && dayData) {
         openTaskModal('add');
-      }
-      else if (e.key === 'n' && currentPage === 'alternative' && altDayDataRef.current) {
-        openAltTaskModal('add');
       }
     }
     window.addEventListener('keydown', handleKeyDown);
@@ -1126,35 +1116,6 @@ function App() {
     return () => { active = false; };
   }, [activeDate, locationConfig]);
 
-  // ---- Load / Init alternative plan data ----
-  useEffect(() => {
-    if (!dayData?.prayerTimes) return;
-    const storageKey = `tarteeb_alternative_day_${activeDate}`;
-    const saved = localStorage.getItem(storageKey);
-
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        parsed.prayerTimes = dayData.prayerTimes;
-        parsed.tasks = normalizeTasksForPrayerBlocks(parsed.tasks || [], parsed.prayerTimes);
-        localStorage.setItem(storageKey, JSON.stringify(parsed));
-        setAlternativeDayData(parsed);
-      } catch {
-        setAlternativeDayData(null);
-      }
-    } else {
-      const newAltDay = {
-        date: activeDate,
-        hijriDate: dayData.hijriDate,
-        prayerTimes: dayData.prayerTimes,
-        tasks: [],
-        stats: calculateStats([])
-      };
-      localStorage.setItem(storageKey, JSON.stringify(newAltDay));
-      setAlternativeDayData(newAltDay);
-    }
-  }, [activeDate, dayData?.prayerTimes]);
-
   // ---- Timeline status (next prayer etc.) ----
   useEffect(() => {
     if (!appReadyRef.current) return;
@@ -1243,223 +1204,12 @@ function App() {
     setDayData(updated);
   };
 
-  const updateAltDayData = (updated) => {
-    updated.stats = calculateStats(updated.tasks);
-    localStorage.setItem(`tarteeb_alternative_day_${updated.date}`, JSON.stringify(updated));
-    setAlternativeDayData(updated);
-  };
-
-  const toggleAltTaskCompletion = (id) => {
-    const data = altDayDataRef.current;
-    if (!data) return;
-    const task = data.tasks.find(t => t.id === id);
-    if (!task) return;
-    const wasCompleted = task.completed;
-    if (!wasCompleted) {
-      confetti({
-        particleCount: 120, spread: 80, origin: { x: 0.5, y: 0.5 },
-        colors: ['#0f766e', '#14b8a6', '#f59e0b', '#8b5cf6', '#10b981']
-      });
-    }
-    const updTasks = data.tasks.map(t => t.id === id ? { ...t, completed: !wasCompleted, status: !wasCompleted ? 'completed' : 'pending' } : t);
-    updateAltDayData({ ...data, tasks: updTasks });
-  };
-
-  const setAltTaskStatus = (id, newStatus) => {
-    const data = altDayDataRef.current;
-    if (!data) return;
-    const task = data.tasks.find(t => t.id === id);
-    if (!task) return;
-    if (newStatus === 'completed' && task.status !== 'completed' && !task.completed) {
-      confetti({
-        particleCount: 120, spread: 80, origin: { x: 0.5, y: 0.5 },
-        colors: ['#0f766e', '#14b8a6', '#f59e0b', '#8b5cf6', '#10b981']
-      });
-    }
-    const updTasks = data.tasks.map(t => t.id === id ? { ...t, status: newStatus, completed: newStatus === 'completed' } : t);
-    updateAltDayData({ ...data, tasks: updTasks });
-  };
-
-  const deleteAltTask = async (id) => {
-    const data = altDayDataRef.current;
-    if (!data) return;
-    const confirmed = await showConfirm(t('confirm.deleteTask'));
-    if (confirmed) {
-      const newTasks = data.tasks.filter(t => t.id !== id);
-      updateAltDayData({ ...data, tasks: newTasks });
-    }
-  };
-
-  const openAltTaskModal = (mode, task = null, periodOverride = null) => {
-    const data = altDayDataRef.current;
-    const prayers = data?.prayerTimes;
-    if (mode === 'edit' && task?.type === 'fixed') return;
-    if (mode === 'add' && prayers) {
-      const period = periodOverride || 'evening';
-      const nowMin = getCurrentPlannerMinutes(currentTime, activeDate);
-      const startTime = getFirstAvailableTimeForPeriod(period, data.tasks, prayers, 15, null, nowMin);
-      const startMin = scheduledTimeToPlannerMinutes(startTime, period, prayers);
-      const endSlots = getAvailableEndSlots(period, data.tasks, prayers, startMin);
-      const endTime = endSlots.length > 0 ? formatMinutesToTime(endSlots[0]) : formatMinutesToTime(startMin + 15);
-      const duration = endSlots.length > 0 ? endSlots[0] - startMin : 15;
-      setTaskForm({
-        name: '', details: '', duration, period,
-        scheduledTime: startTime, endTime, isRecurring: false
-      });
-      setTaskModal({ open: true, mode: 'add', task: null, isAlternative: true });
-    } else if (task && prayers) {
-      const taskEnd = getTaskStartMinutes(task, prayers) + (Number(task.duration) || 15);
-      setTaskForm({
-        name: task.name, details: task.details || '', duration: task.duration,
-        period: task.period, scheduledTime: getTaskDisplayTime(task, prayers),
-        endTime: formatMinutesToTime(taskEnd), isRecurring: task.isRecurring || false
-      });
-      setTaskModal({ open: true, mode: 'edit', task, isAlternative: true });
-    }
-  };
-
-  const toggleTaskCompletion = (id) => {
-    const task = dayDataRef.current?.tasks.find(t => t.id === id);
-    if (!task) return;
-
-    const wasCompleted = task.completed;
-    const newCompleted = !wasCompleted;
-    const newStatus = newCompleted ? 'completed' : 'pending';
-
-    if (!wasCompleted) {
-      confetti({
-        particleCount: 120,
-        spread: 80,
-        origin: { x: 0.5, y: 0.5 },
-        colors: ['#059669', '#0d9488', '#d97706', '#f59e0b', '#10b981']
-      });
-    }
-
-    setDayData(prev => {
-      if (!prev) return prev;
-      const updTasks = prev.tasks.map(t => t.id === id ? { ...t, completed: newCompleted, status: newStatus } : t);
-      const updated = { ...prev, tasks: updTasks };
-      updated.stats = calculateStats(updated.tasks);
-      localStorage.setItem(`tarteeb_day_${updated.date}`, JSON.stringify(updated));
-      showToast(
-        !wasCompleted ? t('toast.taskCompleted') : t('toast.taskUncompleted'),
-        { label: t('toast.undo'), action: () => toggleTaskCompletion(id) }
-      );
-      return updated;
-    });
-
-    syncTaskToPrayerTracking(task.name, newStatus);
-  };
-
-  const setTaskStatus = (id, newStatus) => {
-    const task = dayData?.tasks.find(t => t.id === id);
-    if (!task) return;
-
-    if (newStatus === 'completed' && task.status !== 'completed' && !task.completed) {
-      confetti({
-        particleCount: 120,
-        spread: 80,
-        origin: { x: 0.5, y: 0.5 },
-        colors: ['#059669', '#0d9488', '#d97706', '#f59e0b', '#10b981']
-      });
-    }
-
-    setDayData(prev => {
-      if (!prev) return prev;
-      const updTasks = prev.tasks.map(t => 
-        t.id === id ? { ...t, status: newStatus, completed: newStatus === 'completed' } : t
-      );
-      const updated = { ...prev, tasks: updTasks };
-      updated.stats = calculateStats(updated.tasks);
-      localStorage.setItem(`tarteeb_day_${updated.date}`, JSON.stringify(updated));
-      return updated;
-    });
-
-    syncTaskToPrayerTracking(task.name, newStatus);
-  };
-
-  const triggerConfetti = () => {
-    confetti({
-      particleCount: 80,
-      spread: 70,
-      origin: { x: 0.5, y: 0.5 },
-      colors: ['#059669', '#0d9488', '#d97706', '#f59e0b', '#10b981']
-    });
-  };
-
-  const syncTaskToPrayerTracking = (taskName, newStatus, dateStr) => {
-    const targetDate = dateStr || activeDate;
-    const prayerKey = FIXED_TASK_PRAYER_KEY[taskName];
-    if (prayerKey) {
-      setPrayerTracking(prev => ({ ...prev, [targetDate]: { ...(prev[targetDate] || {}), [prayerKey]: newStatus } }));
-      return;
-    }
-    const adhkarKey = TASK_TO_ADHKAR_KEY[taskName];
-    if (adhkarKey) {
-      setPrayerTracking(prev => ({ ...prev, [targetDate]: { ...(prev[targetDate] || {}), [adhkarKey]: newStatus } }));
-    }
-  };
-
-  const syncPrayerToTask = (prayerKey, status) => {
-    const taskName = PRAYER_TO_TASK_NAME[prayerKey];
-    if (!taskName || !dayData) return;
-    setDayData(prev => {
-      const updTasks = prev.tasks.map(t =>
-        t.name === taskName ? { ...t, completed: status === 'completed', status } : t
-      );
-      return { ...prev, tasks: updTasks };
-    });
-  };
-
-  const syncAdhkarToTask = (adhkarKey, status) => {
-    const taskName = ADHKAR_KEY_TO_TASK[adhkarKey];
-    if (!taskName || !dayData) return;
-    setDayData(prev => {
-      const updTasks = prev.tasks.map(t =>
-        t.name === taskName ? { ...t, completed: status === 'completed', status } : t
-      );
-      return { ...prev, tasks: updTasks };
-    });
-  };
-
-  const openTaskModal = (mode, task = null, periodOverride = null) => {
-    const prayers = dayData?.prayerTimes;
-    if (mode === 'edit' && task?.type === 'fixed') return;
-    if (mode === 'add' && prayers) {
-      const period = periodOverride || 'evening';
-      const nowMin = getCurrentPlannerMinutes(currentTime, activeDate);
-      const startTime = getFirstAvailableTimeForPeriod(period, dayData.tasks, prayers, 15, null, nowMin);
-      const startMin = scheduledTimeToPlannerMinutes(startTime, period, prayers);
-      const endSlots = getAvailableEndSlots(period, dayData.tasks, prayers, startMin);
-      const endTime = endSlots.length > 0 ? formatMinutesToTime(endSlots[0]) : formatMinutesToTime(startMin + 15);
-      const duration = endSlots.length > 0 ? endSlots[0] - startMin : 15;
-      setTaskForm({
-        name: '', details: '', duration, period,
-        scheduledTime: startTime, endTime, isRecurring: false
-      });
-      setTaskModal({ open: true, mode: 'add', task: null });
-    } else if (task && prayers) {
-      const taskEnd = getTaskStartMinutes(task, prayers) + (Number(task.duration) || 15);
-      setTaskForm({
-        name: task.name,
-        details: task.details || '',
-        duration: task.duration,
-        period: task.period,
-        scheduledTime: getTaskDisplayTime(task, prayers),
-        endTime: formatMinutesToTime(taskEnd),
-        isRecurring: task.isRecurring || false
-      });
-      setTaskModal({ open: true, mode: 'edit', task });
-    }
-  };
-
   const handleTaskSubmit = (e) => {
     e.preventDefault();
     if (!taskForm.name.trim()) return;
     if (taskModal.mode === 'edit' && taskModal.task?.type === 'fixed') return;
 
-    const isAlt = taskModal.isAlternative;
-    const targetData = isAlt ? altDayDataRef.current : dayData;
+    const targetData = dayData;
     if (!targetData) return;
 
     const prayers = targetData.prayerTimes;
@@ -1504,11 +1254,7 @@ function App() {
         type: taskForm.isRecurring ? 'user' : (t.type === 'fixed' ? 'fixed' : 'personal')
       } : t);
     }
-    if (isAlt) {
-      updateAltDayData({ ...targetData, tasks: newTasks });
-    } else {
-      updateDayData({ ...targetData, tasks: newTasks });
-    }
+    updateDayData({ ...targetData, tasks: newTasks });
     setTaskModal({ open: false, mode: 'add', task: null });
   };
 
@@ -1706,344 +1452,132 @@ function App() {
   const exportToMarkdown = (data = null) => {
     const day = data || dayData;
     if (!day) return;
-    const { tasks, diary, date, hijriDate, prayerTimes, studyNotes, mood } = day;
+    const { tasks, date, prayerTimes, studyNotes } = day;
     const lines = [];
     const d = new Date(date);
-    const locale = lang === 'ar' ? 'ar-SA' : 'en-US';
-    const title = d.toLocaleDateString(locale, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const title = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 
-    // Gather stats
     const allTasks = tasks || [];
-    const total = allTasks.length;
-    const completedTasksList = allTasks.filter(t => t.status === 'completed' || t.completed);
-    const notCompletedTasksList = allTasks.filter(t => t.status === 'not_completed');
-    const pendingTasksList = allTasks.filter(t => !t.status || t.status === 'pending' || (!t.completed && t.status !== 'not_completed'));
-
-    const completed = completedTasksList.length;
-    const notCompleted = notCompletedTasksList.length;
-    const pending = pendingTasksList.length;
-    const overallPct = total > 0 ? Math.round((completed / total) * 100) : 0;
-
-    const fixed = allTasks.filter(t => t.type === 'fixed');
-    const fixedDone = fixed.filter(t => t.status === 'completed' || t.completed).length;
-    const fixedPct = fixed.length > 0 ? Math.round((fixedDone / fixed.length) * 100) : 100;
-    const personal = allTasks.filter(t => t.type !== 'fixed');
-    const personalDone = personal.filter(t => t.status === 'completed' || t.completed).length;
-    const personalPct = personal.length > 0 ? Math.round((personalDone / personal.length) * 100) : 100;
-
-    const todayTrack = prayerTracking[date] || {};
-    const prayerCounts = { completed: 0, not_completed: 0, pending: 0 };
-    PRAYER_KEYS.forEach(pk => { const s = todayTrack[pk] || 'pending'; prayerCounts[s]++; });
-    const onTime = prayerCounts.completed;
-
-    const allHabitsThisDate = habits.filter(h => h.entries?.[date] !== undefined);
-    const completedHabits = allHabitsThisDate.filter(h => h.entries?.[date]?.completed).length;
-    const totalHabitsToday = allHabitsThisDate.length;
-    const habitsPct = totalHabitsToday > 0 ? Math.round((completedHabits / totalHabitsToday) * 100) : 0;
-
-    const notes = studyNotes || [];
-    const streak = computeStreak();
-
-    // Sleep & drinks
     const dateSessions = sleepTracking[date] || [];
-    const totalSleepHours = dateSessions.reduce((sum, s) => sum + calcSleepHours(s.start, s.end), 0);
-    const sleepScore = Math.min(Math.round((totalSleepHours / 8) * 100), 100);
-
     const dateDrinks = drinksTracking[date] || [];
-    const totalDrinksCount = dateDrinks.reduce((sum, d) => sum + d.count, 0);
-
-    const prayerPct = Math.round((onTime / 5) * 100);
-    const streakScore = Math.min(streak * 10, 100);
-    const compositeScore = Math.round(
-      (overallPct * 0.25) + (habitsPct * 0.20) + (prayerPct * 0.30) + (sleepScore * 0.15) + (streakScore * 0.10)
-    );
-    const scoreLabel = compositeScore >= 85 ? t('pulse.scoreExcellent')
-      : compositeScore >= 65 ? t('pulse.scoreGood')
-      : compositeScore >= 45 ? t('pulse.scoreFair')
-      : t('pulse.scoreNeedsWork');
-
     const prayerOrder = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
+
+    const forceAMPM = (timeStr) => {
+      if (!timeStr || timeStr === '—') return '—';
+      const clean = timeStr.trim();
+      if (clean.toLowerCase().includes('am') || clean.toLowerCase().includes('pm')) return clean;
+      const parts = clean.split(':');
+      if (parts.length < 2) return clean;
+      let h = parseInt(parts[0], 10);
+      const m = parts[1].substring(0, 2);
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      h = h % 12;
+      h = h ? h : 12;
+      return `${h}:${m} ${ampm}`;
+    };
+
+    const forceMinutesAMPM = (mins) => {
+      const normalized = ((mins % 1440) + 1440) % 1440;
+      let h = Math.floor(normalized / 60);
+      const m = normalized % 60;
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      h = h % 12;
+      h = h ? h : 12;
+      return `${h}:${String(m).padStart(2, '0')} ${ampm}`;
+    };
 
     const formatDur = (mins) => {
       if (!mins || mins <= 0) return '';
       const h = Math.floor(mins / 60);
       const m = mins % 60;
-      return h > 0 ? `${h}h${m > 0 ? m + 'm' : ''}` : `${m}m`;
+      return h > 0 ? `${h}h ${m > 0 ? m + 'm' : ''}`.trim() : `${m}m`;
     };
 
-    const statusLabel = (s) => t(s === 'pending' ? 'tasks.statusPending' : (s === 'completed' ? 'tasks.statusCompleted' : 'tasks.statusNotCompleted'));
-
-    // ---- Build ----
-    lines.push(`# ${title}`);
-    lines.push('');
-    if (hijriDate) lines.push(`> ${hijriDate}`);
-    lines.push('');
-    lines.push('---');
+    lines.push(`> ${title}`);
     lines.push('');
 
-    // Daily Overview
-    lines.push('## ' + t('export.dailyOverview'));
+    lines.push('## Prayer Times');
     lines.push('');
-    lines.push('**' + t('export.dayAtGlance') + '**');
-    lines.push('');
-    lines.push(`- **${t('export.tasks')}**: ${completed}/${total} (${overallPct}%) — ${completed} ${t('tasks.statusCompleted')}, ${notCompleted} ${t('tasks.statusNotCompleted')}, ${pending} ${t('tasks.statusPending')}`);
-    lines.push(`- **${t('export.fixedTasks')}**: ${fixedPct}% | **${t('export.personalTasks')}**: ${personalPct}%`);
-    lines.push(`- **${t('export.prayersOnTime')}**: ${onTime}/5 (${prayerPct}%)`);
-    if (totalHabitsToday > 0) lines.push(`- **${t('habits.title')}**: ${completedHabits}/${totalHabitsToday} (${habitsPct}%)`);
-    if (dateSessions.length > 0) lines.push(`- **${t('sleep.title')}**: ${totalSleepHours} ${t('sleep.hours')}`);
-    if (dateDrinks.length > 0) lines.push(`- **${t('drinks.title')}**: ${totalDrinksCount}×`);
-    lines.push(`- **${t('pulse.productivityScore')}**: ${compositeScore}/100 (${scoreLabel})`);
-    lines.push(`- **${t('export.streak')}**: ${streak} ${t('streak.days')}`);
-    if (mood) {
-      lines.push(`- **${t('mood.title')}**: ${t('mood.' + mood)}`);
-    }
-    lines.push('');
-
-    // Settings / App Info
-    lines.push('---');
-    lines.push('');
-    lines.push('## ' + (lang === 'ar' ? 'التطبيق والإعدادات' : 'App & Settings'));
-    lines.push('');
-    lines.push('- **' + (lang === 'ar' ? 'التطبيق' : 'App') + '**: Tarteeb Muslim Daily Planner');
-    lines.push('- **' + (lang === 'ar' ? 'التاريخ' : 'Date') + '**: ' + title);
-    if (hijriDate) lines.push('- **' + (lang === 'ar' ? 'التاريخ الهجري' : 'Hijri Date') + '**: ' + hijriDate);
-    lines.push('- **' + (lang === 'ar' ? 'اللغة' : 'Language') + '**: ' + (lang === 'ar' ? 'العربية' : 'English'));
-    lines.push('- **' + (lang === 'ar' ? 'السمة' : 'Theme') + '**: ' + (theme === 'dark' ? (lang === 'ar' ? 'داكن' : 'Dark') : (lang === 'ar' ? 'فاتح' : 'Light')));
-    lines.push('- **' + (lang === 'ar' ? 'صيغة الوقت' : 'Time Format') + '**: ' + (getUse12h() ? '12h' : '24h'));
-    if (locationConfig.city && locationConfig.country) {
-      lines.push('- **' + (lang === 'ar' ? 'الموقع' : 'Location') + '**: ' + locationConfig.city + ', ' + locationConfig.country);
-    } else if (locationConfig.latitude && locationConfig.longitude) {
-      lines.push('- **' + (lang === 'ar' ? 'الإحداثيات' : 'Coordinates') + '**: ' + locationConfig.latitude + ', ' + locationConfig.longitude);
-    }
-    lines.push('');
-
-    // Prayer Times
-    lines.push('---');
-    lines.push('');
-    lines.push('## ' + t('export.prayerTimes'));
-    lines.push('');
+    lines.push('| Prayer | Time |');
+    lines.push('|---------|---------|');
     prayerOrder.forEach(pk => {
       const time = prayerTimes?.[pk] || '—';
-      const status = todayTrack[pk] || 'pending';
-      const label = statusLabel(status);
-      const prayerLabel = t('prayer.' + pk);
-      lines.push(`- **${prayerLabel}**: ${time} — ${label}`);
+      const prayerLabel = pk.charAt(0).toUpperCase() + pk.slice(1);
+      lines.push(`| ${prayerLabel} | ${forceAMPM(time)} |`);
     });
     lines.push('');
 
-    // Adhkar
-    lines.push('---');
+    lines.push('## Sleep Sessions');
     lines.push('');
-    lines.push('## ' + t('adhkar.title'));
-    lines.push('');
-    const adhkarM = todayTrack['adhkar_morning'] || 'pending';
-    const adhkarE = todayTrack['adhkar_evening'] || 'pending';
-    lines.push(`- **${t('adhkar.morning')}**: ${statusLabel(adhkarM)}`);
-    lines.push(`- **${t('adhkar.evening')}**: ${statusLabel(adhkarE)}`);
-    lines.push('');
-
-    // Tasks
-    lines.push('---');
-    lines.push('');
-    lines.push('## ' + t('export.tasks'));
-    lines.push('');
-
-    if (completedTasksList.length > 0) {
-      lines.push('### ' + t('tasks.statusCompleted') + ' (' + completed + ')');
-      lines.push('');
-      completedTasksList.forEach(task => {
-        const time = getTaskDisplayTime(task, prayerTimes);
-        const end = task.type === 'personal' || task.type === 'user'
-          ? ` – ${formatMinutesToTime(getTaskStartMinutes(task, prayerTimes) + (Number(task.duration) || 15))}`
-          : '';
-        const periodTag = task.period ? ` \`[${t('period.' + task.period)}]\`` : '';
-        const durationTag = task.duration ? ` _(${formatDur(Number(task.duration))})_` : '';
-        const recurringTag = task.isRecurring ? ' _(Recurring)_' : '';
-        lines.push(`- [x] **${translateTaskName(task.name)}** — ${time}${end}${periodTag}${durationTag}${recurringTag}`);
-        if (task.details) lines.push(`  - ${task.details}`);
+    lines.push('| Session | Start | End | Total |');
+    lines.push('|---------|---------|---------|---------|');
+    if (dateSessions.length > 0) {
+      dateSessions.forEach((s, i) => {
+        const startAMPM = forceAMPM(s.start);
+        const endAMPM = forceAMPM(s.end);
+        const startMins = parseTimeToMinutes(s.start);
+        const endMins = parseTimeToMinutes(s.end);
+        let diff = endMins - startMins;
+        if (diff < 0) diff += 1440;
+        const durStr = formatDur(diff);
+        lines.push(`| Main Sleep ${i > 0 ? i + 1 : ''} | ${startAMPM} | ${endAMPM} | ${durStr} |`);
       });
-      lines.push('');
+    } else {
+      lines.push(`| No Sessions | - | - | - |`);
     }
+    lines.push('');
 
-    if (notCompletedTasksList.length > 0) {
-      lines.push('### ' + t('tasks.statusNotCompleted') + ' (' + notCompleted + ')');
-      lines.push('');
-      notCompletedTasksList.forEach(task => {
-        const time = getTaskDisplayTime(task, prayerTimes);
-        const end = task.type === 'personal' || task.type === 'user'
-          ? ` – ${formatMinutesToTime(getTaskStartMinutes(task, prayerTimes) + (Number(task.duration) || 15))}`
-          : '';
-        const periodTag = task.period ? ` \`[${t('period.' + task.period)}]\`` : '';
-        const durationTag = task.duration ? ` _(${formatDur(Number(task.duration))})_` : '';
-        const recurringTag = task.isRecurring ? ' _(Recurring)_' : '';
-        lines.push(`- ~~**${translateTaskName(task.name)}**~~ — ${time}${end}${periodTag}${durationTag}${recurringTag}`);
-        if (task.details) lines.push(`  - ${task.details}`);
+    lines.push('## Drinks');
+    lines.push('');
+    lines.push('| Drink | Amount |');
+    lines.push('|---------|---------|');
+    if (dateDrinks.length > 0) {
+      dateDrinks.forEach(d => {
+        lines.push(`| ${d.name || 'Drink'} | ${d.count} |`);
       });
-      lines.push('');
+    } else {
+      lines.push(`| No Drinks | - |`);
     }
+    lines.push('');
 
-    if (pendingTasksList.length > 0) {
-      lines.push('### ' + t('tasks.statusPending') + ' (' + pending + ')');
-      lines.push('');
-      pendingTasksList.forEach(task => {
-        const time = getTaskDisplayTime(task, prayerTimes);
-        const end = task.type === 'personal' || task.type === 'user'
-          ? ` – ${formatMinutesToTime(getTaskStartMinutes(task, prayerTimes) + (Number(task.duration) || 15))}`
-          : '';
-        const periodTag = task.period ? ` \`[${t('period.' + task.period)}]\`` : '';
-        const durationTag = task.duration ? ` _(${formatDur(Number(task.duration))})_` : '';
-        const recurringTag = task.isRecurring ? ' _(Recurring)_' : '';
-        lines.push(`- [ ] **${translateTaskName(task.name)}** — ${time}${end}${periodTag}${durationTag}${recurringTag}`);
-        if (task.details) lines.push(`  - ${task.details}`);
+    lines.push('## Tasks');
+    lines.push('');
+    lines.push('| Task | Start | End |');
+    lines.push('|---------|---------|---------|');
+    if (allTasks.length > 0) {
+      allTasks.forEach(task => {
+        const startMins = getTaskStartMinutes(task, prayerTimes);
+        const startStr = forceMinutesAMPM(startMins);
+        const endMins = startMins + (Number(task.duration) || 15);
+        const endStr = forceMinutesAMPM(endMins);
+        lines.push(`| ${translateTaskName(task.name)} | ${startStr} | ${endStr} |`);
       });
-      lines.push('');
+    } else {
+      lines.push(`| No Tasks | - | - |`);
     }
+    lines.push('');
 
-    // Task breakdown by period
-    if (total > 0) {
-      const periodStats = getPlannerPeriodOrder().map(pk => {
-        const pt = allTasks.filter(t => t.period === pk);
-        if (pt.length === 0) return null;
-        const d = pt.filter(t => t.status === 'completed' || t.completed).length;
-        return { pk, name: t('period.' + pk), range: (PERIODS_META[pk]?.range || ''), done: d, total: pt.length, pct: Math.round((d / pt.length) * 100) };
-      }).filter(Boolean);
-
-      if (periodStats.length > 0) {
-        lines.push('### ' + t('export.taskBreakdown'));
-        lines.push('');
-        periodStats.forEach(ps => {
-          const bar = '█'.repeat(Math.round(ps.pct / 10)) + '░'.repeat(10 - Math.round(ps.pct / 10));
-          lines.push(`- **${ps.name}** ${ps.range ? '(' + ps.range + ')' : ''}: ${ps.done}/${ps.total} — ${bar} ${ps.pct}%`);
-        });
-        lines.push('');
-      }
-    }
-
-    // Study Notes
+    const notes = studyNotes || [];
     if (notes.length > 0) {
-      lines.push('---');
-      lines.push('');
-      lines.push('## ' + t('journal.studyNotes'));
+      lines.push('## Journal');
       lines.push('');
       getPlannerPeriodOrder().forEach(pk => {
         const pn = notes.filter(n => n.period === pk).sort((a, b) => (a.time || '').localeCompare(b.time || ''));
         if (pn.length === 0) return;
-        const meta = PERIODS_META[pk];
-        lines.push('### ' + t('period.' + pk) + ' — ' + (meta?.range || ''));
-        lines.push('');
         pn.forEach(n => {
-          const tl = n.time ? '`' + n.time + '` ' : '';
+          const tl = n.time ? forceAMPM(n.time) + ' ' : '';
           lines.push('- ' + tl + n.text);
         });
-        lines.push('');
-      });
-    }
-
-    // Habits
-    if (allHabitsThisDate.length > 0) {
-      lines.push('---');
-      lines.push('');
-      lines.push('## ' + t('habits.title'));
-      lines.push('');
-      lines.push('**' + t('export.todaysHabits') + '**');
-      lines.push('');
-      allHabitsThisDate.forEach(h => {
-        const done = h.entries?.[date]?.completed;
-        lines.push('- **' + (done ? '' : '~~') + h.name + (done ? '' : '~~') + '**' + (done ? ' — ' + t('tasks.statusCompleted') : ' — ' + t('tasks.statusNotCompleted')));
-      });
-      lines.push('');
-      lines.push('_' + completedHabits + '/' + totalHabitsToday + ' ' + t('export.habitsDone') + '_');
-      lines.push('');
-    }
-
-    // All habits (including ones not tracked today)
-    const untrackedHabits = habits.filter(h => !h.entries?.[date]);
-    if (untrackedHabits.length > 0) {
-      lines.push('**' + (lang === 'ar' ? 'عادات لم تسجل اليوم' : 'Habits Not Logged Today') + ' (' + untrackedHabits.length + ')**');
-      lines.push('');
-      untrackedHabits.forEach(h => {
-        lines.push('- **' + h.name + '** — ' + (lang === 'ar' ? 'لم تسجل' : 'Not logged'));
       });
       lines.push('');
     }
 
-    // Sleep Data
-    if (dateSessions.length > 0) {
-      lines.push('---');
-      lines.push('');
-      lines.push('## ' + t('sleep.title'));
-      lines.push('');
-      dateSessions.forEach((s, i) => {
-        lines.push(`- **${t('sleep.session')} #${i + 1}**: ${s.start} → ${s.end} (${calcSleepHours(s.start, s.end)} ${t('sleep.hours')})`);
-      });
-      lines.push('');
-      lines.push('**' + t('sleep.totalSleep') + '**: ' + totalSleepHours + ' ' + t('sleep.hours'));
-      lines.push('');
-    } else {
-      lines.push('---');
-      lines.push('');
-      lines.push('## ' + t('sleep.title'));
-      lines.push('');
-      lines.push('_' + t('sleep.noSessions') + '_');
-      lines.push('');
-    }
-
-    // Drinks Data
-    if (dateDrinks.length > 0) {
-      lines.push('---');
-      lines.push('');
-      lines.push('## ' + t('drinks.title'));
-      lines.push('');
-      dateDrinks.forEach(d => {
-        lines.push(`- **${d.name || t('drinks.drink')}**: ${d.count}×`);
-      });
-      lines.push('');
-      lines.push('**' + t('drinks.total') + '**: ' + totalDrinksCount + '×');
-      lines.push('');
-    } else {
-      lines.push('---');
-      lines.push('');
-      lines.push('## ' + t('drinks.title'));
-      lines.push('');
-      lines.push('_' + t('drinks.noDrinks') + '_');
-      lines.push('');
-    }
-
-    // Journal
-    if (diary) {
-      lines.push('---');
-      lines.push('');
-      lines.push('## ' + t('journal.title'));
-      lines.push('');
-      lines.push('**' + t('export.dailyReflection') + '**');
-      lines.push('');
-      diary.split('\n').forEach(l => lines.push(l));
-      lines.push('');
-    }
-
-    // Summary
+    const ds = getDayStartMode();
+    const daySystem = ds === DAY_START_MODES.MAGHRIB ? 'Maghrib' : '12:00 AM';
     lines.push('---');
+    lines.push('Generated by Wasla');
     lines.push('');
-    lines.push('## ' + t('export.summary'));
-    lines.push('');
-    lines.push('- **' + t('export.tasksCompleted') + '**: ' + completed + '/' + total + ' (' + overallPct + '%)');
-    lines.push('- **' + t('tasks.statusNotCompleted') + '**: ' + notCompleted + '/' + total);
-    lines.push('- **' + t('tasks.statusPending') + '**: ' + pending + '/' + total);
-    lines.push('- **' + t('export.fixedTasks') + '**: ' + fixedPct + '%');
-    lines.push('- **' + t('export.personalTasks') + '**: ' + personalPct + '%');
-    lines.push('- **' + t('export.prayersOnTime') + '**: ' + onTime + '/5 (' + prayerPct + '%)');
-    if (totalHabitsToday > 0) lines.push('- **' + t('export.habitsDone') + '**: ' + completedHabits + '/' + totalHabitsToday + ' (' + habitsPct + '%)');
-    lines.push('- **' + t('pulse.productivityScore') + '**: ' + compositeScore + '/100 (' + scoreLabel + ')');
-    if (notes.length > 0) lines.push('- **' + t('journal.studyNotes') + '**: ' + notes.length + ' ' + (lang === 'ar' ? 'ملاحظة' : 'notes'));
-    if (dateSessions.length > 0) lines.push('- **' + t('sleep.totalSleep') + '**: ' + totalSleepHours + ' ' + t('sleep.hours'));
-    if (dateDrinks.length > 0) lines.push('- **' + t('drinks.total') + '**: ' + totalDrinksCount + '×');
-    lines.push('- **' + t('export.streak') + '**: ' + streak + ' ' + t('streak.days'));
-    if (mood) {
-      lines.push('- **' + t('mood.title') + '**: ' + t('mood.' + mood));
-    }
-    lines.push('');
-    lines.push('---');
-    lines.push('_' + t('export.exportedFrom') + '_');
+    lines.push(`Day System: Starts at ${daySystem}`);
     lines.push('');
 
     const blob = new Blob([lines.join('\n')], { type: 'text/markdown' });
@@ -2391,307 +1925,6 @@ function App() {
           <div className="contact-footer">
             <span className="contact-response-time">{t('contact.response')}</span>
           </div>
-        </div>
-      </div>
-    );
-  };
-
-  // ---- Alternative Plan Views ----
-  const renderAlternativeHeader = (view) => (
-    <div className="new-tasks-header-wrap">
-      <div className="new-tasks-header">
-        <div style={{display: 'flex', alignItems: 'center', gap: '16px'}}>
-          <RefreshCw size={32} className="new-tasks-title-icon alt-plan-icon" />
-          <div>
-            <h2 className="new-tasks-title">{t('alternative.title')}</h2>
-            <p className="new-tasks-subtitle">{t('alternative.subtitle')}</p>
-          </div>
-        </div>
-        <div className="alt-plan-view-tabs">
-          <button
-            className={`alt-view-btn ${view === 'home' ? 'active' : ''}`}
-            onClick={() => setAltPageView('home')}
-          >
-            <Clock size={14} /> {t('nav.home')}
-          </button>
-          <button
-            className={`alt-view-btn ${view === 'tasks' ? 'active' : ''}`}
-            onClick={() => setAltPageView('tasks')}
-          >
-            <List size={14} /> {t('nav.tasks')}
-          </button>
-        </div>
-      </div>
-      <div className="alt-plan-badge">
-        <RefreshCw size={12} />
-        <span>{t('alternative.usingAlt')}</span>
-      </div>
-    </div>
-  );
-
-  const renderAlternativeDayView = () => {
-    const data = altDayDataRef.current;
-    if (!data?.prayerTimes) {
-      return (
-        <div className="alt-plan-page">
-          {renderAlternativeHeader('home')}
-          <div className="empty-state">
-            <RefreshCw size={24} />
-            <span className="empty-state-title">{t('alternative.empty')}</span>
-            <p className="empty-state-desc">{t('alternative.emptyHint')}</p>
-          </div>
-        </div>
-      );
-    }
-    const { prayerTimes: prayers, tasks } = data;
-    const dayStart = getPlannerDayStartMinutes(prayers);
-    const dayEnd = getPlannerDayEndMinutes(prayers);
-    const padTop = 15;
-    const padBottom = 15;
-    const visualStart = dayStart - padTop;
-    const visualEnd = dayEnd + padBottom;
-    const visualDuration = visualEnd - visualStart;
-    const timelineHeight = Math.max(2800, Math.min(8000, visualDuration * 4));
-    const toPercent = (minutes) => ((minutes - visualStart) / visualDuration) * 100;
-    const nowMinutes = getCurrentPlannerMinutes(currentTime, activeDate);
-    const nowInRange = nowMinutes >= visualStart && nowMinutes <= visualEnd;
-    const nowTop = nowInRange ? toPercent(nowMinutes) : -100;
-    const sortedTasks = sortTasksForPlannerDay(tasks, prayers);
-    const markers = getPrayerMarkersForPlannerDay(prayers).map(m => ({
-      key: m.key, prayer: m.label, time: m.time, minutes: m.minutes
-    }));
-    const morningStart = getPeriodStartMinutes('morning', prayers);
-    const periodBands = [
-      { key: 'night-band', label: t('band.night'), start: dayStart, end: morningStart },
-      { key: 'day-band', label: t('band.day'), start: morningStart, end: dayEnd }
-    ];
-    const formatTimelineTick = (minutes, exact = false) => {
-      const normalized = ((minutes % 1440) + 1440) % 1440;
-      const hour = Math.floor(normalized / 60);
-      const minute = normalized % 60;
-      if (getUse12h()) {
-        const period = hour < 12 ? t('time.am') : t('time.pm');
-        const h12 = hour % 12 || 12;
-        const time = exact || minute !== 0 ? `${h12}:${String(minute).padStart(2, '0')}` : `${h12}`;
-        return { time, period };
-      }
-      return { time: exact || minute !== 0 ? `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}` : `${hour}`, period: '' };
-    };
-    const hourTicks = [
-      { key: 'start', ...formatTimelineTick(dayStart, true), minutes: dayStart },
-      ...Array.from(
-        { length: Math.max(0, Math.floor(dayEnd / 60) - Math.ceil(dayStart / 60) + 1) },
-        (_, index) => {
-          const minutes = (Math.ceil(dayStart / 60) + index) * 60;
-          return { key: `hour-${minutes}`, ...formatTimelineTick(minutes), minutes };
-        }
-      ).filter(tick => tick.minutes > dayStart && tick.minutes < dayEnd),
-      { key: 'end', ...formatTimelineTick(dayEnd, true), minutes: dayEnd }
-    ];
-
-    return (
-      <div className="alt-plan-page">
-        {renderAlternativeHeader('home')}
-        <section className="full-day-view">
-          <article className="continuous-day-card alt-plan-card">
-            <div className="continuous-timeline" style={{ '--timeline-height': `${timelineHeight}px` }}>
-              <div className="timeline-time-column">
-                {hourTicks.map(tick => (
-                  <span key={tick.key} className="timeline-tick" style={{ top: `${toPercent(tick.minutes)}%` }}>
-                    <span className="timeline-tick-time">{tick.time}</span>
-                    {tick.period && <span className="timeline-tick-period">{tick.period}</span>}
-                  </span>
-                ))}
-              </div>
-
-              <div className="timeline-board">
-                {nowInRange && (
-                  <div className="timeline-now-line" style={{ top: `${nowTop}%` }} />
-                )}
-                {periodBands.map(band => (
-                  <div
-                    key={band.key}
-                    className={`timeline-period-band ${band.key}`}
-                    style={{
-                      top: `${toPercent(band.start)}%`,
-                      height: `${toPercent(band.end) - toPercent(band.start)}%`
-                    }}
-                  >
-                    <span>{band.label}</span>
-                  </div>
-                ))}
-
-                {hourTicks.map(tick => (
-                  <div key={tick.key} className="timeline-hour-line" style={{ top: `${toPercent(tick.minutes)}%` }} />
-                ))}
-
-                {markers.map(marker => {
-                  const pk = marker.prayer.toLowerCase();
-                  return (
-                    <div
-                      key={marker.key}
-                      className="timeline-prayer-marker"
-                      style={{ top: `${toPercent(marker.minutes)}%` }}
-                      title={t('prayer.' + pk)}
-                    >
-                      {marker.prayer.charAt(0)}
-                    </div>
-                  );
-                })}
-
-                {sortedTasks.map((task) => {
-                  const taskStart = getTaskStartMinutes(task, prayers);
-                  const blockEnd = getPeriodEndMinutes(task.period, prayers);
-                  const duration = Math.max(5, Math.min(Number(task.duration) || 15, blockEnd - taskStart));
-                  const top = toPercent(taskStart);
-                  const heightPct = (duration / visualDuration) * 100;
-                  const isAdhkar = task.name.includes('Adhkar');
-                  const taskEnd = taskStart + duration;
-                  return (
-                    <div
-                      key={task.id}
-                      className={`timeline-task-card task-${task.type}${isAdhkar ? ' task-adhkar' : ''} ${task.completed ? 'completed' : ''} alt-task-card`}
-                      style={{ top: `${top}%`, height: `${heightPct}%` }}
-                      onClick={() => setTaskActionPopup({ open: true, task, isAlternative: true })}
-                    >
-                      <div className="timeline-task-bar" />
-                      <div className="timeline-task-body">
-                        <span className="timeline-task-time">
-                          {getTaskDisplayTime(task, prayers)}–{formatMinutesToTime(taskEnd)}
-                          <span className="timeline-task-duration-badge">{translateDuration(duration)}</span>
-                        </span>
-                        <span className="timeline-task-name">
-                          {translateTaskName(task.name)}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-
-                {sortedTasks.length === 0 && (
-                  <div className="alt-empty-timeline-message">
-                    <span>{t('alternative.noTasks')}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </article>
-        </section>
-      </div>
-    );
-  };
-
-  const renderAlternativeTasksView = () => {
-    const data = altDayDataRef.current;
-    if (!data) {
-      return (
-        <div className="alt-plan-page">
-          {renderAlternativeHeader('tasks')}
-          <div className="empty-state">
-            <RefreshCw size={24} />
-            <span className="empty-state-title">{t('alternative.empty')}</span>
-          </div>
-        </div>
-      );
-    }
-
-    const allTasks = data.tasks || [];
-
-    return (
-      <div className="alt-plan-page">
-        {renderAlternativeHeader('tasks')}
-        <div className="tasks-page new-tasks-page alt-tasks-page">
-          <div className="tasks-search-wrap new-search-wrap">
-            <Search size={16} className="tasks-search-icon" />
-            <input
-              className="tasks-search-input"
-              type="text"
-              placeholder={t('tasks.searchPlaceholder')}
-              value={taskSearch}
-              onChange={e => setTaskSearch(e.target.value)}
-              dir="auto"
-            />
-            {taskSearch && (
-              <button className="tasks-search-clear" onClick={() => setTaskSearch('')}>
-                <X size={16} />
-              </button>
-            )}
-          </div>
-
-          <div className="new-tasks-sections">
-            <div className="new-period-section">
-              <div className="new-period-task-list">
-                {(() => {
-                  const filtered = taskSearch
-                    ? allTasks.filter(t =>
-                        t.name.toLowerCase().includes(taskSearch.toLowerCase()) ||
-                        (t.details || '').toLowerCase().includes(taskSearch.toLowerCase())
-                      )
-                    : allTasks;
-                  return filtered.map(task => {
-                    const taskStart = getTaskStartMinutes(task, data.prayerTimes);
-                    const taskEnd = taskStart + (Number(task.duration) || 15);
-                    const currentStatus = task.status || (task.completed ? 'completed' : 'pending');
-                    return (
-                      <div key={task.id} className={`t-card status-${currentStatus} alt-t-card`} onClick={() => toggleAltTaskCompletion(task.id)}>
-                        <span className={`t-dot ${currentStatus}`} />
-                        <div className="t-body">
-                          <div className="t-row">
-                            <h4 className="t-title">{translateTaskName(task.name)}</h4>
-                            <div className="t-actions">
-                              <button
-                                className={`t-btn ${currentStatus === 'pending' ? 'active' : ''}`}
-                                onClick={(e) => { e.stopPropagation(); setAltTaskStatus(task.id, 'pending'); }}
-                                title={t('tasks.statusPending')}
-                              >
-                                <Clock size={12} />
-                              </button>
-                              <button
-                                className={`t-btn ${currentStatus === 'completed' ? 'active' : ''}`}
-                                onClick={(e) => { e.stopPropagation(); setAltTaskStatus(task.id, 'completed'); }}
-                                title={t('tasks.statusCompleted')}
-                              >
-                                <Check size={12} />
-                              </button>
-                              <button
-                                className={`t-btn ${currentStatus === 'not_completed' ? 'active' : ''}`}
-                                onClick={(e) => { e.stopPropagation(); setAltTaskStatus(task.id, 'not_completed'); }}
-                                title={t('tasks.statusNotCompleted')}
-                              >
-                                <X size={12} />
-                              </button>
-                            </div>
-                          </div>
-                          {task.details && (
-                            <p className="t-desc">{task.details}</p>
-                          )}
-                          <span className="t-meta">{translateDuration(Number(task.duration) || 15)}</span>
-                        </div>
-                      </div>
-                    );
-                  });
-                })()}
-              </div>
-            </div>
-          </div>
-
-          {taskSearch && allTasks.filter(t =>
-            t.name.toLowerCase().includes(taskSearch.toLowerCase()) ||
-            (t.details || '').toLowerCase().includes(taskSearch.toLowerCase())
-          ).length === 0 && (
-            <div className="tasks-empty-search">
-              <Search size={24} />
-              <span>{t('tasks.noTasksMatch')}</span>
-            </div>
-          )}
-
-          {allTasks.length === 0 && !taskSearch && (
-            <div className="empty-state">
-              <RefreshCw size={24} />
-              <span className="empty-state-title">{t('alternative.noTasks')}</span>
-              <p className="empty-state-desc">{t('alternative.emptyHint')}</p>
-            </div>
-          )}
         </div>
       </div>
     );
@@ -3152,7 +2385,6 @@ function App() {
   // ---- Sidebar navigation links ----
   const sidebarLinks = [
     { id: 'home', label: t('nav.home'), icon: Sparkles },
-    { id: 'alternative', label: t('nav.alternative'), icon: RefreshCw },
     { id: 'journal', label: t('nav.journal'), icon: BookOpen },
     { id: 'tasks', label: t('nav.tasks'), icon: List },
     { id: 'habits', label: t('nav.habits'), icon: Target },
@@ -3328,9 +2560,6 @@ function App() {
             {/* Conditional Pages */}
             {currentPage === 'home' && dayData && renderFullDayView()}
 
-            {currentPage === 'alternative' && (
-              altPageView === 'home' ? renderAlternativeDayView() : renderAlternativeTasksView()
-            )}
 
             {currentPage === 'tasks' && dayData && (
               <div className="tasks-page new-tasks-page">
@@ -4398,11 +3627,6 @@ function App() {
             <Plus size={22} />
           </button>
         )}
-        {currentPage === 'alternative' && altDayDataRef.current && (
-          <button className="fab-add-task fab-alt" onClick={() => openAltTaskModal('add')} title={t('alternative.fabHint')}>
-            <Plus size={22} />
-          </button>
-        )}
         </div>
 
       {/* Toast notifications */}
@@ -4677,11 +3901,7 @@ function App() {
                 className={`tap-btn ${taskActionPopup.task.completed ? 'tap-btn-secondary' : 'tap-btn-primary'}`}
                 onClick={() => {
                   const task = taskActionPopup.task;
-                  if (taskActionPopup.isAlternative) {
-                    toggleAltTaskCompletion(task.id);
-                  } else {
-                    toggleTaskCompletion(task.id);
-                  }
+                  toggleTaskCompletion(task.id);
                   setTaskActionPopup({ open: false, task: null });
                 }}
               >
@@ -4696,11 +3916,7 @@ function App() {
                     onClick={() => {
                       const task = taskActionPopup.task;
                       setTaskActionPopup({ open: false, task: null });
-                      if (taskActionPopup.isAlternative) {
-                        openAltTaskModal('edit', task);
-                      } else {
-                        openTaskModal('edit', task);
-                      }
+                      openTaskModal('edit', task);
                     }}
                   >
                     <Edit2 size={15} />
@@ -4712,11 +3928,7 @@ function App() {
                     onClick={() => {
                       const task = taskActionPopup.task;
                       setTaskActionPopup({ open: false, task: null });
-                      if (taskActionPopup.isAlternative) {
-                        deleteAltTask(task.id);
-                      } else {
-                        deleteTask(task.id);
-                      }
+                      deleteTask(task.id);
                     }}
                   >
                     <Trash2 size={15} />
