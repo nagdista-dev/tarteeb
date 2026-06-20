@@ -1,16 +1,12 @@
-Remove the entire "Alternative Plan" feature from the application.
+Rename the "Notes" section throughout the entire application to "Journal".
 
 Requirements:
 
-- Delete the "Alternative Plan" section completely from the UI.
-- Remove it from navigation menus, settings, dashboards, daily pages, and any related screens.
-- Remove all buttons, forms, dialogs, cards, and components associated with the feature.
-- Remove any references in the export/import functionality.
-- Remove any references from search, filters, statistics, summaries, reports, and analytics.
-- Remove related state management, hooks, services, API endpoints, database fields, and unused code.
-- Clean up translations, constants, types, interfaces, and documentation related to the feature.
-- Ensure removing this feature does not affect any other functionality or cause runtime errors.
-- Verify the application builds successfully and all remaining features continue to work correctly.
-- If existing data for this feature is stored locally, safely ignore it and prevent it from appearing anywhere in the application.
-
+- Replace every occurrence of "Notes" in the UI with "Journal".
+- Update navigation labels, page titles, section headers, buttons, dialogs, empty states, placeholders, tooltips, export functionality, and any related text.
+- Ensure all routes, translations, and references remain consistent after the rename.
+- Existing notes data must continue working without any data loss or migration issues.
+- Update the Markdown export so the section is exported as "Journal" instead of "Notes".
+- Verify that search, filtering, creation, editing, deletion, import, export, and persistence features continue to work correctly after the rename.
+- Keep the functionality unchanged; this is a terminology/UI update only.
 add files and commit, fix all problem in push 
