@@ -1,29 +1,13 @@
-fix 
-npm run dev
+Fix the issue where the “Download Current Day” and “Download Previous Day” buttons are not working.
 
-> tarteeb@0.0.0 dev
-> vite
+Requirements:
 
-
-  VITE v8.0.16  ready in 531 ms
-
-  ➜  Local:   http://localhost:5173/
-  ➜  Network: use --host to expose
-  ➜  press h + enter to show help
-[vite:css][postcss] @import must precede all other statements (besides @charset or empty @layer)
-240 |    }
-241 |  }
-242 |  @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Tajawal:wght@300;400;500;...
-    |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-243 |  :root {
-244 |    --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-
-
-
-
-
-
-
-
-
-add files and commit, fix all problem in push 
+- Investigate why both download buttons are not triggering the export action.
+- Ensure clicking either button correctly generates and downloads the Markdown file for the selected day.
+- Current Day download must export today's data using the correct export template.
+- Previous Day download must export the selected previous day using the same template and rules as Current Day export.
+- Ensure no UI errors or silent failures occur when the buttons are clicked.
+- Add proper error handling so that if export fails, a clear error message is shown to the user.
+- Verify that file generation, formatting, and download triggering work consistently across both buttons.
+- Ensure the fix does not break other export-related features or app performance.
+add all files and commit don't push to github only add files and commit 
