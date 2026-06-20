@@ -7,8 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview",
-    "deploy": "npm run build && cd dist && git init && git checkout -b gh-pages && git add -A && git commit -m 'deploy' && git push -f https://github.com/nagdista-dev/tarteeb.git gh-pages && rm -rf .git"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.0",
