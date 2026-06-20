@@ -344,6 +344,7 @@ const en = {
 
   'export.completed': 'completed',
   'export.success': 'Markdown file exported successfully!',
+  'export.error': 'Failed to export Markdown file.',
 
   /* Duration labels */
   'duration.hour': '1 hour',
@@ -862,6 +863,7 @@ const ar = {
 
   'export.completed': 'مكتمل',
   'export.success': 'تم تصدير ملف ماركداون بنجاح!',
+  'export.error': 'فشل في تصدير ملف ماركداون.',
 
   /* Duration labels */
   'duration.hour': 'ساعة واحدة',
