@@ -1461,6 +1461,9 @@ function App() {
     const titleLocale = isArabic ? 'ar-EG' : 'en-US';
     const title = d.toLocaleDateString(titleLocale, { month: 'long', day: 'numeric', year: 'numeric' });
 
+    const alignLabel = isArabic ? '---:' : ':---';
+    const alignCol = (count) => '|' + Array(count).fill(alignLabel).join('|') + '|';
+
     if (isArabic) {
       lines.push('<div dir="rtl">');
       lines.push('');
@@ -1508,7 +1511,7 @@ function App() {
     lines.push(`## ${t('export.prayerTimes')}`);
     lines.push('');
     lines.push(`| ${t('export.prayer')} | ${t('export.time')} |`);
-    lines.push('|---------|---------|');
+    lines.push(alignCol(2));
     prayerOrder.forEach(pk => {
       const time = prayerTimes?.[pk] || '—';
       const prayerLabel = t(`prayer.${pk}`);
@@ -1519,7 +1522,7 @@ function App() {
     lines.push(`## ${t('export.sleepSessions')}`);
     lines.push('');
     lines.push(`| ${t('export.session')} | ${t('export.start')} | ${t('export.end')} | ${t('export.total')} |`);
-    lines.push('|---------|---------|---------|---------|');
+    lines.push(alignCol(4));
     if (dateSessions.length > 0) {
       dateSessions.forEach((s, i) => {
         const startAMPM = forceAMPM(s.start);
@@ -1539,7 +1542,7 @@ function App() {
     lines.push(`## ${t('export.drinks')}`);
     lines.push('');
     lines.push(`| ${t('export.drink')} | ${t('export.amount')} |`);
-    lines.push('|---------|---------|');
+    lines.push(alignCol(2));
     if (dateDrinks.length > 0) {
       dateDrinks.forEach(d => {
         lines.push(`| ${d.name || t('export.drink')} | ${d.count} |`);
@@ -1552,7 +1555,7 @@ function App() {
     lines.push(`## ${t('export.tasks')}`);
     lines.push('');
     lines.push(`| ${t('export.task')} | ${t('export.start')} | ${t('export.end')} |`);
-    lines.push('|---------|---------|---------|');
+    lines.push(alignCol(3));
     if (allTasks.length > 0) {
       allTasks.forEach(task => {
         const startMins = getTaskStartMinutes(task, prayerTimes);
@@ -1920,7 +1923,7 @@ function App() {
               value={contactMessage}
               onChange={e => setContactMessage(e.target.value)}
               rows={5}
-              dir="auto"
+              dir={i18n.language === 'ar' ? 'rtl' : 'ltr'}
             />
             <button
               className="btn btn-primary contact-send-btn"
@@ -2596,7 +2599,7 @@ function App() {
                     placeholder={t('tasks.searchPlaceholder')}
                     value={taskSearch}
                     onChange={e => setTaskSearch(e.target.value)}
-                    dir="auto"
+                    dir={i18n.language === 'ar' ? 'rtl' : 'ltr'}
                   />
                   {taskSearch && (
                     <button className="tasks-search-clear" onClick={() => setTaskSearch('')}>
@@ -2700,7 +2703,7 @@ function App() {
                       onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); addStudyNote(); } }}
                       rows={4}
                       style={{ resize: 'none' }}
-                      dir="auto"
+                      dir={i18n.language === 'ar' ? 'rtl' : 'ltr'}
                     />
                   </div>
 
@@ -2770,7 +2773,7 @@ function App() {
                                       onChange={e => setEditText(e.target.value)}
                                       rows={3}
                                       style={{ resize: 'none' }}
-                                      dir="auto"
+                                      dir={i18n.language === 'ar' ? 'rtl' : 'ltr'}
                                     />
                                     <div className="study-note-edit-actions">
                                       <button type="button" className="btn btn-sm" onClick={cancelEditNote}>{t('journal.cancel')}</button>
@@ -3181,7 +3184,7 @@ function App() {
                               value={drink.name}
                               onChange={e => updateDrink(drink.id, 'name', e.target.value)}
                               placeholder={t('drinks.name')}
-                              dir="auto"
+                              dir={i18n.language === 'ar' ? 'rtl' : 'ltr'}
                             />
                           </div>
                           <div className="d-card-actions">
@@ -3474,7 +3477,7 @@ function App() {
                         {['fajr','dhuhr','asr','maghrib','isha'].map(p => (
                           <div key={p} className="form-group">
                             <label className="form-label">{t('settings.' + p)}</label>
-                            <input className="form-input" type="text" value={manualTimesForm[p]} onChange={e => setManualTimesForm(prev => ({ ...prev, [p]: e.target.value }))} required dir="auto" pattern="^([01]\d|2[0-3]):[0-5]\d$" title="HH:MM (e.g. 05:30)" />
+                            <input className="form-input" type="text" value={manualTimesForm[p]} onChange={e => setManualTimesForm(prev => ({ ...prev, [p]: e.target.value }))} required dir={i18n.language === 'ar' ? 'rtl' : 'ltr'} pattern="^([01]\d|2[0-3]):[0-5]\d$" title="HH:MM (e.g. 05:30)" />
                             <span className="manual-time-hint">{t('prayer.' + p)}</span>
                           </div>
                         ))}
@@ -3774,7 +3777,7 @@ function App() {
                   {/* Task name */}
                   <div className="form-group">
                     <label className="form-label">{t('modal.taskName')}</label>
-                    <input className="form-input" type="text" dir="auto" value={taskForm.name}
+                    <input className="form-input" type="text" dir={i18n.language === 'ar' ? 'rtl' : 'ltr'} value={taskForm.name}
                       onChange={e => setTaskForm(prev => ({ ...prev, name: e.target.value }))} required autoFocus />
                   </div>
 
@@ -3972,7 +3975,7 @@ function App() {
               <div className="modal-body">
                 <div className="form-group">
                   <label className="form-label">{t('habits.name')}</label>
-                  <input className="form-input" type="text" value={habitForm.name} onChange={e => setHabitForm(prev => ({ ...prev, name: e.target.value }))} required autoFocus dir="auto" />
+                  <input className="form-input" type="text" value={habitForm.name} onChange={e => setHabitForm(prev => ({ ...prev, name: e.target.value }))} required autoFocus dir={i18n.language === 'ar' ? 'rtl' : 'ltr'} />
                 </div>
               </div>
               <div className="modal-footer">
