@@ -1450,162 +1450,173 @@ function App() {
   };
 
   const exportToMarkdown = (data = null) => {
-    const day = data || dayData;
-    if (!day) return;
-    const { tasks, date, prayerTimes, studyNotes } = day;
-    const lines = [];
-    const d = new Date(date);
-    
-    // Use Arabic locale for title if lang is Arabic
-    const isArabic = i18n.language === 'ar';
-    const titleLocale = isArabic ? 'ar-EG' : 'en-US';
-    const title = d.toLocaleDateString(titleLocale, { month: 'long', day: 'numeric', year: 'numeric' });
+    try {
+      // If data is passed as a DOM Event (e.g., from an onClick handler without an arrow function), ignore it
+      const actualData = (data && data.nativeEvent) ? null : data;
+      const day = actualData || dayData;
+      if (!day) return;
+      const { tasks, date, prayerTimes, studyNotes } = day;
+      const lines = [];
+      const d = new Date(date);
+      if (isNaN(d.getTime())) {
+          throw new Error('Invalid date in day data.');
+      }
+      
+      // Use Arabic locale for title if lang is Arabic
+      const isArabic = i18n.language === 'ar';
+      const titleLocale = isArabic ? 'ar-EG' : 'en-US';
+      const title = d.toLocaleDateString(titleLocale, { month: 'long', day: 'numeric', year: 'numeric' });
 
-    const alignLabel = isArabic ? '---:' : ':---';
-    const alignCol = (count) => '|' + Array(count).fill(alignLabel).join('|') + '|';
+      const alignLabel = isArabic ? '---:' : ':---';
+      const alignCol = (count) => '|' + Array(count).fill(alignLabel).join('|') + '|';
 
-    if (isArabic) {
-      lines.push('<div dir="rtl">');
+      if (isArabic) {
+        lines.push('<div dir="rtl">');
+        lines.push('');
+      }
+
+      lines.push(`> ${title}`);
       lines.push('');
-    }
 
-    lines.push(`> ${title}`);
-    lines.push('');
+      const allTasks = tasks || [];
+      const dateSessions = sleepTracking[date] || [];
+      const dateDrinks = drinksTracking[date] || [];
+      const prayerOrder = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
 
-    const allTasks = tasks || [];
-    const dateSessions = sleepTracking[date] || [];
-    const dateDrinks = drinksTracking[date] || [];
-    const prayerOrder = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
+      const forceAMPM = (timeStr) => {
+        if (!timeStr || timeStr === '—') return '—';
+        const clean = timeStr.trim();
+        if (clean.toLowerCase().includes('am') || clean.toLowerCase().includes('pm')) return clean;
+        const parts = clean.split(':');
+        if (parts.length < 2) return clean;
+        let h = parseInt(parts[0], 10);
+        const m = parts[1].substring(0, 2);
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        h = h % 12;
+        h = h ? h : 12;
+        return `${h}:${m} ${ampm}`;
+      };
 
-    const forceAMPM = (timeStr) => {
-      if (!timeStr || timeStr === '—') return '—';
-      const clean = timeStr.trim();
-      if (clean.toLowerCase().includes('am') || clean.toLowerCase().includes('pm')) return clean;
-      const parts = clean.split(':');
-      if (parts.length < 2) return clean;
-      let h = parseInt(parts[0], 10);
-      const m = parts[1].substring(0, 2);
-      const ampm = h >= 12 ? 'PM' : 'AM';
-      h = h % 12;
-      h = h ? h : 12;
-      return `${h}:${m} ${ampm}`;
-    };
+      const forceMinutesAMPM = (mins) => {
+        if (typeof mins !== 'number' || isNaN(mins)) return '—';
+        const normalized = ((mins % 1440) + 1440) % 1440;
+        let h = Math.floor(normalized / 60);
+        const m = normalized % 60;
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        h = h % 12;
+        h = h ? h : 12;
+        return `${h}:${String(m).padStart(2, '0')} ${ampm}`;
+      };
 
-    const forceMinutesAMPM = (mins) => {
-      const normalized = ((mins % 1440) + 1440) % 1440;
-      let h = Math.floor(normalized / 60);
-      const m = normalized % 60;
-      const ampm = h >= 12 ? 'PM' : 'AM';
-      h = h % 12;
-      h = h ? h : 12;
-      return `${h}:${String(m).padStart(2, '0')} ${ampm}`;
-    };
+      const formatDur = (mins) => {
+        if (!mins || mins <= 0) return '';
+        const h = Math.floor(mins / 60);
+        const m = mins % 60;
+        return h > 0 ? `${h}h ${m > 0 ? m + 'm' : ''}`.trim() : `${m}m`;
+      };
 
-    const formatDur = (mins) => {
-      if (!mins || mins <= 0) return '';
-      const h = Math.floor(mins / 60);
-      const m = mins % 60;
-      return h > 0 ? `${h}h ${m > 0 ? m + 'm' : ''}`.trim() : `${m}m`;
-    };
-
-    lines.push(`## ${t('export.prayerTimes')}`);
-    lines.push('');
-    lines.push(`| ${t('export.prayer')} | ${t('export.time')} |`);
-    lines.push(alignCol(2));
-    prayerOrder.forEach(pk => {
-      const time = prayerTimes?.[pk] || '—';
-      const prayerLabel = t(`prayer.${pk}`);
-      lines.push(`| ${prayerLabel} | ${forceAMPM(time)} |`);
-    });
-    lines.push('');
-
-    lines.push(`## ${t('export.sleepSessions')}`);
-    lines.push('');
-    lines.push(`| ${t('export.session')} | ${t('export.start')} | ${t('export.end')} | ${t('export.total')} |`);
-    lines.push(alignCol(4));
-    if (dateSessions.length > 0) {
-      dateSessions.forEach((s, i) => {
-        const startAMPM = forceAMPM(s.start);
-        const endAMPM = forceAMPM(s.end);
-        const startMins = parseTimeToMinutes(s.start);
-        const endMins = parseTimeToMinutes(s.end);
-        let diff = endMins - startMins;
-        if (diff < 0) diff += 1440;
-        const durStr = formatDur(diff);
-        lines.push(`| ${t('export.mainSleep')} ${i > 0 ? i + 1 : ''} | ${startAMPM} | ${endAMPM} | ${durStr} |`);
-      });
-    } else {
-      lines.push(`| ${t('export.noSessions')} | - | - | - |`);
-    }
-    lines.push('');
-
-    lines.push(`## ${t('export.drinks')}`);
-    lines.push('');
-    lines.push(`| ${t('export.drink')} | ${t('export.amount')} |`);
-    lines.push(alignCol(2));
-    if (dateDrinks.length > 0) {
-      dateDrinks.forEach(d => {
-        lines.push(`| ${d.name || t('export.drink')} | ${d.count} |`);
-      });
-    } else {
-      lines.push(`| ${t('export.noDrinks')} | - |`);
-    }
-    lines.push('');
-
-    lines.push(`## ${t('export.tasks')}`);
-    lines.push('');
-    lines.push(`| ${t('export.task')} | ${t('export.start')} | ${t('export.end')} |`);
-    lines.push(alignCol(3));
-    if (allTasks.length > 0) {
-      allTasks.forEach(task => {
-        const startMins = getTaskStartMinutes(task, prayerTimes);
-        const startStr = forceMinutesAMPM(startMins);
-        const endMins = startMins + (Number(task.duration) || 15);
-        const endStr = forceMinutesAMPM(endMins);
-        lines.push(`| ${translateTaskName(task.name)} | ${startStr} | ${endStr} |`);
-      });
-    } else {
-      lines.push(`| ${t('export.noTasks')} | - | - |`);
-    }
-    lines.push('');
-
-    const notes = studyNotes || [];
-    if (notes.length > 0) {
-      lines.push(`## ${t('export.notes')}`);
+      lines.push(`## ${t('export.prayerTimes')}`);
       lines.push('');
-      getPlannerPeriodOrder().forEach(pk => {
-        const pn = notes.filter(n => n.period === pk).sort((a, b) => (a.time || '').localeCompare(b.time || ''));
-        if (pn.length === 0) return;
-        pn.forEach(n => {
-          const tl = n.time ? forceAMPM(n.time) + ' ' : '';
-          lines.push('- ' + tl + n.text);
+      lines.push(`| ${t('export.prayer')} | ${t('export.time')} |`);
+      lines.push(alignCol(2));
+      prayerOrder.forEach(pk => {
+        const time = prayerTimes?.[pk] || '—';
+        const prayerLabel = t(`prayer.${pk}`);
+        lines.push(`| ${prayerLabel} | ${forceAMPM(time)} |`);
+      });
+      lines.push('');
+
+      lines.push(`## ${t('export.sleepSessions')}`);
+      lines.push('');
+      lines.push(`| ${t('export.session')} | ${t('export.start')} | ${t('export.end')} | ${t('export.total')} |`);
+      lines.push(alignCol(4));
+      if (dateSessions.length > 0) {
+        dateSessions.forEach((s, i) => {
+          const startAMPM = forceAMPM(s.start);
+          const endAMPM = forceAMPM(s.end);
+          const startMins = parseTimeToMinutes(s.start);
+          const endMins = parseTimeToMinutes(s.end);
+          let diff = endMins - startMins;
+          if (diff < 0) diff += 1440;
+          const durStr = formatDur(diff);
+          lines.push(`| ${t('export.mainSleep')} ${i > 0 ? i + 1 : ''} | ${startAMPM} | ${endAMPM} | ${durStr} |`);
         });
-      });
+      } else {
+        lines.push(`| ${t('export.noSessions')} | - | - | - |`);
+      }
       lines.push('');
-    }
 
-    const ds = getDayStartMode();
-    const daySystem = ds === DAY_START_MODES.MAGHRIB ? t('settings.maghribStart') : t('settings.midnight');
-    lines.push('---');
-    lines.push(t('export.generatedBy'));
-    lines.push('');
-    lines.push(`${t('export.daySystem')} ${daySystem}`);
-    lines.push('');
-    
-    if (isArabic) {
-      lines.push('</div>');
-    }
+      lines.push(`## ${t('export.drinks')}`);
+      lines.push('');
+      lines.push(`| ${t('export.drink')} | ${t('export.amount')} |`);
+      lines.push(alignCol(2));
+      if (dateDrinks.length > 0) {
+        dateDrinks.forEach(d => {
+          lines.push(`| ${d.name || t('export.drink')} | ${d.count} |`);
+        });
+      } else {
+        lines.push(`| ${t('export.noDrinks')} | - |`);
+      }
+      lines.push('');
 
-    const blob = new Blob([lines.join('\n')], { type: 'text/markdown' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${date}.md`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    showToast(t('export.success'), { label: t('dialog.ok'), action: () => {} }, 86400000);
+      lines.push(`## ${t('export.tasks')}`);
+      lines.push('');
+      lines.push(`| ${t('export.task')} | ${t('export.start')} | ${t('export.end')} |`);
+      lines.push(alignCol(3));
+      if (allTasks.length > 0) {
+        allTasks.forEach(task => {
+          const startMins = getTaskStartMinutes(task, prayerTimes);
+          const startStr = forceMinutesAMPM(startMins);
+          const endMins = (typeof startMins === 'number' && !isNaN(startMins)) ? startMins + (Number(task.duration) || 15) : NaN;
+          const endStr = forceMinutesAMPM(endMins);
+          lines.push(`| ${translateTaskName(task.name)} | ${startStr} | ${endStr} |`);
+        });
+      } else {
+        lines.push(`| ${t('export.noTasks')} | - | - |`);
+      }
+      lines.push('');
+
+      const notes = studyNotes || [];
+      if (notes.length > 0) {
+        lines.push(`## ${t('export.notes')}`);
+        lines.push('');
+        getPlannerPeriodOrder().forEach(pk => {
+          const pn = notes.filter(n => n.period === pk).sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+          if (pn.length === 0) return;
+          pn.forEach(n => {
+            const tl = n.time ? forceAMPM(n.time) + ' ' : '';
+            lines.push('- ' + tl + n.text);
+          });
+        });
+        lines.push('');
+      }
+
+      const ds = getDayStartMode();
+      const daySystem = ds === DAY_START_MODES.MAGHRIB ? t('settings.maghribStart') : t('settings.midnight');
+      lines.push('---');
+      lines.push(t('export.generatedBy'));
+      lines.push('');
+      lines.push(`${t('export.daySystem')} ${daySystem}`);
+      lines.push('');
+      
+      if (isArabic) {
+        lines.push('</div>');
+      }
+
+      const blob = new Blob([lines.join('\n')], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${date}.md`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast(t('export.success'), { label: t('dialog.ok'), action: () => {} }, 86400000);
+    } catch (error) {
+      console.error("Export failed:", error);
+      showToast((t('export.error') || 'Failed to export: ') + error.message, { label: t('dialog.ok'), action: () => {} }, 86400000);
+    }
   };
 
   const handleDiaryChange = (e) => {
