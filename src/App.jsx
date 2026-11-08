@@ -2566,7 +2566,7 @@ function App() {
 
           {/* Footer */}
           <div className="sidebar-footer">
-            {t('footer.developedBy')} <a href="https://nagdista.com" target="_blank" rel="noopener noreferrer">Nagdista</a>
+            {t('footer.developedBy')} <a href="https://nagdista.com" target="_blank" rel="noopener noreferrer">{t('footer.developerName')}</a>
             {errorLog.length > 0 && (
               <button className="sidebar-error-btn" onClick={() => setErrorModalOpen(true)} title={t('footer.viewErrors')}>
                 <AlertCircle size={11} /> {errorLog.length}

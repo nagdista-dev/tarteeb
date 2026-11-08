@@ -5,6 +5,7 @@ const en = {
 
   /* Footer */
   'footer.developedBy': 'Developed by',
+  'footer.developerName': 'Mahmoud Elnagdy',
   'footer.viewErrors': 'View errors',
   'footer.errorLog': 'Error Log',
   'footer.noErrors': 'No errors recorded',
@@ -525,6 +526,7 @@ const ar = {
 
   /* Footer */
   'footer.developedBy': 'طُوّر بواسطة',
+  'footer.developerName': 'محمود النجدي',
   'footer.viewErrors': 'عرض الأخطاء',
   'footer.errorLog': 'سجل الأخطاء',
   'footer.noErrors': 'لا توجد أخطاء مسجلة',
