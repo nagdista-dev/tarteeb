@@ -44,6 +44,10 @@ Open `http://localhost:5173`.
 
 Contributions are welcome! Please open an issue or submit a pull request.
 
+## Author
+
+Built by [Mahmoud Elnagdy](https://nagdista.com/) — full-stack developer in Cairo, Egypt.
+
 ## License
 
 This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
